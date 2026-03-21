@@ -1,8 +1,17 @@
 import { useState, useEffect } from 'react';
+import MarkdownIt from 'markdown-it';
+import DOMPurify from 'dompurify';
 import TarotCard from '../components/TarotCard';
 import api from '../services/api';
 import useVisitStats from '../hooks/useVisitStats';
 import './Divination.css';
+
+// 创建 markdown-it 实例
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true
+});
 
 const spreads = [
   {
@@ -235,6 +244,8 @@ function Divination() {
         drawnCards
       });
       setAiInterpretation(interpretation);
+      // Update debug info with raw AI response
+      setLastRequest(prev => prev ? { ...prev, aiRawResponse: interpretation } : null);
       // Increment question count for visit stats
       incrementQuestionCount();
     } catch (error) {
@@ -251,348 +262,33 @@ function Divination() {
     }
   };
 
-  // 渲染 Markdown 内容（支持完整 Markdown 语法）
+  // 渲染 Markdown 内容（使用 markdown-it + DOMPurify 净化）
   const renderMarkdownContent = (content) => {
     if (!content) return '';
 
-    // 解析行内 Markdown 格式
-    const parseInlineMarkdown = (text) => {
-      if (!text) return text;
-      if (typeof text !== 'string') return String(text);
-
-      let result = text;
-
-      // 转义字符
-      const escapeMap = {
-        '\\*': '∗',
-        '\\_': '＿',
-        '\\`': '｀',
-        '\\[': '［',
-        '\\]': '］',
-        '\\<': '＜',
-        '\\>': '＞',
-      };
-      Object.entries(escapeMap).forEach(([escaped, placeholder]) => {
-        result = result.replace(new RegExp(escaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), placeholder);
+    try {
+      const html = md.render(content);
+      // 使用 DOMPurify 净化 HTML，防止 XSS 注入
+      const clean = DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'strong', 'em', 'del', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div'],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'target', 'rel', 'style']
       });
-
-      // 处理行内代码 `code`
-      result = result.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-      // 处理加粗+斜体 ***text*** 或 ___text___
-      result = result.replace(/(\*\*\*|___)([^*_]+)\1/g, '<strong><em>$2</em></strong>');
-
-      // 处理加粗 **text** 或 __text__
-      result = result.replace(/(\*\*|__)([^*_]+)\1/g, '<strong>$2</strong>');
-
-      // 处理斜体 *text* 或 _text_
-      result = result.replace(/(\*|_)([^*_]+)\1/g, '<em>$2</em>');
-
-      // 恢复占位符
-      Object.entries(escapeMap).forEach(([escaped, placeholder]) => {
-        result = result.replace(new RegExp(placeholder, 'g'), escaped.slice(1));
-      });
-
-      // 处理链接 [text](url)
-      result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-
-      // 处理图片 ![alt](url)
-      result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="markdown-img" />');
-
-      return result;
-    };
-
-    // 解析 Markdown 块
-    const parseBlocks = (lines) => {
-      const blocks = [];
-      let i = 0;
-
-      while (i < lines.length) {
-        const line = lines[i];
-        const trimmed = line.trim();
-
-        // 跳过空行
-        if (!trimmed) {
-          i++;
-          continue;
-        }
-
-        // 标题 (# Header)
-        const headerMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
-        if (headerMatch) {
-          const level = headerMatch[1].length;
-          blocks.push({ type: 'header', level, content: headerMatch[2] });
-          i++;
-          continue;
-        }
-
-        // 水平线 --- 或 *** 或 ___
-        if (/^([-*_]){3,}$/.test(trimmed)) {
-          blocks.push({ type: 'hr' });
-          i++;
-          continue;
-        }
-
-        // 引用块 > quote
-        if (trimmed.startsWith('>')) {
-          const quoteLines = [];
-          while (i < lines.length && lines[i].trim().startsWith('>')) {
-            quoteLines.push(lines[i].trim().slice(1).trim() || ' ');
-            i++;
-          }
-          blocks.push({ type: 'blockquote', content: quoteLines.join('\n') });
-          continue;
-        }
-
-        // 表格
-        if (trimmed.startsWith('|')) {
-          const tableLines = [];
-          while (i < lines.length && lines[i].trim().startsWith('|')) {
-            tableLines.push(lines[i].trim());
-            i++;
-          }
-          blocks.push({ type: 'table', content: tableLines.join('\n') });
-          continue;
-        }
-
-        // 无序列表 - item 或 * item 或 + item
-        if (/^[-*+]\s/.test(trimmed)) {
-          const listItems = [];
-          while (i < lines.length && /^[-*+]\s/.test(lines[i].trim())) {
-            let item = lines[i].trim().slice(2);
-            // 检查缩进子项
-            let indentLevel = 0;
-            const indentMatch = lines[i].match(/^(\s*)[-*+]\s/);
-            if (indentMatch) {
-              indentLevel = Math.floor(indentMatch[1].length / 2);
-            }
-            listItems.push({ indent: indentLevel, content: item });
-            i++;
-          }
-          blocks.push({ type: 'ul', items: listItems });
-          continue;
-        }
-
-        // 有序列表 1. item
-        if (/^\d+\.\s/.test(trimmed)) {
-          const listItems = [];
-          while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
-            const item = lines[i].trim().replace(/^\d+\.\s/, '');
-            listItems.push(item);
-            i++;
-          }
-          blocks.push({ type: 'ol', items: listItems });
-          continue;
-        }
-
-        // 段落
-        const paraLines = [];
-        while (i < lines.length && lines[i].trim() &&
-               !lines[i].trim().startsWith('#') &&
-               !lines[i].trim().startsWith('>') &&
-               !lines[i].trim().startsWith('|') &&
-               !/^[-*+]\s/.test(lines[i].trim()) &&
-               !/^\d+\.\s/.test(lines[i].trim()) &&
-               !/^([-*_]){3,}$/.test(lines[i].trim())) {
-          paraLines.push(lines[i]);
-          i++;
-        }
-        if (paraLines.length > 0) {
-          blocks.push({ type: 'paragraph', content: paraLines.join(' ') });
-        }
-      }
-
-      return blocks;
-    };
-
-    // 渲染表格
-    const renderTable = (tableContent) => {
-      const lines = tableContent.split('\n').filter(l => l.trim());
-      if (lines.length < 2) return null;
-
-      const parseRow = (line) => line.split('|').filter(c => c.trim() && c.trim() !== '---').map(c => c.trim());
-
-      const headerCells = parseRow(lines[0]);
-      const bodyRows = lines.slice(2).map(row => parseRow(row));
-
-      return (
-        <table className="markdown-table">
-          <thead>
-            <tr>
-              {headerCells.map((cell, ci) => <th key={ci} dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(cell) }} />)}
-            </tr>
-          </thead>
-          <tbody>
-            {bodyRows.map((row, ri) => (
-              <tr key={ri}>
-                {row.map((cell, ci) => <td key={ci} dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(cell) }} />)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      );
-    };
-
-    // 渲染列表
-    const renderList = (block) => {
-      if (block.type === 'ul') {
-        return (
-          <ul className="markdown-list markdown-ul">
-            {block.items.map((item, idx) => (
-              <li key={idx} style={{ marginLeft: item.indent * 20 }}>
-                <span dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(item.content) }} />
-              </li>
-            ))}
-          </ul>
-        );
-      }
-      if (block.type === 'ol') {
-        return (
-          <ol className="markdown-list markdown-ol">
-            {block.items.map((item, idx) => (
-              <li key={idx} dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(item.content) }} />
-            ))}
-          </ol>
-        );
-      }
-      return null;
-    };
-
-    // 渲染块
-    const renderBlock = (block, idx) => {
-      switch (block.type) {
-        case 'header':
-          const Tag = `h${block.level}`;
-          return <Tag key={idx} className={`markdown-h${block.level}`} dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(block.content) }} />;
-        case 'hr':
-          return <hr key={idx} className="markdown-hr" />;
-        case 'blockquote':
-          return <blockquote key={idx} className="markdown-blockquote" dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(block.content) }} />;
-        case 'table':
-          return <div key={idx} className="markdown-table-wrapper">{renderTable(block.content)}</div>;
-        case 'ul':
-        case 'ol':
-          return <div key={idx}>{renderList(block)}</div>;
-        case 'paragraph':
-          return <p key={idx} className="markdown-paragraph" dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(block.content) }} />;
-        default:
-          return null;
-      }
-    };
-
-    const lines = content.split('\n');
-    const blocks = parseBlocks(lines);
-
-    return (
-      <div className="markdown-body">
-        {blocks.map((block, idx) => renderBlock(block, idx))}
-      </div>
-    );
+      return <div className="markdown-body" dangerouslySetInnerHTML={{ __html: clean }} />;
+    } catch (error) {
+      console.error('[Markdown渲染] 解析失败:', error);
+      // 降级渲染：直接显示原始内容
+      return <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{content}</pre>;
+    }
   };
 
-  // 解析 AI 回复为分节格式
+  // 解析 AI 回复为分节格式（简化为直接返回整个内容）
   const parseInterpretation = (text) => {
     if (!text || typeof text !== 'string') {
       return [{ title: '综合解读', icon: '📖', content: String(text || '') }];
     }
 
-    // 定义分节模式：标题 + 内容
-    const sectionPatterns = [
-      { pattern: /【([^】]+)】/g, icon: '📖' },  // 【标题】
-      { pattern: /#([^#\n]+)#/g, icon: '📖' },  // #标题#
-      { pattern: /##\s*([^#\n]+)/g, icon: '📖' }, // ## 标题
-      { pattern: /\*\*([^*]+)\*\*/g, icon: '📖' }, // **标题**
-      { pattern: /建议[：:]/g, icon: '💡', title: '具体建议' },  // 建议：
-      { pattern: /需要注意[：:]/g, icon: '⚠️', title: '需要注意' },  // 需要注意：
-      { pattern: /未来[：:]/g, icon: '🔮', title: '未来展望' },  // 未来：
-      { pattern: /综合[分析解读][：:]/g, icon: '📖', title: '综合分析' },  // 综合分析：
-    ];
-
-    // 检查是否是 Markdown 表格行
-    const isMarkdownTableRow = (line) => {
-      const trimmed = line.trim();
-      return trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.includes('|');
-    };
-
-    // 检查是否是表格分隔行（如 | --- | --- |）
-    const isMarkdownTableDivider = (line) => {
-      const trimmed = line.trim();
-      return /^\|[\s-|]+\|$/.test(trimmed);
-    };
-
-    // 尝试按分节标题分割
-    const lines = text.split('\n');
-    const sections = [];
-    let currentSection = { title: '综合解读', icon: '📖', content: '' };
-    let inTable = false;
-    let tableBuffer = [];
-
-    lines.forEach(line => {
-      // 检查是否是分节标题
-      let isSectionTitle = false;
-      for (const sp of sectionPatterns) {
-        const match = line.match(sp.pattern);
-        if (match) {
-          // 结束当前表格（如果在进行中）
-          if (tableBuffer.length > 0) {
-            currentSection.content += '\n' + tableBuffer.join('\n');
-            tableBuffer = [];
-            inTable = false;
-          }
-          // 保存当前节
-          if (currentSection.content && currentSection.content.trim()) {
-            sections.push(currentSection);
-          }
-          // 开始新节
-          currentSection = {
-            title: (sp.title || (match[1] || '').trim() || '综合解读'),
-            icon: sp.icon,
-            content: ''
-          };
-          isSectionTitle = true;
-          break;
-        }
-      }
-
-      if (!isSectionTitle) {
-        // 检测表格行
-        if (isMarkdownTableRow(line) || isMarkdownTableDivider(line)) {
-          if (!inTable && currentSection.content.trim()) {
-            // 开始新表格前，先保存当前内容
-            sections.push(currentSection);
-            currentSection = { title: '综合解读', icon: '📖', content: '' };
-          }
-          inTable = true;
-          tableBuffer.push(line);
-        } else {
-          // 非表格行
-          if (inTable && tableBuffer.length > 0) {
-            // 结束表格，添加到内容
-            currentSection.content += (currentSection.content ? '\n' : '') + tableBuffer.join('\n');
-            tableBuffer = [];
-            inTable = false;
-          }
-          currentSection.content += (currentSection.content ? '\n' : '') + (line || '');
-        }
-      }
-    });
-
-    // 处理最后残留的表格
-    if (tableBuffer.length > 0) {
-      currentSection.content += '\n' + tableBuffer.join('\n');
-    }
-
-    // 添加最后一节
-    if (currentSection.content && currentSection.content.trim()) {
-      sections.push(currentSection);
-    }
-
-    // 如果没有分节，整个作为一节
-    if (sections.length === 0) {
-      sections.push({ title: '综合解读', icon: '📖', content: text });
-    }
-
-    return sections;
+    // 直接将整个文本作为一个 section 返回，由 Markdown 渲染处理格式
+    return [{ title: '综合解读', icon: '📖', content: text }];
   };
 
   if (loading) {
@@ -802,6 +498,14 @@ function Divination() {
                   position: c.position
                 })), null, 2)}</pre>
               </details>
+              {lastRequest.aiRawResponse && (
+                <details>
+                  <summary style={{ cursor: 'pointer', color: 'var(--color-secondary)' }}>AI 原始回复</summary>
+                  <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                    {lastRequest.aiRawResponse}
+                  </pre>
+                </details>
+              )}
             </div>
           )}
 

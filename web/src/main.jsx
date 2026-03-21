@@ -10,7 +10,7 @@ console.log('TarotQA starting...');
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <BrowserRouter basename="/tarotqa-web">
+      <BrowserRouter basename={import.meta.env.BASE_URL || '/'}>
         <App />
       </BrowserRouter>
     </ErrorBoundary>
