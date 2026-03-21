@@ -2,6 +2,8 @@
 
 纯前端静态Web应用，提供塔罗牌占卜服务。无需安装，直接在浏览器中使用。
 
+**在线体验**：https://imzhengyu.github.io/tarotqa-web/
+
 ## 功能特性
 
 - **78张完整塔罗牌**：大阿卡纳22张 + 小阿卡纳56张
@@ -12,6 +14,7 @@
 - **3D动画**：卡牌翻转动画、悬浮效果
 - **AI深度解读**：集成 MiniMax API，根据问题场景匹配合适的塔罗角色顾问，提供专业的深度解读
 - **Markdown渲染**：AI解读内容支持完整标准Markdown语法（加粗、斜体、列表、表格、引用等）
+- **速率限制**：AI深度解读3分钟冷却，防止滥用
 
 ## 技术栈
 
@@ -30,12 +33,13 @@ tarotqa-web/
 │   ├── src/
 │   │   ├── components/      # 组件：TarotCard, Layout, ScrollIndicator
 │   │   ├── pages/           # 页面：Home, Divination, Cards, Horoscope, Profile
-│   │   ├── services/         # api.js (本地JSON数据加载 + AI API调用)
+│   │   ├── services/        # api.js (本地JSON数据加载 + AI API调用)
 │   │   └── styles/           # global.css
 │   └── index.html
 ├── resources/
 │   ├── tarot-data.json       # 78张塔罗牌完整数据
 │   └── tarot-personas.md      # AI角色设定
+├── dist/                      # 构建产物（GitHub Pages部署目录）
 ├── SPEC.md                   # 项目规格说明书
 └── README.md
 ```
@@ -63,7 +67,7 @@ cd web
 npm run build
 ```
 
-构建产物在 `web/dist/` 目录，可直接部署到任意静态服务器。
+构建产物在 `dist/` 目录，可直接部署到 GitHub Pages 或任意静态服务器。
 
 ## 牌阵说明
 
@@ -84,11 +88,23 @@ npm run build
 
 ## AI 深度解读
 
-### 配置 API Key
+### 开箱即用
+
+部署版本已内置默认 API Key，可直接使用 AI 深度解读功能，无需自行配置。
+
+### 自定义 API Key（可选）
+
+如需使用自己的 API Key：
 
 1. 访问 [MiniMax Platform](https://platform.minimaxi.com) 注册并获取 API Key
 2. 在"我的"页面配置您的 API Key
-3. API Key 会安全存储在浏览器本地
+3. 自定义 Key 优先级高于默认 Key
+
+### 速率限制
+
+- 每3分钟只能发起一次 AI 深度解读请求
+- 按钮会显示剩余冷却时间
+- 倒计时结束后自动恢复
 
 ### AI 角色系统
 
@@ -99,7 +115,7 @@ npm run build
 | 综合顾问 | 通用问题 | 默认 |
 | 职涯发展顾问 | 事业抉择、工作问题 | 工作、事业、跳槽、面试 |
 | 爱情情感顾问 | 感情占卜、恋爱问题 | 爱情、感情、复合、桃花 |
-| 财富财务顾问 | 财运占卜、投资理财 | 金钱、财富、投资、理财 |
+| 财富财务顾问 | 财运占卜，投资理财 | 金钱、财富，投资、理财 |
 | 决策指引顾问 | 重大决策、选择困难 | 选择、决定、纠结 |
 | 综合运势顾问 | 综合运势分析 | 运势、运气、趋势 |
 
@@ -146,5 +162,5 @@ MIT
 
 ---
 
-*文档版本：v2.4*
-*最后更新：2026-03-20 22:30*
+*文档版本：v2.5*
+*最后更新：2026-03-21*
