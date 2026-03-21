@@ -14,8 +14,6 @@
     "lint:css:fix": "stylelint \"src/**/*.css\" --fix"
   },
   "dependencies": {
-    "@rolldown/binding-win32-x64-msvc": "^1.0.0-rc.10",
-    "@rollup/rollup-win32-x64-msvc": "^4.59.1",
     "axios": "^1.6.0",
     "dompurify": "^3.3.3",
     "markdown-it": "^14.1.1",
@@ -24,6 +22,10 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-msvc": "^1.0.0-rc.10",
+    "@rollup/rollup-win32-x64-msvc": "^4.59.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
