@@ -175,7 +175,11 @@ const api = {
 
   // AI 解读相关
   async getAIInterpretation(data) {
-    const apiKey = localStorage.getItem('minimax_api_key');
+    // 优先使用用户配置的 API Key，其次使用默认 Key
+    let apiKey = localStorage.getItem('minimax_api_key');
+    if (!apiKey) {
+      apiKey = import.meta.env.VITE_DEFAULT_API_KEY;
+    }
 
     // 错误场景1: API Key 未配置
     if (!apiKey) {
