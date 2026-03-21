@@ -79,10 +79,63 @@ function Divination() {
   const [aiError, setAiError] = useState(null);
   const [debugMode, setDebugMode] = useState(false);
   const [lastRequest, setLastRequest] = useState(null);
+  const [aiCooldown, setAiCooldown] = useState(0); // 剩余冷却秒数
+  const [showCooldownToast, setShowCooldownToast] = useState(false);
+
+  // AI 深度解读速率限制：3分钟冷却
+  const AI_COOLDOWN_SECONDS = 180;
+
+  // 检查是否可以发起 AI 请求
+  const canMakeAIRequest = () => {
+    const lastTime = localStorage.getItem('ai_last_request_time');
+    if (!lastTime) return true;
+    const elapsed = (Date.now() - parseInt(lastTime, 10)) / 1000;
+    return elapsed >= AI_COOLDOWN_SECONDS;
+  };
+
+  // 获取剩余冷却时间
+  const getRemainingCooldown = () => {
+    const lastTime = localStorage.getItem('ai_last_request_time');
+    if (!lastTime) return 0;
+    const elapsed = (Date.now() - parseInt(lastTime, 10)) / 1000;
+    return Math.max(0, Math.ceil(AI_COOLDOWN_SECONDS - elapsed));
+  };
+
+  // 启动冷却倒计时
+  const startCooldownTimer = () => {
+    const remaining = getRemainingCooldown();
+    if (remaining > 0) {
+      setAiCooldown(remaining);
+      setShowCooldownToast(true);
+    }
+  };
 
   useEffect(() => {
     loadCards();
+    // 检查初始冷却状态
+    if (!canMakeAIRequest()) {
+      startCooldownTimer();
+    }
   }, []);
+
+  // 冷却倒计时计时器
+  useEffect(() => {
+    if (aiCooldown <= 0) {
+      setShowCooldownToast(false);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      const remaining = getRemainingCooldown();
+      setAiCooldown(remaining);
+      if (remaining <= 0) {
+        setShowCooldownToast(false);
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [aiCooldown]);
 
   const loadCards = async () => {
     try {
@@ -143,8 +196,20 @@ function Divination() {
   };
 
   const handleAIInterpretation = async () => {
+    // 检查速率限制
+    if (!canMakeAIRequest()) {
+      const remaining = getRemainingCooldown();
+      setAiCooldown(remaining);
+      setShowCooldownToast(true);
+      setAiError(`请等待 ${remaining} 秒后再试`);
+      return;
+    }
+
     setAiLoading(true);
     setAiError(null);
+
+    // 记录请求时间
+    localStorage.setItem('ai_last_request_time', Date.now().toString());
 
     // 获取将使用的角色
     const persona = api.getRecommendedPersona(selectedSpread?.id, question);
@@ -524,6 +589,14 @@ function Divination() {
 
   return (
     <div className="divination">
+      {/* 冷却倒计时浮动提示 */}
+      {showCooldownToast && aiCooldown > 0 && (
+        <div className="cooldown-toast">
+          <span className="cooldown-icon">⏳</span>
+          <span className="cooldown-text">请等待 {aiCooldown}s 后再试</span>
+        </div>
+      )}
+
       <h1 className="page-title">占卜</h1>
 
       {step === 'select' && (
@@ -647,9 +720,9 @@ function Divination() {
             <button
               className="btn btn-primary"
               onClick={handleAIInterpretation}
-              disabled={aiLoading}
+              disabled={aiLoading || aiCooldown > 0}
             >
-              {aiLoading ? '解读中...' : 'AI深度解读'}
+              {aiLoading ? '解读中...' : aiCooldown > 0 ? `请等待 ${aiCooldown}s` : 'AI深度解读'}
             </button>
           </div>
 

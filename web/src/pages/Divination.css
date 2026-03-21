@@ -656,3 +656,42 @@
     align-items: center;
   }
 }
+
+/* 冷却倒计时浮动提示 */
+.cooldown-toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: rgba(26, 15, 46, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  animation: toastFadeIn 0.3s ease-out;
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.cooldown-icon {
+  font-size: 20px;
+}
+
+.cooldown-text {
+  color: var(--color-secondary);
+  font-size: 15px;
+  font-weight: 500;
+}
