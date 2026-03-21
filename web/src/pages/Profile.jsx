@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
-import useVisitStats from '../hooks/useVisitStats';
-import PieChart from '../components/PieChart';
 import './Profile.css';
 
 function Profile() {
-  const [activeTab, setActiveTab] = useState('api');
   const [user, setUser] = useState(null);
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -15,18 +13,6 @@ function Profile() {
   const [minimaxKey, setMinimaxKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [usingDefaultKey, setUsingDefaultKey] = useState(false);
-
-  const {
-    isInitialized,
-    stats,
-    incrementQuestionCount,
-    clearAllStats,
-    getTodayQuestions,
-    getWeekQuestions,
-    getRecentRecords,
-    getDeviceStatsWithPercentage,
-    getOsStatsWithPercentage
-  } = useVisitStats();
 
   useEffect(() => {
     checkLogin();
@@ -114,180 +100,7 @@ function Profile() {
     }
   };
 
-  const handleClearAllStats = () => {
-    if (window.confirm('确定要清除所有访问记录吗？此操作不可恢复。')) {
-      clearAllStats();
-      setMessage('访问记录已清除');
-    }
-  };
-
-  const formatTime = (isoString) => {
-    if (!isoString) return '-';
-    const date = new Date(isoString);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${month}-${day} ${hours}:${minutes}`;
-  };
-
-  const getDeviceIcon = (deviceType) => {
-    switch (deviceType) {
-      case 'desktop': return '💻';
-      case 'tablet': return '📱';
-      case 'mobile': return '📱';
-      default: return '💻';
-    }
-  };
-
-  const getDeviceLabel = (deviceType) => {
-    switch (deviceType) {
-      case 'desktop': return '桌面';
-      case 'tablet': return '平板';
-      case 'mobile': return '手机';
-      default: return '未知';
-    }
-  };
-
-  // Render API Settings Tab
-  const renderApiSettings = () => (
-    <>
-      {usingDefaultKey && (
-        <div className="default-key-indicator">
-          <span className="default-key-icon">✨</span>
-          <span>正在使用默认 API Key，可直接使用 AI 深度解读功能</span>
-        </div>
-      )}
-
-      <div className="api-key-form">
-        <input
-          type={showKey ? 'text' : 'password'}
-          placeholder="输入 MiniMax API Key"
-          value={minimaxKey}
-          onChange={(e) => setMinimaxKey(e.target.value)}
-        />
-        <button
-          className="btn btn-secondary"
-          onClick={() => setShowKey(!showKey)}
-        >
-          {showKey ? '隐藏' : '显示'}
-        </button>
-      </div>
-
-      <div className="api-key-actions">
-        <button
-          className="btn btn-primary"
-          onClick={saveMinimaxKey}
-        >
-          保存
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={clearMinimaxKey}
-        >
-          清除
-        </button>
-      </div>
-
-      <p className="api-key-hint">
-        API Key 获取地址：<a href="https://platform.minimaxi.com" target="_blank" rel="noopener noreferrer">platform.minimaxi.com</a>
-      </p>
-    </>
-  );
-
-  // Render Visit Stats Tab
-  const renderVisitStats = () => {
-    if (!isInitialized) {
-      return (
-        <div className="loading">
-          <div className="spinner"></div>
-        </div>
-      );
-    }
-
-    const totalSessions = stats.totalSessions;
-    const totalQuestions = stats.totalQuestions;
-    const avgPerSession = totalSessions > 0 ? (totalQuestions / totalSessions).toFixed(1) : '0.0';
-    const todayQuestions = getTodayQuestions();
-    const weekQuestions = getWeekQuestions();
-    const deviceStats = getDeviceStatsWithPercentage();
-    const osStats = getOsStatsWithPercentage();
-    const recentRecords = getRecentRecords(10);
-
-    return (
-      <div className="visit-stats">
-        {/* Overview Cards */}
-        <div className="stats-overview">
-          <div className="stat-card">
-            <span className="stat-value">{totalSessions}</span>
-            <span className="stat-label">总会话数</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-value">{totalQuestions}</span>
-            <span className="stat-label">总提问数</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-value">{todayQuestions}</span>
-            <span className="stat-label">今日提问</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-value">{weekQuestions}</span>
-            <span className="stat-label">本周提问</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-value">{avgPerSession}</span>
-            <span className="stat-label">平均/会话</span>
-          </div>
-        </div>
-
-        {/* Pie Charts */}
-        <div className="stats-charts">
-          <PieChart data={deviceStats} size={180} title="设备分布" />
-          <PieChart data={osStats} size={180} title="操作系统" />
-        </div>
-
-        {/* Recent Records */}
-        <div className="recent-records">
-          <h3 className="recent-records-title">最近访问记录</h3>
-          {recentRecords.length === 0 ? (
-            <p className="no-records">暂无访问记录</p>
-          ) : (
-            <div className="records-table">
-              <div className="records-header">
-                <span className="col-index">#</span>
-                <span className="col-time">访问时间</span>
-                <span className="col-device">设备</span>
-                <span className="col-questions">提问数</span>
-              </div>
-              {recentRecords.map((record, index) => (
-                <div key={record.sessionId} className="records-row">
-                  <span className="col-index">{recentRecords.length - index}</span>
-                  <span className="col-time">{formatTime(record.lastVisit)}</span>
-                  <span className="col-device">
-                    <span className="device-icon">{getDeviceIcon(record.deviceType)}</span>
-                    <span className="device-label">{getDeviceLabel(record.deviceType)}</span>
-                  </span>
-                  <span className="col-questions">{record.questionCount}次</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Clear Button */}
-        <div className="stats-actions">
-          <button
-            className="btn btn-secondary"
-            onClick={handleClearAllStats}
-          >
-            清除所有记录
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  if (user) {
+if (user) {
     return (
       <div className="profile">
         <h1 className="page-title">我的</h1>
@@ -377,26 +190,53 @@ function Profile() {
       </div>
 
       <div className="api-settings-card">
-        {/* Tab Switcher */}
-        <div className="settings-tabs">
+        <h2>API 设置</h2>
+
+        {usingDefaultKey && (
+          <div className="default-key-indicator">
+            <span className="default-key-icon">✨</span>
+            <span>正在使用默认 API Key，可直接使用 AI 深度解读功能</span>
+          </div>
+        )}
+
+        <div className="api-key-form">
+          <input
+            type={showKey ? 'text' : 'password'}
+            placeholder="输入 MiniMax API Key"
+            value={minimaxKey}
+            onChange={(e) => setMinimaxKey(e.target.value)}
+          />
           <button
-            className={`tab-btn ${activeTab === 'api' ? 'active' : ''}`}
-            onClick={() => setActiveTab('api')}
+            className="btn btn-secondary"
+            onClick={() => setShowKey(!showKey)}
           >
-            API设置
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
-            onClick={() => setActiveTab('stats')}
-          >
-            访问统计
+            {showKey ? '隐藏' : '显示'}
           </button>
         </div>
 
-        {/* Tab Content */}
-        <div className="settings-content">
-          {activeTab === 'api' && renderApiSettings()}
-          {activeTab === 'stats' && renderVisitStats()}
+        <div className="api-key-actions">
+          <button
+            className="btn btn-primary"
+            onClick={saveMinimaxKey}
+          >
+            保存
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={clearMinimaxKey}
+          >
+            清除
+          </button>
+        </div>
+
+        <p className="api-key-hint">
+          API Key 获取地址：<a href="https://platform.minimaxi.com" target="_blank" rel="noopener noreferrer">platform.minimaxi.com</a>
+        </p>
+
+        <div className="stats-link">
+          <Link to="/statistics" className="btn btn-secondary">
+            📊 查看访问统计
+          </Link>
         </div>
       </div>
     </div>

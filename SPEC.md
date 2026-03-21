@@ -550,9 +550,13 @@ Error:        #F44336 (红)
 ├── 运势页 (/horoscope)
 │   ├──  星座选择器
 │   └──  运势详情
-└── 我的页 (/profile)
-    ├──  API设置 (Tab)
-    └──  访问统计 (Tab)
+├── 我的页 (/profile)
+│   └──  API设置
+└── 统计页 (/statistics)
+    ├──  访问概览
+    ├──  设备分布饼图
+    ├──  操作系统饼图
+    └──  最近访问记录
 
 ### 4.4.1 全局 Footer
 
@@ -903,7 +907,8 @@ tarotqa-web/
 │   │   │   ├── Divination.jsx # 占卜页
 │   │   │   ├── Cards.jsx     # 牌库页
 │   │   │   ├── Horoscope.jsx # 运势页
-│   │   │   └── Profile.jsx   # 我的页
+│   │   │   ├── Profile.jsx   # 我的页
+│   │   │   └── Statistics.jsx # 统计页
 │   │   ├── services/        # API服务 (本地JSON加载)
 │   │   │   └── api.js       # 数据加载服务
 │   │   ├── styles/          # 样式文件

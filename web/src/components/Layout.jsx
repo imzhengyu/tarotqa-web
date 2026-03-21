@@ -28,6 +28,9 @@ function Layout() {
               <NavLink to="/horoscope" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 运势
               </NavLink>
+              <NavLink to="/statistics" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                统计
+              </NavLink>
               <NavLink to="/profile" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 我的
               </NavLink>
@@ -56,6 +59,10 @@ function Layout() {
           <NavLink to="/cards" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
             <span className="nav-icon">🃏</span>
             <span className="nav-label">牌库</span>
+          </NavLink>
+          <NavLink to="/statistics" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+            <span className="nav-icon">📊</span>
+            <span className="nav-label">统计</span>
           </NavLink>
           <NavLink to="/profile" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
             <span className="nav-icon">👤</span>

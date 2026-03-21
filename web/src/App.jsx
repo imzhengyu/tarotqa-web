@@ -4,6 +4,7 @@ import Divination from './pages/Divination';
 import Cards from './pages/Cards';
 import Horoscope from './pages/Horoscope';
 import Profile from './pages/Profile';
+import Statistics from './pages/Statistics';
 import Layout from './components/Layout';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="cards" element={<Cards />} />
         <Route path="horoscope" element={<Horoscope />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="statistics" element={<Statistics />} />
       </Route>
     </Routes>
   );
