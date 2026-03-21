@@ -86,8 +86,8 @@ function Divination() {
   // Visit stats tracking
   const { incrementQuestionCount } = useVisitStats();
 
-  // AI 深度解读速率限制：3分钟冷却
-  const AI_COOLDOWN_SECONDS = 180;
+  // AI 深度解读速率限制：60秒冷却
+  const AI_COOLDOWN_SECONDS = 60;
 
   // 检查是否可以发起 AI 请求
   const canMakeAIRequest = () => {
