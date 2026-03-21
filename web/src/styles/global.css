@@ -75,6 +75,13 @@ input, textarea {
   transform: translateY(-2px);
 }
 
+.btn-primary:disabled {
+  background: #666;
+  color: #999;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-secondary {
   background: transparent;
   border: 1px solid var(--color-secondary);
