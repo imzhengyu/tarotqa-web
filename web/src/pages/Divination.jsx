@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import MarkdownIt from 'markdown-it';
+import markdownitMark from 'markdown-it-mark';
 import DOMPurify from 'dompurify';
 import TarotCard from '../components/TarotCard';
 import api from '../services/api';
+import { spreads } from '../data/spreads';
 import useVisitStats from '../hooks/useVisitStats';
 import './Divination.css';
 
@@ -13,67 +15,20 @@ const md = new MarkdownIt({
   typographer: true
 });
 
-const spreads = [
-  {
-    id: 'single',
-    name: '单牌阵',
-    cards: 1,
-    desc: '快速简单占卜',
-    positions: [{ name: '核心问题' }]
-  },
-  {
-    id: 'three-cards',
-    name: '三牌阵',
-    cards: 3,
-    desc: '过去-现在-未来',
-    positions: [{ name: '过去' }, { name: '现在' }, { name: '未来' }]
-  },
-  {
-    id: 'celtic-cross',
-    name: '凯尔特十字',
-    cards: 10,
-    desc: '深度详细分析',
-    positions: [
-      { name: '核心问题' },
-      { name: '障碍' },
-      { name: '过去' },
-      { name: '现在' },
-      { name: '未来' },
-      { name: '自我' },
-      { name: '周围' },
-      { name: '希望/恐惧' },
-      { name: '结果' },
-      { name: '最终结局' }
-    ]
-  },
-  {
-    id: 'love-pyramid',
-    name: '爱情金字塔',
-    cards: 4,
-    desc: '情感专项',
-    positions: [
-      { name: '过去' },
-      { name: '现在' },
-      { name: '未来' },
-      { name: '结果' }
-    ]
-  },
-  {
-    id: 'horseshoe',
-    name: '马蹄铁牌阵',
-    cards: 7,
-    desc: '综合运势',
-    positions: [
-      { name: '过去' },
-      { name: '现在' },
-      { name: '未来' },
-      { name: '行动' },
-      { name: '环境' },
-      { name: '阻碍' },
-      { name: '结果' }
-    ]
-  },
-];
+// 添加扩展语法：==高亮==
+md.use(markdownitMark);
+
+// 启用表格支持
+md.enable('table');
+
+// 转换为 Divination 组件期望的格式
+const spreadList = Object.values(spreads).map(s => ({
+  id: s.id,
+  name: s.name,
+  cards: s.cardCount,
+  desc: s.description,
+  positions: s.positions.map(p => ({ name: p.name }))
+}));
 
 function Divination() {
   const [cards, setCards] = useState([]);
@@ -90,6 +45,7 @@ function Divination() {
   const [debugMode, setDebugMode] = useState(false);
   const [lastRequest, setLastRequest] = useState(null);
   const [aiCooldown, setAiCooldown] = useState(0); // 剩余冷却秒数
+  const [aiCooldownEnd, setAiCooldownEnd] = useState(0); // 冷却结束时间戳
   const [showCooldownToast, setShowCooldownToast] = useState(false);
 
   // Visit stats tracking
@@ -100,26 +56,28 @@ function Divination() {
 
   // 检查是否可以发起 AI 请求
   const canMakeAIRequest = () => {
-    const lastTime = localStorage.getItem('ai_last_request_time');
-    if (!lastTime) return true;
-    const elapsed = (Date.now() - parseInt(lastTime, 10)) / 1000;
-    return elapsed >= AI_COOLDOWN_SECONDS;
+    const endTime = localStorage.getItem('ai_cooldown_end');
+    if (!endTime) return true;
+    return Date.now() >= parseInt(endTime, 10);
   };
 
   // 获取剩余冷却时间
   const getRemainingCooldown = () => {
-    const lastTime = localStorage.getItem('ai_last_request_time');
-    if (!lastTime) return 0;
-    const elapsed = (Date.now() - parseInt(lastTime, 10)) / 1000;
-    return Math.max(0, Math.ceil(AI_COOLDOWN_SECONDS - elapsed));
+    if (aiCooldownEnd <= 0) return 0;
+    const remaining = Math.max(0, Math.ceil((aiCooldownEnd - Date.now()) / 1000));
+    return remaining;
   };
 
   // 启动冷却倒计时
   const startCooldownTimer = () => {
-    const remaining = getRemainingCooldown();
-    if (remaining > 0) {
-      setAiCooldown(remaining);
-      setShowCooldownToast(true);
+    const endTime = localStorage.getItem('ai_cooldown_end');
+    if (endTime) {
+      const remaining = Math.max(0, Math.ceil((parseInt(endTime, 10) - Date.now()) / 1000));
+      if (remaining > 0) {
+        setAiCooldownEnd(parseInt(endTime, 10));
+        setAiCooldown(remaining);
+        setShowCooldownToast(true);
+      }
     }
   };
 
@@ -131,24 +89,25 @@ function Divination() {
     }
   }, []);
 
-  // 冷却倒计时计时器
+  // 冷却倒计时计时器 - 使用 aiCooldownEnd 作为过期时间戳
   useEffect(() => {
-    if (aiCooldown <= 0) {
+    if (aiCooldownEnd <= 0) {
       setShowCooldownToast(false);
       return;
     }
 
     const timer = setInterval(() => {
-      const remaining = getRemainingCooldown();
+      const remaining = Math.max(0, Math.ceil((aiCooldownEnd - Date.now()) / 1000));
       setAiCooldown(remaining);
       if (remaining <= 0) {
         setShowCooldownToast(false);
+        setAiCooldownEnd(0);
         clearInterval(timer);
       }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [aiCooldown]);
+  }, [aiCooldownEnd]);
 
   const loadCards = async () => {
     try {
@@ -211,18 +170,19 @@ function Divination() {
   const handleAIInterpretation = async () => {
     // 检查速率限制
     if (!canMakeAIRequest()) {
-      const remaining = getRemainingCooldown();
-      setAiCooldown(remaining);
-      setShowCooldownToast(true);
+      const endTime = localStorage.getItem('ai_cooldown_end');
+      const remaining = endTime ? Math.max(0, Math.ceil((parseInt(endTime, 10) - Date.now()) / 1000)) : 0;
+      if (remaining > 0) {
+        setAiCooldownEnd(parseInt(endTime, 10));
+        setAiCooldown(remaining);
+        setShowCooldownToast(true);
+      }
       setAiError(`请等待 ${remaining} 秒后再试`);
       return;
     }
 
     setAiLoading(true);
     setAiError(null);
-
-    // 记录请求时间
-    localStorage.setItem('ai_last_request_time', Date.now().toString());
 
     // 获取将使用的角色
     const persona = api.getRecommendedPersona(selectedSpread?.id, question);
@@ -243,6 +203,10 @@ function Divination() {
         selectedSpread,
         drawnCards
       });
+      // API调用完成后设置冷却结束时间
+      const cooldownEnd = Date.now() + AI_COOLDOWN_SECONDS * 1000;
+      localStorage.setItem('ai_cooldown_end', cooldownEnd.toString());
+      setAiCooldownEnd(cooldownEnd);
       setAiInterpretation(interpretation);
       // Update debug info with raw AI response
       setLastRequest(prev => prev ? { ...prev, aiRawResponse: interpretation } : null);
@@ -250,6 +214,10 @@ function Divination() {
       incrementQuestionCount();
     } catch (error) {
       console.error('[AI解读] 捕获错误:', error.message);
+      // 即使请求失败也记录时间，防止频繁重试
+      const cooldownEnd = Date.now() + AI_COOLDOWN_SECONDS * 1000;
+      localStorage.setItem('ai_cooldown_end', cooldownEnd.toString());
+      setAiCooldownEnd(cooldownEnd);
       setAiError(error.message);
     } finally {
       setAiLoading(false);
@@ -270,7 +238,7 @@ function Divination() {
       const html = md.render(content);
       // 使用 DOMPurify 净化 HTML，防止 XSS 注入
       const clean = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'strong', 'em', 'del', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div'],
+        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'strong', 'em', 'del', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div', 'mark'],
         ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'target', 'rel', 'style']
       });
       return <div className="markdown-body" dangerouslySetInnerHTML={{ __html: clean }} />;
@@ -315,7 +283,7 @@ function Divination() {
         <section className="spread-select">
           <h2>选择牌阵</h2>
           <div className="spreads-list">
-            {spreads.map(spread => (
+            {spreadList.map(spread => (
               <div
                 key={spread.id}
                 className={`spread-item ${selectedSpread?.id === spread.id ? 'selected' : ''}`}
@@ -454,7 +422,7 @@ function Divination() {
                   <span>❓</span>
                   <span>您的提问</span>
                 </div>
-                <p className="question-text">"{question || '无特定问题，希望了解整体运势'}"</p>
+                <p className="question-text">&ldquo;{question || '无特定问题，希望了解整体运势'}&rdquo;</p>
                 <p className="question-meta">
                   牌阵：{selectedSpread?.name} | 抽牌：{drawnCards.length}张
                 </p>

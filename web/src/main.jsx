@@ -5,8 +5,6 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles/global.css';
 
-console.log('TarotQA starting...');
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
@@ -16,5 +14,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </ErrorBoundary>
   </React.StrictMode>
 );
-
-console.log('TarotQA mounted');

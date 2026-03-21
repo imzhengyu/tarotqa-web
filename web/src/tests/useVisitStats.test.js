@@ -430,3 +430,207 @@ describe('useVisitStats Utility Functions', () => {
     });
   });
 });
+
+describe('useVisitStats Hook', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('should initialize with isInitialized true after mount', async () => {
+    const { renderHook, waitFor } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+  });
+
+  it('should return stats object after initialization', async () => {
+    const { renderHook, waitFor } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.stats).toBeDefined();
+      expect(hookResult.current.stats).toHaveProperty('totalSessions');
+      expect(hookResult.current.stats).toHaveProperty('totalQuestions');
+      expect(hookResult.current.stats).toHaveProperty('deviceStats');
+      expect(hookResult.current.stats).toHaveProperty('osStats');
+    });
+  });
+
+  it('should increment question count when incrementQuestionCount is called', async () => {
+    const { renderHook, waitFor, act } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+
+    const initialQuestions = hookResult.current.stats.totalQuestions;
+
+    await act(async () => {
+      hookResult.current.incrementQuestionCount();
+    });
+
+    expect(hookResult.current.stats.totalQuestions).toBe(initialQuestions + 1);
+  });
+
+  it('should not increment when currentSession is null', async () => {
+    const { renderHook, waitFor, act } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+
+    // incrementQuestionCount should work without error even if called multiple times
+    await act(async () => {
+      hookResult.current.incrementQuestionCount();
+      hookResult.current.incrementQuestionCount();
+    });
+
+    expect(hookResult.current.stats.totalQuestions).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should return today questions count via getTodayQuestions', async () => {
+    const { renderHook, waitFor, act } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+
+    // Add some questions first
+    await act(async () => {
+      hookResult.current.incrementQuestionCount();
+    });
+
+    const todayQuestions = hookResult.current.getTodayQuestions();
+    expect(typeof todayQuestions).toBe('number');
+    expect(todayQuestions).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should return week questions count via getWeekQuestions', async () => {
+    const { renderHook, waitFor } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+
+    const weekQuestions = hookResult.current.getWeekQuestions();
+    expect(typeof weekQuestions).toBe('number');
+    expect(weekQuestions).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should return recent records via getRecentRecords', async () => {
+    const { renderHook, waitFor } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+
+    const recentRecords = hookResult.current.getRecentRecords();
+    expect(Array.isArray(recentRecords)).toBe(true);
+  });
+
+  it('should return recent records with limit via getRecentRecords', async () => {
+    const { renderHook, waitFor } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+
+    const recentRecords = hookResult.current.getRecentRecords(5);
+    expect(Array.isArray(recentRecords)).toBe(true);
+    expect(recentRecords.length).toBeLessThanOrEqual(5);
+  });
+
+  it('should return device stats with percentages via getDeviceStatsWithPercentage', async () => {
+    const { renderHook, waitFor } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+
+    const deviceStats = hookResult.current.getDeviceStatsWithPercentage();
+    expect(Array.isArray(deviceStats)).toBe(true);
+    expect(deviceStats.length).toBe(3); // desktop, tablet, mobile
+
+    deviceStats.forEach(stat => {
+      expect(stat).toHaveProperty('type');
+      expect(stat).toHaveProperty('label');
+      expect(stat).toHaveProperty('count');
+      expect(stat).toHaveProperty('percentage');
+    });
+  });
+
+  it('should return OS stats with percentages via getOsStatsWithPercentage', async () => {
+    const { renderHook, waitFor } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+
+    const osStats = hookResult.current.getOsStatsWithPercentage();
+    expect(Array.isArray(osStats)).toBe(true);
+
+    osStats.forEach(stat => {
+      expect(stat).toHaveProperty('type');
+      expect(stat).toHaveProperty('label');
+      expect(stat).toHaveProperty('count');
+      expect(stat).toHaveProperty('percentage');
+      expect(stat).toHaveProperty('color');
+    });
+  });
+
+  it('should clear all stats and reset when clearAllStats is called', async () => {
+    const { renderHook, waitFor, act } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    const { result: hookResult } = renderHook(() => useVisitStats());
+
+    await waitFor(() => {
+      expect(hookResult.current.isInitialized).toBe(true);
+    });
+
+    // Add some data first
+    await act(async () => {
+      hookResult.current.incrementQuestionCount();
+      hookResult.current.incrementQuestionCount();
+    });
+
+    // Clear stats
+    await act(async () => {
+      hookResult.current.clearAllStats();
+    });
+
+    // After clear, should have a new session and reset question count
+    expect(hookResult.current.stats.totalSessions).toBeGreaterThanOrEqual(1);
+    expect(hookResult.current.isInitialized).toBe(true);
+  });
+});

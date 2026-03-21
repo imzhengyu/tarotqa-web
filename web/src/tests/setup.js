@@ -9,3 +9,7 @@ afterEach(() => {
 
 // 全局 expect 扩展
 globalThis.expect = expect;
+
+// Vite 注入的全局变量
+globalThis.__APP_VERSION__ = '2.9.0';
+globalThis.__GIT_SHA__ = 'test1234';

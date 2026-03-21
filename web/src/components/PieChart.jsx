@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import './PieChart.css';
 
 function PieChart({ data, size = 200, title }) {
@@ -23,7 +24,8 @@ function PieChart({ data, size = 200, title }) {
     if (item.count === 0) return;
     const percentage = (item.count / total) * 100;
     const angle = (percentage / 100) * 360;
-    gradientParts.push(`${item.color} ${currentAngle}deg ${currentAngle + angle}deg`);
+    const color = item.color || '#666666';
+    gradientParts.push(`${color} ${currentAngle}deg ${currentAngle + angle}deg`);
     currentAngle += angle;
   });
 
@@ -49,22 +51,36 @@ function PieChart({ data, size = 200, title }) {
           </div>
         </div>
         <div className="pie-chart-legend">
-          {data.map((item, index) => (
-            <div key={index} className="pie-chart-legend-item">
-              <span
-                className="pie-chart-legend-color"
-                style={{ backgroundColor: item.color }}
-              />
-              <span className="pie-chart-legend-icon">{item.icon || ''}</span>
-              <span className="pie-chart-legend-label">{item.label}</span>
-              <span className="pie-chart-legend-value">{item.count}</span>
-              <span className="pie-chart-legend-percentage">{item.percentage}%</span>
-            </div>
-          ))}
+          {data.map((item, index) => {
+            const itemPercentage = total > 0 ? ((item.count / total) * 100).toFixed(1) : '0.0';
+            return (
+              <div key={index} className="pie-chart-legend-item">
+                <span
+                  className="pie-chart-legend-color"
+                  style={{ backgroundColor: item.color }}
+                />
+                <span className="pie-chart-legend-icon">{item.icon || ''}</span>
+                <span className="pie-chart-legend-label">{item.label}</span>
+                <span className="pie-chart-legend-value">{item.count}</span>
+                <span className="pie-chart-legend-percentage">{itemPercentage}%</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 }
+
+PieChart.propTypes = {
+  data: PropTypes.arrayOf(PropTypes.shape({
+    label: PropTypes.string.isRequired,
+    count: PropTypes.number.isRequired,
+    color: PropTypes.string,
+    icon: PropTypes.string
+  })),
+  size: PropTypes.number,
+  title: PropTypes.string
+};
 
 export default PieChart;

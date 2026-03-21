@@ -125,8 +125,7 @@
   }
 
   .pie-chart-legend {
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-flow: row wrap;
     justify-content: center;
     gap: 12px;
   }

@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
+import PropTypes from 'prop-types';
 import './TarotCard.css';
 
-function TarotCard({ card, faceUp = false, onClick, small = false, selected = false }) {
+const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small = false, selected = false }) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
-  const isReversed = card?.isReversed;
+  const isReversed = card?.isReversed ?? false;
   const showReversed = faceUp && isReversed;
 
   return (
@@ -22,20 +24,31 @@ function TarotCard({ card, faceUp = false, onClick, small = false, selected = fa
           {card && (
             <>
               <div className="card-image-container">
-                {!imageLoaded && (
+                {!imageLoaded && !imageError && (
                   <div className="card-image-placeholder">
                     <div className="placeholder-pattern"></div>
                   </div>
                 )}
-                <img
-                  src={card.localPath ? `${import.meta.env.BASE_URL}${card.localPath}` : card.imageUrl}
-                  alt={card.name}
-                  className="card-image"
-                  loading="lazy"
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageLoaded(true)}
-                  style={{ opacity: imageLoaded ? 1 : 0 }}
-                />
+                {imageError && (
+                  <div className="card-image-error">
+                    <span className="error-icon">🖼️</span>
+                    <span className="error-text">图片加载失败</span>
+                  </div>
+                )}
+                {!imageError && (
+                  <img
+                    src={card.localPath ? `${import.meta.env.BASE_URL}${card.localPath}` : card.imageUrl}
+                    alt={card.name}
+                    className="card-image"
+                    loading="lazy"
+                    onLoad={() => setImageLoaded(true)}
+                    onError={() => {
+                      setImageLoaded(true);
+                      setImageError(true);
+                    }}
+                    style={{ opacity: imageLoaded ? 1 : 0 }}
+                  />
+                )}
               </div>
               <div className="card-name-overlay">
                 <span>{card.name}</span>
@@ -46,6 +59,19 @@ function TarotCard({ card, faceUp = false, onClick, small = false, selected = fa
       </div>
     </div>
   );
-}
+});
+
+TarotCard.propTypes = {
+  card: PropTypes.shape({
+    name: PropTypes.string,
+    localPath: PropTypes.string,
+    imageUrl: PropTypes.string,
+    isReversed: PropTypes.bool
+  }),
+  faceUp: PropTypes.bool,
+  onClick: PropTypes.func,
+  small: PropTypes.bool,
+  selected: PropTypes.bool
+};
 
 export default TarotCard;

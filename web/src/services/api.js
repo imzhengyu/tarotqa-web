@@ -1,7 +1,15 @@
 // 本地数据加载服务 - 纯前端无需后端
 import tarotData from '../../../resources/tarot-data.json';
+import { spreads, getRecommendedPersona as getSpreadPersona } from '../data/spreads';
+import { personas, getPersona } from '../data/personas';
 
 const api = {
+  // 导出 personas 以保持向后兼容
+  personas,
+
+  // 导出 spreads 以保持向后兼容
+  spreads,
+
   // 获取所有塔罗牌
   async getCards() {
     return tarotData.cards;
@@ -151,12 +159,10 @@ const api = {
 
   // 认证相关 - 简化版本
   async sendCode(phone) {
-    console.log('短信验证码功能已简化');
     return { success: true };
   },
 
   async verifyCode(phone, code) {
-    console.log('登录功能已简化');
     return { success: true, token: 'demo-token' };
   },
 
@@ -304,124 +310,10 @@ const api = {
     return aiContent.trim();
   },
 
-  // 塔罗角色设定
-  personas: {
-    general: {
-      id: 'general',
-      name: '综合顾问',
-      description: '你是一位资深的塔罗牌解读师，拥有多年的占卜经验。你的解读风格：深入浅出，既专业又易懂；善于结合牌面正逆位解读其象征意义；关注牌与牌之间的关联性；提供积极正面的引导建议；回答使用中文。'
-    },
-    career: {
-      id: 'career',
-      name: '职涯发展顾问',
-      description: `你是一位专业的事业发展塔罗顾问。
-
-请按照以下步骤进行解读：
-
-1. 深入了解我的职业背景、目前状况和具体困扰
-2. 从以下维度解读牌面：
-   - 目前的职业状态和优势
-   - 面临的挑战和机会
-   - 适合的发展方向和策略
-   - 需要提升的能力或注意的事项
-   - 时机把握和行动建议
-3. 提供实用的职涯发展建议和具体行动计划
-
-请保持专业和务实的态度，重点关注可行性和实际操作建议。`
-    },
-    love: {
-      id: 'love',
-      name: '爱情情感顾问',
-      description: `你是一位专业的情感关系塔罗顾问，专注于爱情和感情问题的解读。
-
-解读维度：
-- 目前的感情状态和关系质量
-- 双方的优势和潜在矛盾
-- 影响感情发展的外部因素
-- 适合的关系模式和改进建议
-- 未来发展趋势和时机
-
-请以温暖、理解的态度提供建议，同时保持客观和真实。`
-    },
-    finance: {
-      id: 'finance',
-      name: '财富财务顾问',
-      description: `你是一位专业的财富运势塔罗顾问，专注于财务和财运方面的解读。
-
-解读维度：
-- 目前的财务状况和收支平衡
-- 理财优势和潜在风险
-- 适合的投资方向和策略
-- 财务决策的时机建议
-- 财富积累的长期规划
-
-请提供务实、可操作的财富管理建议。`
-    },
-    decision: {
-      id: 'decision',
-      name: '决策指引顾问',
-      description: `你是一位专业的决策指引塔罗顾问，擅长帮助用户理清复杂局面下的选择。
-
-解读维度：
-- 核心问题的本质分析
-- 各选项的利弊对比
-- 内心的真实诉求和恐惧
-- 隐藏的机遇和风险
-- 最佳决策时机和行动方案
-
-请帮助用户全面分析局势，做出明智选择。`
-    },
-    fortune: {
-      id: 'fortune',
-      name: '综合运势顾问',
-      description: `你是一位经验丰富的综合运势塔罗顾问，提供全方位的运势解读。
-
-解读维度：
-- 整体运势走向
-- 各领域发展（事业、感情、健康、财运）
-- 年度/月度重要时间节点
-- 需要特别注意的时期
-- 趋吉避凶的建议
-
-请提供全面而平衡的运势分析。`
-    }
-  },
-
-  // 根据牌阵ID获取推荐角色
+  // 获取推荐角色
   getRecommendedPersona(spreadId, question) {
-    const keywordMap = {
-      career: ['工作', '事业', '跳槽', '面试', '职场', '职业', '创业', '辞职', '加薪', '晋升'],
-      love: ['爱情', '感情', '恋人', '复合', '桃花', '婚姻', '约会', '暗恋', '表白', '分手'],
-      finance: ['金钱', '财富', '投资', '理财', '财运', '财务', '收入', '债务', '债务', '赚钱'],
-      decision: ['选择', '决定', '纠结', '两难', '犹豫', '决策'],
-      fortune: ['运势', '运气', '未来', '趋势', '年度', '月份']
-    };
-
-    const spreadPersonaMap = {
-      'single': 'general',
-      'three-cards': 'general',
-      'celtic_cross': 'decision',
-      'love-pyramid': 'love',
-      'horseshoe': 'fortune'
-    };
-
-    // 如果有问题，先检查关键词
-    if (question) {
-      const q = question.toLowerCase();
-      for (const [personaId, keywords] of Object.entries(keywordMap)) {
-        if (keywords.some(kw => q.includes(kw))) {
-          return this.personas[personaId];
-        }
-      }
-    }
-
-    // 其次按牌阵类型选择
-    if (spreadId && spreadPersonaMap[spreadId]) {
-      return this.personas[spreadPersonaMap[spreadId]];
-    }
-
-    // 默认使用综合顾问
-    return this.personas.general;
+    const personaId = getSpreadPersona(spreadId, question);
+    return getPersona(personaId);
   },
 
   buildTarotMessages(data) {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -14,6 +15,10 @@ class ErrorBoundary extends React.Component {
     console.error('React Error:', error, errorInfo);
   }
 
+  handleReset = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -25,20 +30,51 @@ class ErrorBoundary extends React.Component {
           minHeight: '100vh'
         }}>
           <h1 style={{ color: '#D4AF37', marginBottom: '20px' }}>出错了</h1>
-          <p style={{ color: '#B8A9C9' }}>{this.state.error?.message || 'Unknown error'}</p>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              marginTop: '20px',
+          <p style={{ color: '#B8A9C9', marginBottom: '24px' }}>
+            {this.state.error?.message || '发生了未知错误'}
+          </p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={this.handleReset}
+              style={{
+                padding: '12px 24px',
+                background: '#4CAF50',
+                border: 'none',
+                borderRadius: '8px',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              重试
+            </button>
+            <Link to="/" style={{
               padding: '12px 24px',
               background: '#D4AF37',
               border: 'none',
               borderRadius: '8px',
-              cursor: 'pointer'
-            }}
-          >
-            刷新页面
-          </button>
+              color: '#1A0F2E',
+              textDecoration: 'none',
+              fontSize: '14px',
+              display: 'inline-block'
+            }}>
+              返回首页
+            </Link>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                padding: '12px 24px',
+                background: 'transparent',
+                border: '1px solid #D4AF37',
+                borderRadius: '8px',
+                color: '#D4AF37',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              刷新页面
+            </button>
+          </div>
         </div>
       );
     }

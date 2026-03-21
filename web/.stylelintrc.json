@@ -1,0 +1,24 @@
+{
+  "extends": [
+    "stylelint-config-standard",
+    "stylelint-config-recess-order"
+  ],
+  "rules": {
+    "color-hex-length": "short",
+    "selector-class-pattern": "^[a-z][a-zA-Z0-9]*(-[a-z][a-zA-Z0-9]*)*$",
+    "selector-id-pattern": "^[a-z][a-zA-Z0-9]*(-[a-z][a-zA-Z0-9]*)*$",
+    "keyframes-name-pattern": "^[a-z][a-zA-Z0-9]*(-[a-z][a-zA-Z0-9]*)*$",
+    "property-no-vendor-prefix": null,
+    "value-no-vendor-prefix": null,
+    "no-descending-specificity": null,
+    "media-feature-range-notation": null,
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "order/properties-order": null
+  },
+  "ignoreFiles": [
+    "node_modules/**",
+    "dist/**",
+    "coverage/**"
+  ]
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import './Horoscope.css';
 
@@ -21,22 +21,25 @@ function Horoscope() {
   const [selected, setSelected] = useState('aries');
   const [horoscope, setHoroscope] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadHoroscope(selected);
-  }, [selected]);
-
-  const loadHoroscope = async (zodiac) => {
+  const loadHoroscope = useCallback(async (zodiac) => {
     setLoading(true);
+    setError(null);
     try {
       const data = await api.getHoroscope(zodiac);
       setHoroscope(data);
-    } catch (error) {
-      console.error('Failed to load horoscope:', error);
+    } catch (err) {
+      console.error('Failed to load horoscope:', err);
+      setError('加载失败，请稍后重试');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadHoroscope(selected);
+  }, [selected, loadHoroscope]);
 
   return (
     <div className="horoscope">
@@ -59,10 +62,17 @@ function Horoscope() {
         <div className="loading">
           <div className="spinner"></div>
         </div>
+      ) : error ? (
+        <div className="error-message">
+          <p>{error}</p>
+          <button className="btn btn-secondary" onClick={() => loadHoroscope(selected)}>
+            重试
+          </button>
+        </div>
       ) : horoscope ? (
         <div className="horoscope-content">
           <div className="horoscope-header">
-            <h2>{horoscope.zodiacName} {horoscope.date}</h2>
+            <h2>{horoscope.name}</h2>
           </div>
 
           <div className="horoscope-grid">

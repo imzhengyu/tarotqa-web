@@ -164,10 +164,6 @@ input, textarea {
     margin-bottom: 16px;
   }
 
-  /* 移动端主容器 */
-  .main {
-    padding: 20px 16px 80px;
-  }
 
   /* 移动端按钮全宽 */
   .btn {

@@ -78,7 +78,7 @@
 .card-group-header h2 {
   color: var(--color-secondary);
   font-size: 18px;
-  font-family: 'Cinzel', 'Georgia', serif;
+  font-family: Cinzel, Georgia, serif;
   margin: 0;
 }
 
@@ -128,7 +128,7 @@
   color: var(--color-text);
   font-size: 14px;
   margin-bottom: 4px;
-  font-family: 'Cinzel', 'Georgia', serif;
+  font-family: Cinzel, Georgia, serif;
 }
 
 .card-name-en {
@@ -144,10 +144,7 @@
 
 .card-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
@@ -250,35 +247,6 @@
   }
 }
 
-@media (max-width: 768px) {
-  .cards-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-
-  .card-item .tarot-card {
-    width: 100px;
-    height: 150px;
-  }
-
-  .card-group {
-    padding: 16px;
-  }
-
-  .card-modal-content {
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-  }
-
-  .card-detail {
-    text-align: center;
-  }
-
-  .card-tags {
-    justify-content: center;
-  }
-}
 
 @media (max-width: 480px) {
   .cards-grid {
@@ -304,7 +272,7 @@
   }
 }
 
-/* 移动端增强 */
+/* 移动端样式 */
 @media (max-width: 768px) {
   .cards {
     padding: 0 12px;

@@ -74,7 +74,7 @@ export const calculateOsStats = (records) => {
     Other: 0
   };
   records.forEach(record => {
-    if (stats.hasOwnProperty(record.osType)) {
+    if (Object.prototype.hasOwnProperty.call(stats, record.osType)) {
       stats[record.osType]++;
     } else {
       stats.Other++;
@@ -253,7 +253,6 @@ export function useVisitStats() {
   // Clear all stats
   const clearAllStats = useCallback(() => {
     const initial = createInitialStats();
-    setStatsData(initial);
     setCurrentSession(null);
     localStorage.removeItem(STORAGE_KEY);
 
@@ -327,16 +326,16 @@ export function useVisitStats() {
 
     if (total === 0) {
       return [
-        { type: 'desktop', label: '桌面', icon: '💻', count: 0, percentage: 0 },
-        { type: 'tablet', label: '平板', icon: '📱', count: 0, percentage: 0 },
-        { type: 'mobile', label: '手机', icon: '📱', count: 0, percentage: 0 }
+        { type: 'desktop', label: '桌面', icon: '💻', count: 0, percentage: 0, color: '#D4AF37' },
+        { type: 'tablet', label: '平板', icon: '📱', count: 0, percentage: 0, color: '#8B0000' },
+        { type: 'mobile', label: '手机', icon: '📱', count: 0, percentage: 0, color: '#2D1B4E' }
       ];
     }
 
     return [
-      { type: 'desktop', label: '桌面', icon: '💻', count: statsData.stats.deviceStats.desktop, percentage: Math.round((statsData.stats.deviceStats.desktop / total) * 100) },
-      { type: 'tablet', label: '平板', icon: '📱', count: statsData.stats.deviceStats.tablet, percentage: Math.round((statsData.stats.deviceStats.tablet / total) * 100) },
-      { type: 'mobile', label: '手机', icon: '📱', count: statsData.stats.deviceStats.mobile, percentage: Math.round((statsData.stats.deviceStats.mobile / total) * 100) }
+      { type: 'desktop', label: '桌面', icon: '💻', count: statsData.stats.deviceStats.desktop, percentage: Math.round((statsData.stats.deviceStats.desktop / total) * 100), color: '#D4AF37' },
+      { type: 'tablet', label: '平板', icon: '📱', count: statsData.stats.deviceStats.tablet, percentage: Math.round((statsData.stats.deviceStats.tablet / total) * 100), color: '#8B0000' },
+      { type: 'mobile', label: '手机', icon: '📱', count: statsData.stats.deviceStats.mobile, percentage: Math.round((statsData.stats.deviceStats.mobile / total) * 100), color: '#2D1B4E' }
     ];
   }, [statsData]);
 

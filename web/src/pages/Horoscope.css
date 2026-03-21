@@ -108,6 +108,17 @@
   font-weight: bold;
 }
 
+.error-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-error);
+}
+
+.error-message p {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
 @media (max-width: 768px) {
   .horoscope-grid {
     grid-template-columns: 1fr;
