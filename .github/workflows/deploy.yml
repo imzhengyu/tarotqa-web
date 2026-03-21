@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd web
-          npm install
+          npm install --include=optional
 
       - name: Build
         run: |
