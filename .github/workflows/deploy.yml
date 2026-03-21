@@ -43,6 +43,7 @@ jobs:
           npm run build
         env:
           VITE_DEFAULT_API_KEY: ${{ secrets.DEFAULT_MINIMAX_API_KEY }}
+          VITE_GIT_SHA: ${{ github.sha }}
 
       - name: Deploy
         uses: actions/upload-pages-artifact@v3

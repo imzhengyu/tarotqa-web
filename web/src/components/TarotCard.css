@@ -163,3 +163,45 @@
 .tarot-card.small .card-name-overlay {
   font-size: 8px;
 }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .tarot-card {
+    width: 100px;
+    height: 150px;
+  }
+
+  .tarot-card.small {
+    width: 70px;
+    height: 105px;
+  }
+
+  .tarot-card:hover {
+    transform: none;
+  }
+
+  .tarot-card.selected {
+    transform: translateY(-8px);
+  }
+
+  .card-name-overlay {
+    font-size: 9px;
+  }
+
+  .tarot-card.small .card-name-overlay {
+    font-size: 7px;
+  }
+}
+
+/* 手机端适配 */
+@media (max-width: 480px) {
+  .tarot-card {
+    width: 85px;
+    height: 128px;
+  }
+
+  .tarot-card.small {
+    width: 60px;
+    height: 90px;
+  }
+}

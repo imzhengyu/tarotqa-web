@@ -10,6 +10,8 @@
 
 ### 支持平台
 - **Web浏览器**: 面向Windows/macOS/Linux用户，支持Chrome、Firefox、Safari、Edge
+- **移动端浏览器**: 面向iOS/Android用户，支持Safari Mobile、Chrome Mobile、Firefox Mobile
+- **响应式设计**: 自动检测设备类型，适配桌面/平板/手机三种屏幕尺寸
 
 ### 核心价值
 - 真实塔罗牌图片 + 专业牌义解读
@@ -322,6 +324,177 @@ AI 返回的内容支持完整标准 Markdown 语法渲染：
 | 链接 | `[text](url)` | 金色文字，悬停下划线 |
 | 图片 | `![alt](url)` | 圆角，最大宽度100% |
 
+### 3.7 访问记录与统计
+
+#### 3.7.1 功能概述
+
+在"我的"页面新增"访问统计" Tab，展示用户的占卜访问记录和统计数据。
+
+**设计原则**：
+- 隐私优先：不记录具体提问内容
+- 数据最小化：仅收集必要的统计信息
+- 本地存储：数据存储在 localStorage，支持清除
+- 实时更新：设备统计每小时重新计算并存储
+
+#### 3.7.2 记录数据
+
+**访问记录项 (VisitRecord)**：
+```javascript
+{
+  sessionId: String,      // 会话ID（UUID）
+  anonymizedIp: String,   // 脱敏IP（如 "202.199.*.*"）
+  questionCount: Number,  // 该会话提问次数
+  firstVisit: String,     // 首次访问时间 (ISO 8601)
+  lastVisit: String,      // 最后访问时间 (ISO 8601)
+  deviceType: String,     // 'desktop' | 'tablet' | 'mobile'
+  osType: String,         // 'Windows' | 'macOS' | 'Linux' | 'Android' | 'iOS' | 'Other'
+  browser: String         // 'Chrome' | 'Firefox' | 'Safari' | 'Edge' | 'Other'
+}
+```
+
+**脱敏规则**：
+- IPv4：保留前两段，后两段替换为 `*`（如 `202.199.*.*`）
+- OS 类型从 User-Agent 中提取，不存储完整字符串
+- 浏览器类型从 User-Agent 中提取，不存储完整字符串
+- 会话ID使用 UUID v4，不关联真实身份
+
+#### 3.7.3 统计数据展示
+
+**概览卡片**：
+| 统计项 | 说明 |
+|--------|------|
+| 总会话数 | 用户创建的总会话数 |
+| 总提问数 | 所有会话的提问次数累计 |
+| 今日提问数 | 当天0点至当前的提问数 |
+| 本周提问数 | 本周一0点至当前的提问数 |
+| 平均每会话提问 | 总提问数 / 总会话数（保留1位小数） |
+
+**设备分布统计（饼图）**：
+| 设备类型 | 图标 | 说明 |
+|----------|------|------|
+| 桌面 (Desktop) | 💻 | Windows/macOS/Linux |
+| 平板 (Tablet) | 📱 | iPad/Android Pad |
+| 手机 (Mobile) | 📱 | iPhone/Android Phone |
+
+**饼图展示规范**：
+- 尺寸：200x200px（桌面）/ 160x160px（移动端）
+- 颜色区分：
+  - 桌面：#D4AF37 (金色)
+  - 平板：#8B0000 (暗红)
+  - 手机：#2D1B4E (深紫)
+- 悬停显示百分比和具体数量
+- 圆环样式，中心显示总数
+
+**OS 分布统计（饼图）**：
+| 操作系统 | 颜色 |
+|----------|------|
+| Windows | #0078D4 |
+| macOS | #333333 |
+| Linux | #FCC624 |
+| Android | #3DDC84 |
+| iOS | #A2AAAD |
+
+**UI 布局**：
+```
+┌─────────────────────────────────────────┐
+│  🔮 TarotQA                    [首页] │
+├─────────────────────────────────────────┤
+│  [API设置]  [访问统计]                  │ ← Tab 切换
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐  │
+│  │总会话数 │ │总提问数 │ │今日提问 │  │
+│  │   12    │ │   28    │ │    3    │  │
+│  └─────────┘ └─────────┘ └─────────┘  │
+│                                         │
+│  ┌─────────┐ ┌─────────┐               │
+│  │本周提问 │ │平均会话 │               │
+│  │    8    │ │   2.3   │               │
+│  └─────────┘ └─────────┘               │
+│                                         │
+│  ┌───────────────┐ ┌───────────────┐  │
+│  │  设备分布饼图  │ │  OS分布饼图    │  │
+│  │    [饼图]     │ │   [饼图]      │  │
+│  │  💻 45%       │ │  Android 40%  │  │
+│  │  📱 35%       │ │  iOS 35%      │  │
+│  │  💻 20%       │ │  Windows 25%  │  │
+│  └───────────────┘ └───────────────┘  │
+│                                         │
+│  最近访问记录                           │
+│  ┌─────────────────────────────────────┐│
+│  │ #1   03-21 14:30   💻 桌面   3次   ││
+│  │ #2   03-20 09:15   📱 Android 1次  ││
+│  │ #3   03-19 21:42   📱 iOS    2次   ││
+│  │ ...                                ││
+│  └─────────────────────────────────────┘│
+│                                         │
+│  [清除所有记录]                         │
+└─────────────────────────────────────────┘
+```
+
+**不记录以下内容**：
+- ❌ 具体问题内容
+- ❌ 牌阵选择详情
+- ❌ 抽牌结果
+- ❌ AI 解读内容
+- ❌ 完整 IP 地址
+- ❌ 完整 User-Agent
+
+#### 3.7.4 存储方案
+
+**localStorage Key**: `tarotqa_visit_stats`
+
+**数据结构**：
+```javascript
+{
+  version: "1.1",           // 数据版本号，用于迁移
+  records: [VisitRecord],   // 访问记录数组
+  stats: {
+    totalSessions: Number,
+    totalQuestions: Number,
+    deviceStats: {
+      desktop: Number,      // 桌面会话数
+      tablet: Number,        // 平板会话数
+      mobile: Number         // 手机会话数
+    },
+    osStats: {
+      Windows: Number,
+      macOS: Number,
+      Linux: Number,
+      Android: Number,
+      iOS: Number,
+      Other: Number
+    },
+    lastUpdated: String,     // ISO 8601
+    lastDeviceStatsUpdate: String  // 上次设备统计更新时间
+  }
+}
+```
+
+**更新频率**：
+- `stats.deviceStats` 和 `stats.osStats` 每小时更新一次
+- 存储 `lastDeviceStatsUpdate` 时间戳，避免频繁重算
+- 页面加载时检查是否超过1小时，超过则重新计算并更新
+
+**存储限制**：
+- 最多保留 100 条会话记录
+- 超过时自动清除最早的记录
+- 支持一键清除所有数据
+
+#### 3.7.5 记录触发时机
+
+**创建新会话**：
+- 首次访问网站时（localStorage 无记录）
+- 会生成新 sessionId 并记录首次访问时间
+
+**更新会话记录**：
+- 用户点击"AI深度解读"按钮时，questionCount +1
+- 每次页面加载时更新 lastVisit、deviceType、osType 信息
+
+**更新设备统计**：
+- 页面加载时检查距离上次更新是否超过1小时
+- 超过1小时则重新遍历 records 计算 deviceStats 和 osStats
+
 ---
 
 ## 4. UI/UX 设计规范
@@ -378,7 +551,82 @@ Error:        #F44336 (红)
 │   ├──  星座选择器
 │   └──  运势详情
 └── 我的页 (/profile)
-    └──  登录入口
+    ├──  API设置 (Tab)
+    └──  访问统计 (Tab)
+
+### 4.4.1 全局 Footer
+
+所有页面底部统一显示版权信息和版本信息。
+
+**显示内容**：
+- 版权声明：`© 2026 TarotQA - AI塔罗占卜`
+- 发布版本号：`v{version}`（从 package.json 读取，与 SPEC.md 版本对齐）
+- Git Build ID：`({git-sha})`（GitHub Actions 构建时注入，显示 commit SHA 前8位）
+
+**Footer 显示格式**：
+```
+© 2026 TarotQA - AI塔罗占卜 v2.9 (a1b2c3d4)
+```
+
+**版本号规范**：
+- package.json version 与 SPEC.md 版本号保持一致
+- 每次发布前需同步更新 package.json 和 SPEC.md
+- Git SHA 通过 GitHub Actions 环境变量 `VITE_GIT_SHA` 注入
+
+**构建时注入**：
+```yaml
+# GitHub Actions workflow
+- name: Build
+  run: npm run build
+  env:
+    VITE_GIT_SHA: ${{ github.sha }}
+```
+
+**Vite 环境变量配置**：
+```javascript
+// vite.config.js
+define: {
+  __APP_VERSION__: JSON.stringify(version),
+  __GIT_SHA__: JSON.stringify(process.env.VITE_GIT_SHA || 'local')
+}
+```
+
+**Footer 样式**：
+| 元素 | 样式 |
+|------|------|
+| 位置 | 页面最底部，水平居中 |
+| 字号 | 14px |
+| 颜色 | `--color-text-secondary` (#B8A9C9) |
+| 上边距 | 20px |
+| 下边距 | 桌面端 20px，移动端隐藏（由底部导航占用） |
+| 边框 | 顶部 1px solid rgba(212, 175, 55, 0.2) |
+
+**移动端适配**：
+- 移动端隐藏 footer（由底部固定导航栏占用空间）
+- 使用 CSS `@media (max-width: 768px)` 控制显隐
+
+**Layout 组件实现**：
+```jsx
+<footer className="footer">
+  <p>© 2026 TarotQA - AI塔罗占卜 v{__APP_VERSION__} ({__GIT_SHA__.slice(0, 8)})</p>
+</footer>
+```
+
+**CSS 样式**：
+```css
+.footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+@media (max-width: 768px) {
+  .footer {
+    display: none;
+  }
+}
 ```
 
 ### 4.5 占卜页交互规范
@@ -497,6 +745,118 @@ Error:        #F44336 (红)
 - 样式：金色渐变从上到下
 - 圆角：左右圆角 4px
 
+### 4.7 移动端浏览器检测与适配
+
+#### 4.7.1 设备检测方案
+
+**检测方式**: 使用 `navigator.userAgent` 进行浏览器和设备类型检测
+
+**检测规则**:
+```javascript
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isAndroid = /Android/i.test(navigator.userAgent);
+```
+
+**设备分类**:
+| 设备类型 | 屏幕宽度 | 布局模式 |
+|----------|----------|----------|
+| 桌面 (Desktop) | ≥1024px | 多列网格，完整导航 |
+| 平板 (Tablet) | 768px - 1023px | 中等密度，两列网格 |
+| 手机 (Mobile) | <768px | 单列堆叠，底部导航 |
+
+#### 4.7.2 移动端 UI 适配规范
+
+**触摸优化**:
+- 按钮最小点击区域: 44x44px (Apple HIG 标准)
+- 卡牌最小点击区域: 80x120px
+- 元素间距增加: 桌面间距 × 1.5
+- 移除 hover 依赖的交互（移动端无 hover）
+
+**布局调整**:
+| 元素 | 桌面端 | 移动端 |
+|------|--------|--------|
+| 导航栏 | 顶部水平排列 | 底部固定标签栏 |
+| 卡牌网格 | 3-5列 | 1-2列 |
+| 卡牌尺寸 | 200x300px | 120x180px |
+| 牌阵选择 | 2-3列网格 | 单列堆叠 |
+| AI解读按钮 | 页面底部固定 | 全宽底部固定 |
+
+**移动端特定样式**:
+```css
+@media (max-width: 768px) {
+  /* 移除桌面端装饰元素 */
+  .scroll-indicator { display: none; }
+
+  /* 全宽按钮 */
+  .action-button { width: 100%; margin: 8px 0; }
+
+  /* 移动端字体缩小 */
+  .page-title { font-size: 24px; }
+
+  /* 移动端卡牌网格 */
+  .card-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+  /* 移动端底部导航 */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+    background: rgba(45, 27, 78, 0.95);
+    border-top: 1px solid var(--color-secondary);
+    z-index: 100;
+  }
+}
+```
+
+**移动端性能优化**:
+- 禁用不必要的动画（洗牌动画）
+- 使用 `will-change` 优化动画性能
+- 图片使用懒加载
+- 减少 DOM 节点数量
+
+#### 4.7.3 各页面移动端适配
+
+| 页面 | 桌面布局 | 移动端适配 |
+|------|----------|-----------|
+| 首页 | 轮播banner + 功能卡片水平排列 | 垂直堆叠，轮播改为单张展示 |
+| 占卜页 | 左侧问题，右侧牌阵 | 全宽表单，牌阵单列选择 |
+| 抽牌页 | 牌堆居中，已抽牌在上方 | 牌堆上方，已抽牌水平滚动 |
+| 结果页 | 卡牌网格3列 | 卡牌网格2列，AI按钮固定底部 |
+| 牌库页 | 5列卡片网格 | 2列网格，分组折叠 |
+| 运势页 | 12星座3x4网格 | 3x4网格保持，但缩小间距 |
+| 我的页 | 居中表单 | 全宽表单 |
+
+#### 4.7.4 移动端状态栏
+
+**底部导航栏** (移动端专用):
+- 位置: 屏幕底部固定
+- 高度: 56px + safe-area-inset-bottom
+- 图标: 4个导航项（首页、占卜、牌库、我的）
+- 激活状态: 金色图标 + 文字
+
+**移动端浮动提示**:
+- 位置: 顶部偏移 20px
+- 字号: 14px
+- 内边距: 8px 16px
+
+#### 4.7.5 安全区域适配
+
+iOS Safari 等设备需要适配刘海屏和圆角屏：
+
+```css
+/* 适配 iOS 安全区域 */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+```
+
 #### 各页面首屏要求
 
 | 页面 | 必须首屏可见 | 可折叠/次屏 |
@@ -604,9 +964,10 @@ tarotqa-web/
 
 ### Phase 4: 测试与优化 🚧 进行中
 - [x] AI 深度解读功能
+- [x] 响应式布局适配（移动端UI）
+- [x] 访问记录与统计功能
 - [ ] 功能测试验证
 - [ ] 浏览器兼容性测试
-- [ ] 响应式布局适配
 - [ ] 性能优化
 
 ---
@@ -621,7 +982,7 @@ tarotqa-web/
 
 ---
 
-*文档版本：v2.5*
+*文档版本：v2.9*
 *创建日期：2026-03-20*
 *更新日期：2026-03-21*
-*重大变更：添加AI深度解读速率限制（3分钟冷却），按钮显示倒计时*
+*重大变更：所有页面底部增加版权信息和发布版本信息*

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import TarotCard from '../components/TarotCard';
 import api from '../services/api';
+import useVisitStats from '../hooks/useVisitStats';
 import './Divination.css';
 
 const spreads = [
@@ -81,6 +82,9 @@ function Divination() {
   const [lastRequest, setLastRequest] = useState(null);
   const [aiCooldown, setAiCooldown] = useState(0); // 剩余冷却秒数
   const [showCooldownToast, setShowCooldownToast] = useState(false);
+
+  // Visit stats tracking
+  const { incrementQuestionCount } = useVisitStats();
 
   // AI 深度解读速率限制：3分钟冷却
   const AI_COOLDOWN_SECONDS = 180;
@@ -231,6 +235,8 @@ function Divination() {
         drawnCards
       });
       setAiInterpretation(interpretation);
+      // Increment question count for visit stats
+      incrementQuestionCount();
     } catch (error) {
       console.error('[AI解读] 捕获错误:', error.message);
       setAiError(error.message);

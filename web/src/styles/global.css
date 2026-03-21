@@ -149,3 +149,84 @@ input, textarea {
   0%, 100% { transform: translate(-50%, -50%) translateY(0); }
   50% { transform: translate(-50%, -50%) translateY(20px); }
 }
+
+/* ==================== 移动端适配样式 ==================== */
+
+@media (max-width: 768px) {
+  /* 隐藏桌面端滚动指示器 */
+  .scroll-indicator {
+    display: none;
+  }
+
+  /* 移动端页面标题 */
+  .page-title {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+
+  /* 移动端主容器 */
+  .main {
+    padding: 20px 16px 80px;
+  }
+
+  /* 移动端按钮全宽 */
+  .btn {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+
+  .btn + .btn {
+    margin-top: 12px;
+  }
+
+  /* 移动端卡片网格 */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* 移动端容器内边距 */
+  .container {
+    padding: 0 16px;
+  }
+
+  /* 移动端弹窗/模态框 */
+  .modal-content,
+  .card {
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  /* 移动端表单 */
+  input, textarea {
+    font-size: 16px; /* 防止iOS自动缩放 */
+  }
+
+  textarea {
+    min-height: 120px;
+  }
+
+  /* 隐藏桌面端footer */
+  .footer {
+    display: none;
+  }
+}
+
+/* iOS安全区域适配 */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 768px) {
+    .main {
+      padding-bottom: calc(70px + env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* 平板适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}

@@ -695,3 +695,181 @@
   font-size: 15px;
   font-weight: 500;
 }
+
+/* ==================== 移动端适配 ==================== */
+
+@media (max-width: 768px) {
+  .divination {
+    padding: 0 12px;
+  }
+
+  .divination h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  /* 牌阵选择 - 移动端单列 */
+  .spread-select {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .spread-select .spreads-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .spread-select .action-bar {
+    width: 100%;
+    min-width: unset;
+    flex-direction: row;
+  }
+
+  .spread-select .action-bar .btn {
+    flex: 1;
+  }
+
+  .spread-item {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .spread-item h3 {
+    font-size: 16px;
+  }
+
+  .spread-item p {
+    font-size: 13px;
+  }
+
+  /* 问题输入 - 移动端全宽 */
+  .question-input .action-bar {
+    flex-direction: column-reverse;
+    gap: 12px;
+    max-width: 100%;
+  }
+
+  .question-input .action-bar .btn {
+    width: 100%;
+  }
+
+  .textarea-wrapper {
+    margin-bottom: 16px;
+  }
+
+  /* 抽牌区域 */
+  .draw-cards h2 {
+    font-size: 18px;
+  }
+
+  .draw-progress {
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+
+  .deck-area {
+    margin-bottom: 24px;
+  }
+
+  .deck {
+    transform: scale(0.9);
+  }
+
+  .drawn-cards h3 {
+    font-size: 16px;
+  }
+
+  .drawn-list {
+    gap: 8px;
+  }
+
+  /* 结果页面 */
+  .result {
+    padding: 0 8px;
+  }
+
+  .result-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .result-card {
+    padding: 12px;
+    min-width: unset;
+  }
+
+  .result-card .tarot-card {
+    width: 120px;
+    height: 180px;
+  }
+
+  .result-card-info h4 {
+    font-size: 14px;
+  }
+
+  .card-meaning {
+    font-size: 11px;
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* 结果操作按钮 - 移动端固定底部 */
+  .result-actions {
+    position: fixed;
+    bottom: 70px;
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    background: rgba(26, 15, 46, 0.98);
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
+    flex-direction: column;
+    gap: 10px;
+    z-index: 99;
+  }
+
+  .result-actions .btn {
+    width: 100%;
+  }
+
+  /* AI解读区域 */
+  .ai-interpretation {
+    padding: 16px;
+    margin-bottom: 100px;
+  }
+
+  .interpretation-section-content {
+    font-size: 13px;
+  }
+
+  /* 冷却提示 - 移动端顶部偏移 */
+  .cooldown-toast {
+    top: 70px;
+    padding: 10px 16px;
+  }
+
+  /* 调试面板 */
+  .debug-toggle {
+    margin-bottom: 80px;
+  }
+}
+
+/* 手机端小屏适配 */
+@media (max-width: 480px) {
+  .result-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .result-card {
+    width: 100%;
+  }
+
+  .result-card .tarot-card {
+    width: 140px;
+    height: 210px;
+  }
+}
