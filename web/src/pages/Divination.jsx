@@ -502,6 +502,10 @@ function Divination() {
       { pattern: /#([^#\n]+)#/g, icon: '📖' },  // #标题#
       { pattern: /##\s*([^#\n]+)/g, icon: '📖' }, // ## 标题
       { pattern: /\*\*([^*]+)\*\*/g, icon: '📖' }, // **标题**
+      { pattern: /建议[：:]/g, icon: '💡', title: '具体建议' },  // 建议：
+      { pattern: /需要注意[：:]/g, icon: '⚠️', title: '需要注意' },  // 需要注意：
+      { pattern: /未来[：:]/g, icon: '🔮', title: '未来展望' },  // 未来：
+      { pattern: /综合[分析解读][：:]/g, icon: '📖', title: '综合分析' },  // 综合分析：
     ];
 
     // 检查是否是 Markdown 表格行
@@ -526,9 +530,9 @@ function Divination() {
     lines.forEach(line => {
       // 检查是否是分节标题
       let isSectionTitle = false;
-      for (const { pattern, icon } of sectionPatterns) {
-        const match = line.match(pattern);
-        if (match && match[1]) {
+      for (const sp of sectionPatterns) {
+        const match = line.match(sp.pattern);
+        if (match) {
           // 结束当前表格（如果在进行中）
           if (tableBuffer.length > 0) {
             currentSection.content += '\n' + tableBuffer.join('\n');
@@ -541,8 +545,8 @@ function Divination() {
           }
           // 开始新节
           currentSection = {
-            title: (match[1] || '').trim() || '综合解读',
-            icon: icon,
+            title: (sp.title || (match[1] || '').trim() || '综合解读'),
+            icon: sp.icon,
             content: ''
           };
           isSectionTitle = true;
