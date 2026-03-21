@@ -17,7 +17,7 @@ export default defineConfig({
       }
     }
   },
-  base: './',
+  base: '/tarotqa-web/',
   build: {
     outDir: '../dist',
     sourcemap: false

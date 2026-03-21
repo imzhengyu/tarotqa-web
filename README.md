@@ -69,6 +69,29 @@ npm run build
 
 构建产物在 `dist/` 目录，可直接部署到 GitHub Pages 或任意静态服务器。
 
+### 测试
+
+```bash
+cd web
+
+# 运行所有测试（监视模式）
+npm run test
+
+# 运行所有测试（单次）
+npm run test:run
+
+# 运行测试后预览
+npm run preview
+```
+
+**测试覆盖**：当前覆盖率 65%+（api.js 95%，useVisitStats.js 46%）
+
+| 文件 | 覆盖率 |
+|------|--------|
+| services/api.js | 95% |
+| hooks/useVisitStats.js | 46% |
+| **总体** | **65%** |
+
 ## 牌阵说明
 
 | 牌阵 | 牌数 | 说明 |
@@ -164,3 +187,4 @@ MIT
 
 *文档版本：v2.9*
 *最后更新：2026-03-21*
+*测试覆盖率：65%+（118 测试用例）*

@@ -5,7 +5,7 @@ const MAX_RECORDS = 100;
 const DEVICE_STATS_UPDATE_INTERVAL = 60 * 60 * 1000; // 1 hour in ms
 
 // Generate UUID v4
-const generateUUID = () => {
+export const generateUUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -14,7 +14,7 @@ const generateUUID = () => {
 };
 
 // Anonymize IP address - keep first two segments
-const anonymizeIp = (ip) => {
+export const anonymizeIp = (ip) => {
   if (!ip) return 'unknown';
   const segments = ip.split('.');
   if (segments.length >= 2) {
@@ -24,7 +24,7 @@ const anonymizeIp = (ip) => {
 };
 
 // Detect device type from screen width
-const detectDeviceType = () => {
+export const detectDeviceType = () => {
   const width = window.innerWidth;
   if (width < 768) return 'mobile';
   if (width < 1024) return 'tablet';
@@ -32,7 +32,7 @@ const detectDeviceType = () => {
 };
 
 // Detect OS from user agent
-const detectOSType = () => {
+export const detectOSType = () => {
   const ua = navigator.userAgent;
   if (/iPhone|iPad|iPod/i.test(ua)) return 'iOS';
   if (/Android/i.test(ua)) return 'Android';
@@ -43,7 +43,7 @@ const detectOSType = () => {
 };
 
 // Detect browser type from user agent
-const detectBrowser = () => {
+export const detectBrowser = () => {
   const ua = navigator.userAgent;
   if (/Chrome/i.test(ua) && !/Edge/i.test(ua)) return 'Chrome';
   if (/Firefox/i.test(ua)) return 'Firefox';
@@ -53,7 +53,7 @@ const detectBrowser = () => {
 };
 
 // Calculate device stats from records
-const calculateDeviceStats = (records) => {
+export const calculateDeviceStats = (records) => {
   const stats = { desktop: 0, tablet: 0, mobile: 0 };
   records.forEach(record => {
     if (record.deviceType === 'desktop') stats.desktop++;
@@ -64,7 +64,7 @@ const calculateDeviceStats = (records) => {
 };
 
 // Calculate OS stats from records
-const calculateOsStats = (records) => {
+export const calculateOsStats = (records) => {
   const stats = {
     Windows: 0,
     macOS: 0,
@@ -84,7 +84,7 @@ const calculateOsStats = (records) => {
 };
 
 // Get session IP (simulated - in real app this would come from server)
-const getSessionIP = () => {
+export const getSessionIP = () => {
   // In a pure frontend app, we can't get real IP without a backend
   // We'll use a hash of available info as a pseudo-IP
   const seed = navigator.userAgent + screen.width + screen.height + new Date().getTimezoneOffset();
@@ -101,7 +101,7 @@ const getSessionIP = () => {
 };
 
 // Load stats from localStorage
-const loadStats = () => {
+export const loadStats = () => {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
@@ -114,7 +114,7 @@ const loadStats = () => {
 };
 
 // Save stats to localStorage
-const saveStats = (stats) => {
+export const saveStats = (stats) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
   } catch (e) {
@@ -123,7 +123,7 @@ const saveStats = (stats) => {
 };
 
 // Create initial stats structure
-const createInitialStats = () => {
+export const createInitialStats = () => {
   const now = new Date().toISOString();
   return {
     version: '1.1',
