@@ -188,3 +188,21 @@
 .api-key-hint a:hover {
   text-decoration: underline;
 }
+
+.default-key-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: #4CAF50;
+  font-size: 14px;
+}
+
+.default-key-icon {
+  font-size: 16px;
+}

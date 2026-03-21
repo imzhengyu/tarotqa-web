@@ -11,6 +11,7 @@ function Profile() {
   const [message, setMessage] = useState('');
   const [minimaxKey, setMinimaxKey] = useState('');
   const [showKey, setShowKey] = useState(false);
+  const [usingDefaultKey, setUsingDefaultKey] = useState(false);
 
   useEffect(() => {
     checkLogin();
@@ -18,6 +19,10 @@ function Profile() {
     const savedKey = localStorage.getItem('minimax_api_key');
     if (savedKey) {
       setMinimaxKey(savedKey);
+      setUsingDefaultKey(false);
+    } else if (import.meta.env.VITE_DEFAULT_API_KEY) {
+      // 没有用户配置的 Key，但有默认 Key
+      setUsingDefaultKey(true);
     }
   }, []);
 
@@ -80,13 +85,21 @@ function Profile() {
     if (minimaxKey.trim()) {
       localStorage.setItem('minimax_api_key', minimaxKey.trim());
       setMessage('API Key 保存成功');
+      setUsingDefaultKey(false);
     }
   };
 
   const clearMinimaxKey = () => {
     localStorage.removeItem('minimax_api_key');
     setMinimaxKey('');
-    setMessage('API Key 已清除');
+    // 检查是否有默认 Key
+    if (import.meta.env.VITE_DEFAULT_API_KEY) {
+      setUsingDefaultKey(true);
+      setMessage('已切换到默认 API');
+    } else {
+      setUsingDefaultKey(false);
+      setMessage('API Key 已清除');
+    }
   };
 
   if (user) {
@@ -181,6 +194,13 @@ function Profile() {
       <div className="api-settings-card">
         <h2>AI 设置</h2>
         <p className="api-settings-desc">配置 MiniMax API Key 以启用 AI 深度解读功能</p>
+
+        {usingDefaultKey && (
+          <div className="default-key-indicator">
+            <span className="default-key-icon">✨</span>
+            <span>正在使用默认 API Key，可直接使用 AI 深度解读功能</span>
+          </div>
+        )}
 
         <div className="api-key-form">
           <input
