@@ -598,11 +598,11 @@ define: {
 | 字号 | 14px |
 | 颜色 | `--color-text-secondary` (#B8A9C9) |
 | 上边距 | 20px |
-| 下边距 | 桌面端 20px，移动端隐藏（由底部导航占用） |
+| 下边距 | 桌面端 20px，移动端隐藏 |
 | 边框 | 顶部 1px solid rgba(212, 175, 55, 0.2) |
 
 **移动端适配**：
-- 移动端隐藏 footer（由底部固定导航栏占用空间）
+- 移动端隐藏 footer
 - 使用 CSS `@media (max-width: 768px)` 控制显隐
 
 **Layout 组件实现**：
@@ -763,7 +763,7 @@ const isAndroid = /Android/i.test(navigator.userAgent);
 |----------|----------|----------|
 | 桌面 (Desktop) | ≥1024px | 多列网格，完整导航 |
 | 平板 (Tablet) | 768px - 1023px | 中等密度，两列网格 |
-| 手机 (Mobile) | <768px | 单列堆叠，底部导航 |
+| 手机 (Mobile) | <768px | 单列堆叠，顶部导航 |
 
 #### 4.7.2 移动端 UI 适配规范
 
@@ -833,11 +833,12 @@ const isAndroid = /Android/i.test(navigator.userAgent);
 
 #### 4.7.4 移动端状态栏
 
-**底部导航栏** (移动端专用):
-- 位置: 屏幕底部固定
-- 高度: 56px + safe-area-inset-bottom
+**顶部导航栏** (移动端专用):
+- 位置: 屏幕顶部固定
+- 高度: 48px + safe-area-inset-top
 - 图标: 4个导航项（首页、占卜、牌库、我的）
 - 激活状态: 金色图标 + 文字
+- 背景: 半透明深色 + 模糊效果
 
 **移动端浮动提示**:
 - 位置: 顶部偏移 20px
@@ -850,9 +851,9 @@ iOS Safari 等设备需要适配刘海屏和圆角屏：
 
 ```css
 /* 适配 iOS 安全区域 */
-@supports (padding: env(safe-area-inset-bottom)) {
-  .bottom-nav {
-    padding-bottom: env(safe-area-inset-bottom);
+@supports (padding: env(safe-area-inset-top)) {
+  .mobile-nav {
+    padding-top: env(safe-area-inset-top);
   }
 }
 ```

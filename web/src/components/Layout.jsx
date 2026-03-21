@@ -44,20 +44,20 @@ function Layout() {
         </footer>
       )}
       {isMobile && (
-        <nav className="bottom-nav">
-          <NavLink to="/" className={({ isActive }) => isActive ? 'bottom-nav-item active' : 'bottom-nav-item'}>
+        <nav className="mobile-nav">
+          <NavLink to="/" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
             <span className="nav-icon">🏠</span>
             <span className="nav-label">首页</span>
           </NavLink>
-          <NavLink to="/divination" className={({ isActive }) => isActive ? 'bottom-nav-item active' : 'bottom-nav-item'}>
+          <NavLink to="/divination" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
             <span className="nav-icon">🔮</span>
             <span className="nav-label">占卜</span>
           </NavLink>
-          <NavLink to="/cards" className={({ isActive }) => isActive ? 'bottom-nav-item active' : 'bottom-nav-item'}>
+          <NavLink to="/cards" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
             <span className="nav-icon">🃏</span>
             <span className="nav-label">牌库</span>
           </NavLink>
-          <NavLink to="/profile" className={({ isActive }) => isActive ? 'bottom-nav-item active' : 'bottom-nav-item'}>
+          <NavLink to="/profile" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
             <span className="nav-icon">👤</span>
             <span className="nav-label">我的</span>
           </NavLink>
