@@ -1,0 +1,20 @@
+{
+  "name": "tarotqa-web",
+  "version": "1.0.0",
+  "description": "AI Tarot Reading Platform (Mini Program + Web)",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run web\"",
+    "server": "cd server && npm run dev",
+    "web": "cd web && npm run dev",
+    "miniprogram": "cd miniprogram && npm run dev",
+    "build": "npm run build:server && npm run build:web && npm run build:miniprogram",
+    "build:server": "cd server && npm run build",
+    "build:web": "cd web && npm run build",
+    "build:miniprogram": "cd miniprogram && npm run build",
+    "start": "cd server && npm start",
+    "install:all": "npm install && cd server && npm install && cd web && npm install && cd ../miniprogram && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

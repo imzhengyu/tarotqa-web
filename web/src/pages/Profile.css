@@ -1,0 +1,190 @@
+.profile {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(45, 27, 78, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-phone {
+  color: var(--color-text);
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.profile-level {
+  color: var(--color-secondary);
+  font-size: 14px;
+}
+
+.profile-menu {
+  background: rgba(45, 27, 78, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:hover {
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.menu-icon {
+  font-size: 20px;
+}
+
+.menu-item span:last-child {
+  color: var(--color-text);
+}
+
+.profile-message {
+  text-align: center;
+  color: var(--color-text-secondary);
+  margin-top: 20px;
+}
+
+.login-card {
+  background: rgba(45, 27, 78, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+}
+
+.login-card h2 {
+  color: var(--color-secondary);
+  margin-bottom: 8px;
+}
+
+.login-desc {
+  color: var(--color-text-secondary);
+  margin-bottom: 24px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-form input {
+  padding: 14px 16px;
+  background: rgba(26, 15, 46, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 16px;
+  text-align: center;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+}
+
+.login-form input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.login-message {
+  margin-top: 16px;
+  color: var(--color-text-secondary);
+}
+
+.api-settings-card {
+  background: rgba(45, 27, 78, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+  text-align: center;
+}
+
+.api-settings-card h2 {
+  color: var(--color-secondary);
+  margin-bottom: 8px;
+}
+
+.api-settings-desc {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.api-key-form {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.api-key-form input {
+  flex: 1;
+  padding: 12px 16px;
+  background: rgba(26, 15, 46, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.api-key-form input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+}
+
+.api-key-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.api-key-hint {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.api-key-hint a {
+  color: var(--color-secondary);
+  text-decoration: none;
+}
+
+.api-key-hint a:hover {
+  text-decoration: underline;
+}

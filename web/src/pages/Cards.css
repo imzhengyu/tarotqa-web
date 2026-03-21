@@ -1,0 +1,297 @@
+.cards {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px 16px;
+  background: rgba(26, 15, 46, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+}
+
+.search-input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.filter-select {
+  padding: 12px 16px;
+  background: rgba(26, 15, 46, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+}
+
+.cards-count {
+  color: var(--color-text-secondary);
+  margin-bottom: 24px;
+  text-align: right;
+}
+
+/* 卡片分组容器 */
+.cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* 卡片分组 */
+.card-group {
+  background: rgba(45, 27, 78, 0.3);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.card-group-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.card-group-header h2 {
+  color: var(--color-secondary);
+  font-size: 18px;
+  font-family: 'Cinzel', 'Georgia', serif;
+  margin: 0;
+}
+
+.card-group-subtitle {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+/* 卡片网格 */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+
+.card-item {
+  background: rgba(45, 27, 78, 0.4);
+  border: 2px dashed rgba(212, 175, 55, 0.4);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card-item:hover {
+  background: rgba(45, 27, 78, 0.6);
+  border-color: var(--color-secondary);
+  transform: translateY(-4px);
+}
+
+.card-item.selected {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: var(--color-secondary);
+  border-style: solid;
+}
+
+.card-info {
+  margin-top: 12px;
+  text-align: center;
+  width: 100%;
+}
+
+.card-info h3 {
+  color: var(--color-text);
+  font-size: 14px;
+  margin-bottom: 4px;
+  font-family: 'Cinzel', 'Georgia', serif;
+}
+
+.card-name-en {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+/* 牌库卡片的 TarotCard 尺寸 */
+.card-item .tarot-card {
+  width: 120px;
+  height: 180px;
+}
+
+.card-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.card-modal-content {
+  display: flex;
+  gap: 32px;
+  background: rgba(45, 27, 78, 0.95);
+  border: 2px solid var(--color-secondary);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.card-detail {
+  flex: 1;
+  min-width: 200px;
+}
+
+.card-detail h2 {
+  color: var(--color-secondary);
+  margin-bottom: 4px;
+}
+
+.card-detail .card-name-en {
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.card-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.tag {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--color-secondary);
+}
+
+.tag.major {
+  background: rgba(212, 175, 55, 0.3);
+}
+
+.tag.minor {
+  background: rgba(139, 0, 0, 0.3);
+  color: #FF6B6B;
+}
+
+.tag.element {
+  background: rgba(76, 175, 80, 0.2);
+  color: #81C784;
+}
+
+.tag.number {
+  background: rgba(33, 150, 243, 0.2);
+  color: #64B5F6;
+}
+
+.card-description {
+  color: var(--color-text);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.card-keywords h4 {
+  color: var(--color-secondary);
+  margin-bottom: 8px;
+}
+
+.keywords-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.keyword {
+  padding: 4px 12px;
+  background: rgba(212, 175, 55, 0.15);
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--color-text);
+}
+
+@media (max-width: 1024px) {
+  .cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .card-item .tarot-card {
+    width: 100px;
+    height: 150px;
+  }
+
+  .card-group {
+    padding: 16px;
+  }
+
+  .card-modal-content {
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .card-detail {
+    text-align: center;
+  }
+
+  .card-tags {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .card-item .tarot-card {
+    width: 80px;
+    height: 120px;
+  }
+
+  .card-item {
+    padding: 12px;
+  }
+}

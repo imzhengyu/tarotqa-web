@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+# dist/              # Don't ignore root dist (used for GitHub Pages)
+web/dist/
+build/
+*.min.js
+
+# Test
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+# WeChat Mini Program
+miniprogram/app.js
+miniprogram/app.json
+
+# Resources (large files)
+resources/tarot-images/*.jpg
+resources/tarot-images/*.png
+resources/tarot-images/*.webp
