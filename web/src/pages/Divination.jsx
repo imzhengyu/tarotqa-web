@@ -236,6 +236,12 @@ function Divination() {
       setAiError(error.message);
     } finally {
       setAiLoading(false);
+      // API调用完成后启动冷却倒计时
+      const remaining = getRemainingCooldown();
+      if (remaining > 0) {
+        setAiCooldown(remaining);
+        setShowCooldownToast(true);
+      }
     }
   };
 
