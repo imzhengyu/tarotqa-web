@@ -44,6 +44,23 @@ jobs:
         env:
           VITE_DEFAULT_API_KEY: ${{ secrets.DEFAULT_MINIMAX_API_KEY }}
 
+      - name: Security Check - Verify no API keys in dist
+        run: |
+          echo "Checking dist files for API keys..."
+
+          # Check for common API key patterns in dist
+          if grep -rq "sk-[a-zA-Z0-9]" dist/; then
+            echo "ERROR: Found potential API key pattern 'sk-' in dist files!"
+            grep -rn "sk-[a-zA-Z0-9]" dist/ || true
+            exit 1
+          fi
+
+          if grep -rq "minimax.*api.*key" dist/ --include="*.js" --include="*.css"; then
+            echo "WARNING: Found 'minimax api key' references in dist files"
+          fi
+
+          echo "Security check passed: No API keys found in dist files"
+
       - name: Deploy
         uses: actions/upload-pages-artifact@v3
         with:
