@@ -40,7 +40,7 @@ function Layout() {
       </main>
       {!isMobile && (
         <footer className="footer">
-          <p>© 2026 TarotQA - AI塔罗占卜 v{import.meta.env.__APP_VERSION__ || '1.0.0'} ({import.meta.env.__GIT_SHA__?.slice(0, 8) || 'local'})</p>
+          <p>© 2026 TarotQA - AI塔罗占卜 v{__APP_VERSION__ || '1.0.0'} ({__GIT_SHA__?.slice(0, 8) || 'local'})</p>
         </footer>
       )}
       {isMobile && (
