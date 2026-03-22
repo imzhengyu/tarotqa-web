@@ -58,6 +58,10 @@ function Layout() {
             <span className="nav-icon">🃏</span>
             <span className="nav-label">牌库</span>
           </NavLink>
+          <NavLink to="/horoscope" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+            <span className="nav-icon">♈</span>
+            <span className="nav-label">运势</span>
+          </NavLink>
           <NavLink to="/statistics" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
             <span className="nav-icon">📊</span>
             <span className="nav-label">统计</span>
