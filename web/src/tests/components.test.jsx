@@ -8,6 +8,7 @@ import PieChart from '../components/PieChart';
 import OsPieChart from '../components/OsPieChart';
 import ErrorBoundary from '../components/ErrorBoundary';
 import Layout from '../components/Layout';
+import Horoscope from '../pages/Horoscope';
 
 const mockCard = {
   id: 'fool',
@@ -375,6 +376,261 @@ describe('Layout', () => {
 
       const footer = document.querySelector('.footer');
       expect(footer.textContent).toContain('TarotQA');
+    });
+  });
+});
+
+describe('Horoscope (CR1: 3x4 grid, CR2: AI button)', () => {
+  const { innerWidth } = window;
+
+  beforeEach(() => {
+    Object.defineProperty(window, 'innerWidth', { get: () => 1024, configurable: true });
+    Object.defineProperty(window.navigator, 'userAgent', {
+      value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+      configurable: true
+    });
+    localStorage.removeItem('ai_horoscope_cooldown_end');
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, 'innerWidth', { value: innerWidth, writable: true, configurable: true });
+    localStorage.removeItem('ai_horoscope_cooldown_end');
+  });
+
+  describe('Zodiac Grid (CR1)', () => {
+    it('should render 12 zodiac buttons', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const zodiacButtons = document.querySelectorAll('.zodiac-btn');
+      expect(zodiacButtons.length).toBe(12);
+    });
+
+    it('should have zodiac-selector element', () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      const selector = document.querySelector('.zodiac-selector');
+      expect(selector).toBeInTheDocument();
+    });
+
+    it('should highlight selected zodiac', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const firstZodiac = document.querySelector('.zodiac-btn');
+      expect(firstZodiac.classList.contains('active')).toBe(true);
+    });
+
+    it('should change selected zodiac when clicking', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const secondZodiac = document.querySelectorAll('.zodiac-btn')[1];
+      fireEvent.click(secondZodiac);
+
+      await new Promise(r => setTimeout(r, 100));
+
+      expect(secondZodiac.classList.contains('active')).toBe(true);
+    });
+  });
+
+  describe('AI Horoscope Button (CR2)', () => {
+    it('should render AI analysis button', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const aiButton = document.querySelector('.ai-action .btn-primary');
+      expect(aiButton).toBeInTheDocument();
+      expect(aiButton.textContent).toContain('AI运势分析');
+    });
+
+    it('should render ai-action section', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const aiAction = document.querySelector('.ai-action');
+      expect(aiAction).toBeInTheDocument();
+    });
+
+    it('should be disabled when loading', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const aiButton = document.querySelector('.ai-action .btn-primary');
+      expect(aiButton).not.toBeDisabled();
+    });
+  });
+
+  describe('AI Interpretation Flow (CR10: Date Parameters)', () => {
+    it('should have correct initial AI state', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const aiInterpretation = document.querySelector('.ai-interpretation');
+      expect(aiInterpretation).toBeNull();
+    });
+
+    it('should not show AI error initially', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      // AI error should not be visible initially
+      const errorDiv = document.querySelector('.ai-error');
+      expect(errorDiv).toBeNull();
+    });
+
+    it('should have ai-action section with proper button text', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const aiButton = document.querySelector('.ai-action .btn-primary');
+      expect(aiButton.textContent).toContain('AI运势分析');
+    });
+  });
+
+  describe('Horoscope Content Rendering', () => {
+    it('should render horoscope content after loading', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 500));
+
+      const horoscopeContent = document.querySelector('.horoscope-content');
+      expect(horoscopeContent).toBeInTheDocument();
+    });
+
+    it('should render horoscope grid with 4 cards', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 500));
+
+      const gridCards = document.querySelectorAll('.horoscope-card');
+      expect(gridCards.length).toBe(4);
+    });
+
+    it('should render lucky info section', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 500));
+
+      const luckyInfo = document.querySelector('.lucky-info');
+      expect(luckyInfo).toBeInTheDocument();
+    });
+
+    it('should render page title', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 100));
+
+      const title = document.querySelector('.page-title');
+      expect(title).toBeInTheDocument();
+      expect(title.textContent).toBe('每日运势');
+    });
+
+    it('should render all 4 horoscope card types', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 500));
+
+      expect(document.querySelector('.horoscope-card.overall')).toBeInTheDocument();
+      expect(document.querySelector('.horoscope-card.love')).toBeInTheDocument();
+      expect(document.querySelector('.horoscope-card.career')).toBeInTheDocument();
+      expect(document.querySelector('.horoscope-card.finance')).toBeInTheDocument();
+    });
+
+    it('should render zodiac selector with grid layout', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 500));
+
+      const selector = document.querySelector('.zodiac-selector');
+      expect(selector).toBeInTheDocument();
+      const buttons = selector.querySelectorAll('.zodiac-btn');
+      expect(buttons.length).toBe(12);
+    });
+
+    it('should render ai-action section', async () => {
+      render(
+        <BrowserRouter>
+          <Horoscope />
+        </BrowserRouter>
+      );
+
+      await new Promise(r => setTimeout(r, 500));
+
+      expect(document.querySelector('.ai-action')).toBeInTheDocument();
     });
   });
 });

@@ -3,6 +3,33 @@ import tarotData from '../../../resources/tarot-data.json';
 import { spreads, getRecommendedPersona as getSpreadPersona } from '../data/spreads';
 import { personas, getPersona } from '../data/personas';
 
+// 辅助函数：获取 API Key
+const _getApiKey = () => {
+  const key = localStorage.getItem('minimax_api_key');
+  return key || import.meta.env.VITE_DEFAULT_API_KEY;
+};
+
+// 辅助函数：从 HTTP 状态码获取错误消息
+const _getErrorMessageFromStatus = (response, errorData) => {
+  if (response.status === 401) return 'API Key 无效或已过期，请检查设置';
+  if (response.status === 403) return 'API Key 权限不足';
+  if (response.status === 429) return '请求过于频繁，请稍后重试';
+  if (response.status >= 500) return 'MiniMax 服务器繁忙，请稍后重试';
+  if (errorData.base_resp?.status_msg) return errorData.base_resp.status_msg;
+  if (errorData.error?.message) return errorData.error.message;
+  return 'API 请求失败';
+};
+
+// 辅助函数：从 AI 响应中提取内容
+const _extractAIContent = (choice) => {
+  if (choice.messages && Array.isArray(choice.messages)) {
+    return choice.messages.map(m => m.role === 'assistant' ? m.content : '').join('');
+  }
+  if (choice.delta?.content) return choice.delta.content;
+  if (choice.message?.content) return choice.message.content;
+  throw new Error('AI 响应内容解析失败');
+};
+
 const api = {
   // 导出 personas 以保持向后兼容
   personas,
@@ -181,13 +208,8 @@ const api = {
 
   // AI 解读相关
   async getAIInterpretation(data) {
-    // 优先使用用户配置的 API Key，其次使用默认 Key
-    let apiKey = localStorage.getItem('minimax_api_key');
-    if (!apiKey) {
-      apiKey = import.meta.env.VITE_DEFAULT_API_KEY;
-    }
-
     // 错误场景1: API Key 未配置
+    const apiKey = _getApiKey();
     if (!apiKey) {
       throw new Error('请先在设置中配置 MiniMax API Key');
     }
@@ -233,29 +255,13 @@ const api = {
     // 错误场景4: HTTP 状态码错误
     if (!response.ok) {
       let errorMsg = 'API 请求失败';
-
       try {
         const errorData = await response.json();
         console.error('[AI解读] API 错误响应:', errorData);
-
-        // 解析常见错误
-        if (response.status === 401) {
-          errorMsg = 'API Key 无效或已过期，请检查设置';
-        } else if (response.status === 403) {
-          errorMsg = 'API Key 权限不足';
-        } else if (response.status === 429) {
-          errorMsg = '请求过于频繁，请稍后重试';
-        } else if (response.status >= 500) {
-          errorMsg = 'MiniMax 服务器繁忙，请稍后重试';
-        } else if (errorData.base_resp?.status_msg) {
-          errorMsg = errorData.base_resp.status_msg;
-        } else if (errorData.error?.message) {
-          errorMsg = errorData.error.message;
-        }
+        errorMsg = _getErrorMessageFromStatus(response, errorData);
       } catch {
         // 忽略解析错误
       }
-
       throw new Error(errorMsg);
     }
 
@@ -284,18 +290,11 @@ const api = {
 
     // 提取 AI 回复内容
     let aiContent;
-    if (choice.messages && Array.isArray(choice.messages)) {
-      // MiniMax 格式: messages 数组
-      aiContent = choice.messages.map(m => m.role === 'assistant' ? m.content : '').join('');
-    } else if (choice.delta && choice.delta.content) {
-      // 流式格式的单个 delta
-      aiContent = choice.delta.content;
-    } else if (choice.message && choice.message.content) {
-      // 标准格式
-      aiContent = choice.message.content;
-    } else {
+    try {
+      aiContent = _extractAIContent(choice);
+    } catch (err) {
       console.error('[AI解读] 无法提取内容:', choice);
-      throw new Error('AI 响应内容解析失败');
+      throw err;
     }
 
     if (!aiContent || aiContent.trim() === '') {
@@ -346,20 +345,22 @@ const api = {
   },
 
   // AI 星座运势分析
-  async getAIHoroscope(zodiacId, zodiacName) {
-    // 优先使用用户配置的 API Key，其次使用默认 Key
-    let apiKey = localStorage.getItem('minimax_api_key');
-    if (!apiKey) {
-      apiKey = import.meta.env.VITE_DEFAULT_API_KEY;
-    }
-
+  async getAIHoroscope(zodiacId, zodiacName, date = null) {
+    const apiKey = _getApiKey();
     if (!apiKey) {
       throw new Error('请先在设置中配置 MiniMax API Key');
     }
 
+    // 使用传入的日期或当前日期
+    const currentDate = date || {
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
+      day: new Date().getDate()
+    };
+
     const systemPrompt = `你是一位专业的星座运势分析师，专门为用户提供详细的每日/每周运势分析。你需要根据星座的特性和当前星象位置，给出准确、富有洞察力的运势预测。请用中文回答，以 Markdown 格式输出。`;
 
-    const userContent = `请分析 ${zodiacName} 今日的综合运势，包括但不限于：
+    const userContent = `请分析 ${zodiacName} 于 ${currentDate.year}年${currentDate.month}月${currentDate.day}日 的综合运势，包括但不限于：
 1. 整体运势走向
 2. 爱情运势
 3. 事业运势
@@ -398,17 +399,7 @@ const api = {
       let errorMsg = 'API 请求失败';
       try {
         const errorData = await response.json();
-        if (response.status === 401) {
-          errorMsg = 'API Key 无效或已过期，请检查设置';
-        } else if (response.status === 403) {
-          errorMsg = 'API Key 权限不足';
-        } else if (response.status === 429) {
-          errorMsg = '请求过于频繁，请稍后重试';
-        } else if (errorData.base_resp?.status_msg) {
-          errorMsg = errorData.base_resp.status_msg;
-        } else if (errorData.error?.message) {
-          errorMsg = errorData.error.message;
-        }
+        errorMsg = _getErrorMessageFromStatus(response, errorData);
       } catch {
         // ignore parse error
       }
@@ -423,12 +414,10 @@ const api = {
 
     const choice = result.choices[0];
     let aiContent;
-    if (choice.messages && Array.isArray(choice.messages)) {
-      aiContent = choice.messages.map(m => m.role === 'assistant' ? m.content : '').join('');
-    } else if (choice.message && choice.message.content) {
-      aiContent = choice.message.content;
-    } else {
-      throw new Error('AI 响应内容解析失败');
+    try {
+      aiContent = _extractAIContent(choice);
+    } catch {
+      throw new Error('AI 暂时无法提供解读，请稍后重试');
     }
 
     if (!aiContent || aiContent.trim() === '') {

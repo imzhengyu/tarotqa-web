@@ -4,7 +4,7 @@
 2026-03-21
 
 ## 更新日期
-2026-03-22 (新增测试覆盖 CR6-CR9)
+2026-03-22 (新增测试覆盖 CR6-CR9, JSX-A11Y CR11)
 
 ---
 
@@ -21,6 +21,8 @@
 | 7 | 移动端固定导航栏 | High | ✅ 已修复 |
 | 8 | 移动端 padding 优化 | Medium | ✅ 已修复 |
 | 9 | 移动端缺少页面脚注 | Low | ✅ 已修复 |
+| 10 | AI 运势预测缺少日期参数 | Medium | ✅ 已修复 |
+| 11 | JSX-A11Y 无障碍警告 | Low | ✅ 已修复 |
 
 ---
 
@@ -149,6 +151,100 @@
 | **修复方案** | 移除 `global.css` 中隐藏移动端 footer 的规则，添加移动端 footer 样式 |
 | **涉及文件** | `web/src/components/Layout.css` (line 159-165), `web/src/styles/global.css` (line 207-209) |
 | **修复日期** | 2026-03-22 |
+
+---
+
+## 10. AI 运势预测缺少日期参数 ✅ 已修复
+
+| 项目 | 内容 |
+|------|------|
+| **原问题** | AI 运势预测未传递年月日参数，无法进行精确的运势分析 |
+| **修复方案** | 使用 Day.js 获取当前日期，在调用 AI 运势分析时传递年月日参数 |
+| **涉及文件** | `web/src/pages/Horoscope.jsx`, `web/src/services/api.js` |
+| **技术实现** | 引入 dayjs 库，使用 `dayjs().year()`, `dayjs().month() + 1`, `dayjs().date()` 获取当前日期 |
+| **修复日期** | 2026-03-22 |
+
+---
+
+## 11. JSX-A11Y 无障碍警告 (待修复)
+
+| 项目 | 内容 |
+|------|------|
+| **问题描述** | ESLint 报告 20 个 jsx-a11y 警告，原因是 `<div>` 等非交互元素上使用了 `onClick` 但缺少键盘事件监听器 |
+| **警告类型** | `jsx-a11y/click-events-have-key-events` 和 `jsx-a11y/no-static-element-interactions` |
+| **严重性** | Low (warning) |
+| **状态** | ⏳ 待修复 |
+
+### 受影响文件和位置
+
+| 文件 | 行号 | 元素 | 警告数量 |
+|------|------|------|----------|
+| `TarotCard.jsx` | 24 | `<div className="tarot-card" onClick={onClick}>` | 2 |
+| `Cards.jsx` | 127 | `<div className="card-item" onClick>` | 2 |
+| `Cards.jsx` | 145 | `<div className="card-modal" onClick>` | 2 |
+| `Cards.jsx` | 146 | `<div className="card-modal-content" onClick>` | 2 |
+| `Divination.jsx` | 287 | `<div className="spread-item" onClick>` | 2 |
+| `Divination.jsx` | 347 | `<div ... onClick>` | 2 |
+| `Profile.jsx` | 121, 125, 129, 133 | `<div className="menu-item" onClick>` | 8 |
+| **合计** | | | **20** |
+
+### 解决方案
+
+#### 方案 A: 添加键盘事件监听器 (推荐)
+
+在 `onClick` 基础上添加 `onKeyDown` 处理回车键和空格键：
+
+```jsx
+// 示例：TarotCard.jsx
+<div
+  className="tarot-card ..."
+  onClick={onClick}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(e);
+    }
+  }}
+  role="button"
+  tabIndex={0}
+>
+```
+
+#### 方案 B: 替换为语义化按钮 (适合可交互元素)
+
+将 `<div>` 替换为 `<button>`：
+
+```jsx
+// 示例：Profile.jsx
+<button className="menu-item" onClick={() => setMessage('功能开发中')}>
+  <span className="menu-icon">📋</span>
+  <span>占卜历史</span>
+</button>
+```
+
+#### 方案 C: 添加 ESLint 规则禁用注释 (快速但不推荐)
+
+```jsx
+// eslint-disable-next-line jsx-a11y/click-events-have-key-events
+// eslint-disable-next-line jsx-a11y/no-static-element-interactions
+<div className="tarot-card" onClick={onClick}>
+```
+
+### 推荐实施步骤
+
+1. **Profile.jsx** (8 warnings) - 改用 `<button>` 元素，最适合语义化 ✅ 已修复
+2. **Cards.jsx** (6 warnings) - 保持 `<div>` + 添加键盘事件，保留现有样式
+3. **Divination.jsx** (2 warnings) - 保持 `<div>` + 添加键盘事件
+4. **TarotCard.jsx** (2 warnings) - 添加 `role="button"` 和键盘事件
+
+### 修复记录
+
+| 文件 | 修复日期 | 状态 |
+|------|----------|------|
+| Profile.jsx | 2026-03-22 | ✅ 已修复 |
+| Cards.jsx | 2026-03-22 | ✅ 已修复 |
+| Divination.jsx | 2026-03-22 | ✅ 已修复 |
+| TarotCard.jsx | 2026-03-22 | ✅ 已修复 |
 
 *CR 创建日期：2026-03-21*
 *更新日期：2026-03-22*

@@ -1,13 +1,18 @@
 :root {
   --color-primary: #2D1B4E;
   --color-secondary: #D4AF37;
-  --color-accent: #8B0000;
   --color-background: #1A0F2E;
   --color-text: #F5F5F5;
   --color-text-secondary: #B8A9C9;
   --color-success: #4CAF50;
   --color-warning: #FF9800;
   --color-error: #F44336;
+
+  /* 面板颜色 */
+  --color-panel: rgba(45, 27, 78, 0.6);
+  --color-panel-solid: rgba(26, 15, 46, 0.95);
+  --color-border: rgba(212, 175, 55, 0.2);
+  --color-border-strong: rgba(212, 175, 55, 0.4);
 }
 
 * {
@@ -48,11 +53,80 @@ input, textarea {
   padding: 0 20px;
 }
 
-.card {
-  background: rgba(45, 27, 78, 0.8);
-  border: 1px solid var(--color-secondary);
+/* 工具类 */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hover-lift {
+  transition: transform 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+/* AI 组件共用样式 */
+.cooldown-toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: var(--color-panel-solid);
+  border: 1px solid var(--color-border-strong);
   border-radius: 12px;
-  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  animation: toastFadeIn 0.3s ease-out;
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.cooldown-icon {
+  font-size: 20px;
+}
+
+.cooldown-text {
+  color: var(--color-secondary);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.ai-error {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid var(--color-error);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px auto;
+  text-align: center;
+  color: var(--color-error);
+  max-width: 400px;
+}
+
+.ai-error button {
+  margin-top: 8px;
+  padding: 4px 16px;
+  background: transparent;
+  border: 1px solid var(--color-error);
+  border-radius: 4px;
+  color: var(--color-error);
+  cursor: pointer;
 }
 
 .btn {

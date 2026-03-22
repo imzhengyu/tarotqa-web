@@ -1019,3 +1019,147 @@ describe('API Service', () => {
     });
   });
 });
+
+describe('getAIHoroscope', () => {
+  beforeEach(() => {
+    localStorage.removeItem('minimax_api_key');
+    global.fetch = vi.fn();
+  });
+
+  it('应该返回 AI 运势分析结果', async () => {
+    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        choices: [{
+          messages: [{ role: 'assistant', content: '今日运势不错，适合开展新项目。' }]
+        }]
+      })
+    });
+
+    const result = await api.getAIHoroscope('aries', '白羊座');
+    expect(result).toBe('今日运势不错，适合开展新项目。');
+  });
+
+  it('应该使用传入的日期参数', async () => {
+    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+
+    let capturedRequestBody;
+    global.fetch = vi.fn().mockImplementation((url, options) => {
+      capturedRequestBody = JSON.parse(options.body);
+      return {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          choices: [{
+            messages: [{ role: 'assistant', content: '测试结果' }]
+          }]
+        })
+      };
+    });
+
+    const testDate = { year: 2026, month: 3, day: 22 };
+    await api.getAIHoroscope('aries', '白羊座', testDate);
+
+    expect(capturedRequestBody).toBeDefined();
+    expect(capturedRequestBody.messages).toHaveLength(2);
+    expect(capturedRequestBody.messages[1].content).toContain('2026');
+    expect(capturedRequestBody.messages[1].content).toContain('3月');
+    expect(capturedRequestBody.messages[1].content).toContain('22日');
+  });
+
+  it('应该使用当前日期当未传入日期参数', async () => {
+    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+
+    let capturedRequestBody;
+    global.fetch = vi.fn().mockImplementation((url, options) => {
+      capturedRequestBody = JSON.parse(options.body);
+      return {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          choices: [{
+            messages: [{ role: 'assistant', content: '测试结果' }]
+          }]
+        })
+      };
+    });
+
+    await api.getAIHoroscope('aries', '白羊座');
+
+    expect(capturedRequestBody).toBeDefined();
+    expect(capturedRequestBody.messages[1].content).toContain('请分析');
+  });
+
+  it('应该抛出错误当 API Key 未配置', async () => {
+    localStorage.removeItem('minimax_api_key');
+
+    try {
+      await api.getAIHoroscope('aries', '白羊座');
+      expect.fail('应该抛出错误');
+    } catch (error) {
+      expect(error.message).toBe('请先在设置中配置 MiniMax API Key');
+    }
+  });
+
+  it('应该处理网络错误', async () => {
+    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+
+    try {
+      await api.getAIHoroscope('aries', '白羊座');
+      expect.fail('应该抛出错误');
+    } catch (error) {
+      expect(error.message).toBe('网络连接失败，请检查网络后重试');
+    }
+  });
+
+  it('应该处理 HTTP 401 错误', async () => {
+    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: vi.fn().mockResolvedValue({ base_resp: { status_msg: 'Unauthorized' } })
+    });
+
+    try {
+      await api.getAIHoroscope('aries', '白羊座');
+      expect.fail('应该抛出错误');
+    } catch (error) {
+      expect(error.message).toBe('API Key 无效或已过期，请检查设置');
+    }
+  });
+
+  it('应该处理 HTTP 429 错误', async () => {
+    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      json: vi.fn().mockResolvedValue({ base_resp: { status_msg: 'Rate limit' } })
+    });
+
+    try {
+      await api.getAIHoroscope('aries', '白羊座');
+      expect.fail('应该抛出错误');
+    } catch (error) {
+      expect(error.message).toBe('请求过于频繁，请稍后重试');
+    }
+  });
+
+  it('应该处理空响应', async () => {
+    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        choices: [{
+          messages: [{ role: 'assistant', content: '' }]
+        }]
+      })
+    });
+
+    try {
+      await api.getAIHoroscope('aries', '白羊座');
+      expect.fail('应该抛出错误');
+    } catch (error) {
+      expect(error.message).toBe('AI 暂时无法提供解读，请稍后重试');
+    }
+  });
+});

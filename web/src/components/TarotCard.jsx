@@ -25,6 +25,14 @@ const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small
       ref={elementRef}
       className={`tarot-card ${faceUp ? 'face-up' : ''} ${small ? 'small' : ''} ${selected ? 'selected' : ''} ${showReversed ? 'reversed' : ''}`}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick(e);
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       <div className="tarot-card-inner">
         <div className="tarot-card-front">
@@ -59,9 +67,9 @@ const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small
                     }}
                   />
                 )}
-                {!imageLoaded && !imageError && (
+                {!imageLoaded && !imageError && shouldLoadImage && (
                   <img
-                    src={shouldLoadImage ? imageSrc : imageSrc}
+                    src={imageSrc}
                     alt={card.name}
                     className="card-image"
                     loading="lazy"

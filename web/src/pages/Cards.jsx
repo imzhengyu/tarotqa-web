@@ -128,6 +128,14 @@ function Cards() {
                   key={card.id}
                   className={`card-item ${selectedCard?.id === card.id ? 'selected' : ''}`}
                   onClick={() => setSelectedCard(card)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedCard(card);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
                   <TarotCard card={card} faceUp small />
                   <div className="card-info">
@@ -142,8 +150,28 @@ function Cards() {
       </div>
 
       {selectedCard && (
-        <div className="card-modal" onClick={() => setSelectedCard(null)}>
-          <div className="card-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="card-modal"
+          onClick={() => setSelectedCard(null)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setSelectedCard(null);
+            }
+          }}
+          role="button"
+          tabIndex={0}
+        >
+          <div
+            className="card-modal-content"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.stopPropagation();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
             <TarotCard card={selectedCard} faceUp />
             <div className="card-detail">
               <h2>{selectedCard.name}</h2>

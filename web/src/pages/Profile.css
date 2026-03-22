@@ -55,6 +55,13 @@
   border-bottom: 1px solid rgba(212, 175, 55, 0.1);
   cursor: pointer;
   transition: background 0.2s;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
 }
 
 .menu-item:last-child {

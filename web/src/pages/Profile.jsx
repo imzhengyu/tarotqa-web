@@ -118,22 +118,22 @@ if (user) {
         </div>
 
         <div className="profile-menu">
-          <div className="menu-item" onClick={() => setMessage('功能开发中')}>
+          <button className="menu-item" onClick={() => setMessage('功能开发中')}>
             <span className="menu-icon">📋</span>
             <span>占卜历史</span>
-          </div>
-          <div className="menu-item" onClick={() => setMessage('功能开发中')}>
+          </button>
+          <button className="menu-item" onClick={() => setMessage('功能开发中')}>
             <span className="menu-icon">💳</span>
             <span>订单记录</span>
-          </div>
-          <div className="menu-item" onClick={() => setMessage('功能开发中')}>
+          </button>
+          <button className="menu-item" onClick={() => setMessage('功能开发中')}>
             <span className="menu-icon">💎</span>
             <span>开通会员</span>
-          </div>
-          <div className="menu-item" onClick={logout}>
+          </button>
+          <button className="menu-item" onClick={logout}>
             <span className="menu-icon">🚪</span>
             <span>退出登录</span>
-          </div>
+          </button>
         </div>
 
         {message && <p className="profile-message">{message}</p>}

@@ -31,23 +31,11 @@ function Statistics() {
     return `${month}-${day} ${hours}:${minutes}`;
   };
 
-  const getDeviceIcon = (deviceType) => {
-    switch (deviceType) {
-      case 'desktop': return '💻';
-      case 'tablet': return '📱';
-      case 'mobile': return '📱';
-      default: return '💻';
-    }
-  };
+  const DEVICE_ICONS = { desktop: '💻', tablet: '📱', mobile: '📱' };
+  const DEVICE_LABELS = { desktop: '桌面', tablet: '平板', mobile: '手机' };
 
-  const getDeviceLabel = (deviceType) => {
-    switch (deviceType) {
-      case 'desktop': return '桌面';
-      case 'tablet': return '平板';
-      case 'mobile': return '手机';
-      default: return '未知';
-    }
-  };
+  const getDeviceIcon = (deviceType) => DEVICE_ICONS[deviceType] || '💻';
+  const getDeviceLabel = (deviceType) => DEVICE_LABELS[deviceType] || '未知';
 
   if (!isInitialized) {
     return (

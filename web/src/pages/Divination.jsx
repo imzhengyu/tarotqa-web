@@ -6,6 +6,7 @@ import TarotCard from '../components/TarotCard';
 import api from '../services/api';
 import { spreads } from '../data/spreads';
 import useVisitStats from '../hooks/useVisitStats';
+import { useAIRequestCooldown } from '../hooks/useAIRequestCooldown';
 import './Divination.css';
 
 // 创建 markdown-it 实例
@@ -44,70 +45,16 @@ function Divination() {
   const [aiError, setAiError] = useState(null);
   const [debugMode, setDebugMode] = useState(false);
   const [lastRequest, setLastRequest] = useState(null);
-  const [aiCooldown, setAiCooldown] = useState(0); // 剩余冷却秒数
-  const [aiCooldownEnd, setAiCooldownEnd] = useState(0); // 冷却结束时间戳
-  const [showCooldownToast, setShowCooldownToast] = useState(false);
 
   // Visit stats tracking
   const { incrementQuestionCount } = useVisitStats();
 
-  // AI 深度解读速率限制：60秒冷却
-  const AI_COOLDOWN_SECONDS = 60;
-
-  // 检查是否可以发起 AI 请求
-  const canMakeAIRequest = () => {
-    const endTime = localStorage.getItem('ai_cooldown_end');
-    if (!endTime) return true;
-    return Date.now() >= parseInt(endTime, 10);
-  };
-
-  // 获取剩余冷却时间
-  const getRemainingCooldown = () => {
-    if (aiCooldownEnd <= 0) return 0;
-    const remaining = Math.max(0, Math.ceil((aiCooldownEnd - Date.now()) / 1000));
-    return remaining;
-  };
-
-  // 启动冷却倒计时
-  const startCooldownTimer = () => {
-    const endTime = localStorage.getItem('ai_cooldown_end');
-    if (endTime) {
-      const remaining = Math.max(0, Math.ceil((parseInt(endTime, 10) - Date.now()) / 1000));
-      if (remaining > 0) {
-        setAiCooldownEnd(parseInt(endTime, 10));
-        setAiCooldown(remaining);
-        setShowCooldownToast(true);
-      }
-    }
-  };
+  const { aiCooldown, showCooldownToast, canMakeAIRequest, startCooldownTimer, startCooldown } = useAIRequestCooldown('ai_cooldown_end');
 
   useEffect(() => {
     loadCards();
-    // 检查初始冷却状态
-    if (!canMakeAIRequest()) {
-      startCooldownTimer();
-    }
-  }, []);
-
-  // 冷却倒计时计时器 - 使用 aiCooldownEnd 作为过期时间戳
-  useEffect(() => {
-    if (aiCooldownEnd <= 0) {
-      setShowCooldownToast(false);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      const remaining = Math.max(0, Math.ceil((aiCooldownEnd - Date.now()) / 1000));
-      setAiCooldown(remaining);
-      if (remaining <= 0) {
-        setShowCooldownToast(false);
-        setAiCooldownEnd(0);
-        clearInterval(timer);
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [aiCooldownEnd]);
+    startCooldownTimer();
+  }, [startCooldownTimer]);
 
   const loadCards = async () => {
     try {
@@ -172,11 +119,6 @@ function Divination() {
     if (!canMakeAIRequest()) {
       const endTime = localStorage.getItem('ai_cooldown_end');
       const remaining = endTime ? Math.max(0, Math.ceil((parseInt(endTime, 10) - Date.now()) / 1000)) : 0;
-      if (remaining > 0) {
-        setAiCooldownEnd(parseInt(endTime, 10));
-        setAiCooldown(remaining);
-        setShowCooldownToast(true);
-      }
       setAiError(`请等待 ${remaining} 秒后再试`);
       return;
     }
@@ -203,10 +145,7 @@ function Divination() {
         selectedSpread,
         drawnCards
       });
-      // API调用完成后设置冷却结束时间
-      const cooldownEnd = Date.now() + AI_COOLDOWN_SECONDS * 1000;
-      localStorage.setItem('ai_cooldown_end', cooldownEnd.toString());
-      setAiCooldownEnd(cooldownEnd);
+      startCooldown();
       setAiInterpretation(interpretation);
       // Update debug info with raw AI response
       setLastRequest(prev => prev ? { ...prev, aiRawResponse: interpretation } : null);
@@ -214,19 +153,10 @@ function Divination() {
       incrementQuestionCount();
     } catch (error) {
       console.error('[AI解读] 捕获错误:', error.message);
-      // 即使请求失败也记录时间，防止频繁重试
-      const cooldownEnd = Date.now() + AI_COOLDOWN_SECONDS * 1000;
-      localStorage.setItem('ai_cooldown_end', cooldownEnd.toString());
-      setAiCooldownEnd(cooldownEnd);
+      startCooldown();
       setAiError(error.message);
     } finally {
       setAiLoading(false);
-      // API调用完成后启动冷却倒计时
-      const remaining = getRemainingCooldown();
-      if (remaining > 0) {
-        setAiCooldown(remaining);
-        setShowCooldownToast(true);
-      }
     }
   };
 
@@ -288,6 +218,14 @@ function Divination() {
                 key={spread.id}
                 className={`spread-item ${selectedSpread?.id === spread.id ? 'selected' : ''}`}
                 onClick={() => handleSelectSpread(spread)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSelectSpread(spread);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
               >
                 <h3>{spread.name}</h3>
                 <p>{spread.desc}</p>
@@ -344,7 +282,18 @@ function Divination() {
           </p>
 
           <div className="deck-area">
-            <div className="deck" onClick={handleDrawCard}>
+            <div
+              className="deck"
+              onClick={handleDrawCard}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleDrawCard();
+                }
+              }}
+              role="button"
+              tabIndex={0}
+            >
               <TarotCard faceUp={false} />
             </div>
             <p className="draw-hint">点击卡牌抽取</p>

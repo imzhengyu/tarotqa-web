@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import MarkdownIt from 'markdown-it';
 import markdownitMark from 'markdown-it-mark';
 import DOMPurify from 'dompurify';
+import dayjs from 'dayjs';
 import api from '../services/api';
+import { useAIRequestCooldown } from '../hooks/useAIRequestCooldown';
 import './Horoscope.css';
 
 // 创建 markdown-it 实例
@@ -30,9 +32,6 @@ const zodiacList = [
   { id: 'pisces', name: '双鱼座', symbol: '♓', element: '水' },
 ];
 
-// AI 冷却时间（秒）
-const AI_COOLDOWN_SECONDS = 60;
-
 function Horoscope() {
   const [selected, setSelected] = useState('aries');
   const [horoscope, setHoroscope] = useState(null);
@@ -41,9 +40,8 @@ function Horoscope() {
   const [aiInterpretation, setAiInterpretation] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
-  const [aiCooldown, setAiCooldown] = useState(0);
-  const [aiCooldownEnd, setAiCooldownEnd] = useState(0);
-  const [showCooldownToast, setShowCooldownToast] = useState(false);
+
+  const { aiCooldown, showCooldownToast, startCooldownTimer, startCooldown } = useAIRequestCooldown('ai_horoscope_cooldown_end');
 
   const loadHoroscope = useCallback(async (zodiac) => {
     setLoading(true);
@@ -59,46 +57,10 @@ function Horoscope() {
     }
   }, []);
 
-  const canMakeAIRequest = () => {
-    const endTime = localStorage.getItem('ai_horoscope_cooldown_end');
-    if (!endTime) return true;
-    return Date.now() >= parseInt(endTime, 10);
-  };
-
   useEffect(() => {
     loadHoroscope(selected);
-    if (!canMakeAIRequest()) {
-      const endTime = localStorage.getItem('ai_horoscope_cooldown_end');
-      if (endTime) {
-        const remaining = Math.max(0, Math.ceil((parseInt(endTime, 10) - Date.now()) / 1000));
-        if (remaining > 0) {
-          setAiCooldownEnd(parseInt(endTime, 10));
-          setAiCooldown(remaining);
-          setShowCooldownToast(true);
-        }
-      }
-    }
-  }, [selected, loadHoroscope]);
-
-  // 冷却倒计时
-  useEffect(() => {
-    if (aiCooldownEnd <= 0) {
-      setShowCooldownToast(false);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      const remaining = Math.max(0, Math.ceil((aiCooldownEnd - Date.now()) / 1000));
-      setAiCooldown(remaining);
-      if (remaining <= 0) {
-        setShowCooldownToast(false);
-        setAiCooldownEnd(0);
-        localStorage.removeItem('ai_horoscope_cooldown_end');
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [aiCooldownEnd]);
+    startCooldownTimer();
+  }, [selected, loadHoroscope, startCooldownTimer]);
 
   const handleAIInterpretation = async () => {
     if (aiLoading || aiCooldown > 0) return;
@@ -110,18 +72,17 @@ function Horoscope() {
     setAiError(null);
 
     try {
-      const interpretation = await api.getAIHoroscope(selected, selectedZodiac.name);
-      const cooldownEnd = Date.now() + AI_COOLDOWN_SECONDS * 1000;
-      localStorage.setItem('ai_horoscope_cooldown_end', cooldownEnd.toString());
-      setAiCooldownEnd(cooldownEnd);
-      setAiCooldown(AI_COOLDOWN_SECONDS);
-      setShowCooldownToast(true);
+      const currentDate = {
+        year: dayjs().year(),
+        month: dayjs().month() + 1,
+        day: dayjs().date()
+      };
+      const interpretation = await api.getAIHoroscope(selected, selectedZodiac.name, currentDate);
+      startCooldown();
       setAiInterpretation(interpretation);
     } catch (error) {
       console.error('[AI运势] 捕获错误:', error.message);
-      const cooldownEnd = Date.now() + AI_COOLDOWN_SECONDS * 1000;
-      localStorage.setItem('ai_horoscope_cooldown_end', cooldownEnd.toString());
-      setAiCooldownEnd(cooldownEnd);
+      startCooldown();
       setAiError(error.message);
     } finally {
       setAiLoading(false);
