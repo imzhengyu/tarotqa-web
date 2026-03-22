@@ -151,10 +151,15 @@
   }
 
   .main {
-    padding-top: 20px;
+    /* clamp(最小值, 理想值, 最大值) - 适配导航栏高度 85.7px */
+    padding-top: calc(clamp(86px, 12vh, 90px) + env(safe-area-inset-top, 0px));
   }
 
   .footer {
-    display: none;
+    display: block;
+    padding: 12px 20px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--color-text-secondary);
   }
 }

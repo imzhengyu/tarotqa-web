@@ -37,6 +37,12 @@ jobs:
           cd web
           npm install --include=optional
 
+      - name: Lint
+        run: |
+          cd web
+          npm run lint
+          npm run lint:css
+
       - name: Build
         run: |
           cd web

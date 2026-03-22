@@ -204,10 +204,7 @@ input, textarea {
     min-height: 120px;
   }
 
-  /* 隐藏桌面端footer */
-  .footer {
-    display: none;
-  }
+  /* 移动端footer由Layout.css控制 */
 }
 
 /* iOS安全区域适配 */

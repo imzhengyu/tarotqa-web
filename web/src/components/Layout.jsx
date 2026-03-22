@@ -41,11 +41,9 @@ function Layout() {
       <main className="main">
         <Outlet />
       </main>
-      {!isMobile && (
-        <footer className="footer">
-          <p>© 2026 TarotQA - AI塔罗占卜 v{__APP_VERSION__ || '1.0.0'} ({__GIT_SHA__?.slice(0, 8) || 'local'})</p>
-        </footer>
-      )}
+      <footer className="footer">
+        <p>© 2026 TarotQA - AI塔罗占卜 v{__APP_VERSION__ || '1.0.0'} ({__GIT_SHA__?.slice(0, 8) || 'local'})</p>
+      </footer>
       {isMobile && (
         <nav className="mobile-nav">
           <NavLink to="/" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
