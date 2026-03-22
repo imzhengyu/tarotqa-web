@@ -1,6 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
+import MarkdownIt from 'markdown-it';
+import markdownitMark from 'markdown-it-mark';
+import DOMPurify from 'dompurify';
 import api from '../services/api';
 import './Horoscope.css';
+
+// 创建 markdown-it 实例
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true
+});
+
+md.use(markdownitMark);
+md.enable('table');
 
 const zodiacList = [
   { id: 'aries', name: '白羊座', symbol: '♈', element: '火' },
@@ -17,11 +30,20 @@ const zodiacList = [
   { id: 'pisces', name: '双鱼座', symbol: '♓', element: '水' },
 ];
 
+// AI 冷却时间（秒）
+const AI_COOLDOWN_SECONDS = 60;
+
 function Horoscope() {
   const [selected, setSelected] = useState('aries');
   const [horoscope, setHoroscope] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [aiInterpretation, setAiInterpretation] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [aiCooldown, setAiCooldown] = useState(0);
+  const [aiCooldownEnd, setAiCooldownEnd] = useState(0);
+  const [showCooldownToast, setShowCooldownToast] = useState(false);
 
   const loadHoroscope = useCallback(async (zodiac) => {
     setLoading(true);
@@ -37,12 +59,99 @@ function Horoscope() {
     }
   }, []);
 
+  const canMakeAIRequest = () => {
+    const endTime = localStorage.getItem('ai_horoscope_cooldown_end');
+    if (!endTime) return true;
+    return Date.now() >= parseInt(endTime, 10);
+  };
+
   useEffect(() => {
     loadHoroscope(selected);
+    if (!canMakeAIRequest()) {
+      const endTime = localStorage.getItem('ai_horoscope_cooldown_end');
+      if (endTime) {
+        const remaining = Math.max(0, Math.ceil((parseInt(endTime, 10) - Date.now()) / 1000));
+        if (remaining > 0) {
+          setAiCooldownEnd(parseInt(endTime, 10));
+          setAiCooldown(remaining);
+          setShowCooldownToast(true);
+        }
+      }
+    }
   }, [selected, loadHoroscope]);
+
+  // 冷却倒计时
+  useEffect(() => {
+    if (aiCooldownEnd <= 0) {
+      setShowCooldownToast(false);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((aiCooldownEnd - Date.now()) / 1000));
+      setAiCooldown(remaining);
+      if (remaining <= 0) {
+        setShowCooldownToast(false);
+        setAiCooldownEnd(0);
+        localStorage.removeItem('ai_horoscope_cooldown_end');
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [aiCooldownEnd]);
+
+  const handleAIInterpretation = async () => {
+    if (aiLoading || aiCooldown > 0) return;
+
+    const selectedZodiac = zodiacList.find(z => z.id === selected);
+    if (!selectedZodiac) return;
+
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const interpretation = await api.getAIHoroscope(selected, selectedZodiac.name);
+      const cooldownEnd = Date.now() + AI_COOLDOWN_SECONDS * 1000;
+      localStorage.setItem('ai_horoscope_cooldown_end', cooldownEnd.toString());
+      setAiCooldownEnd(cooldownEnd);
+      setAiCooldown(AI_COOLDOWN_SECONDS);
+      setShowCooldownToast(true);
+      setAiInterpretation(interpretation);
+    } catch (error) {
+      console.error('[AI运势] 捕获错误:', error.message);
+      const cooldownEnd = Date.now() + AI_COOLDOWN_SECONDS * 1000;
+      localStorage.setItem('ai_horoscope_cooldown_end', cooldownEnd.toString());
+      setAiCooldownEnd(cooldownEnd);
+      setAiError(error.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const renderMarkdownContent = (content) => {
+    if (!content) return '';
+    try {
+      const html = md.render(content);
+      const clean = DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'strong', 'em', 'del', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div', 'mark'],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'target', 'rel', 'style']
+      });
+      return <div className="markdown-body" dangerouslySetInnerHTML={{ __html: clean }} />;
+    } catch (error) {
+      console.error('[Markdown渲染] 解析失败:', error);
+      return <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{content}</pre>;
+    }
+  };
 
   return (
     <div className="horoscope">
+      {showCooldownToast && aiCooldown > 0 && (
+        <div className="cooldown-toast">
+          <span className="cooldown-icon">⏳</span>
+          <span className="cooldown-text">请等待 {aiCooldown}s 后再试</span>
+        </div>
+      )}
+
       <h1 className="page-title">每日运势</h1>
 
       <div className="zodiac-selector">
@@ -108,6 +217,30 @@ function Horoscope() {
               <span className="lucky-value">{horoscope.luckyDirection}</span>
             </div>
           </div>
+
+          <div className="ai-action">
+            <button
+              className="btn btn-primary"
+              onClick={handleAIInterpretation}
+              disabled={aiLoading || aiCooldown > 0}
+            >
+              {aiLoading ? '分析中...' : aiCooldown > 0 ? `请等待 ${aiCooldown}s` : 'AI运势分析'}
+            </button>
+          </div>
+
+          {aiError && (
+            <div className="ai-error">
+              <p>错误: {aiError}</p>
+              <button onClick={() => setAiError(null)}>关闭</button>
+            </div>
+          )}
+
+          {aiInterpretation && (
+            <div className="ai-interpretation">
+              <h3>AI 运势分析</h3>
+              {renderMarkdownContent(aiInterpretation)}
+            </div>
+          )}
         </div>
       ) : null}
     </div>

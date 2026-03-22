@@ -343,6 +343,99 @@ const api = {
 
     prompt += `请解读这些牌与用户问题的关系，提供深入的分析和指导建议。请用中文回答，以 Markdown 格式输出即可。`;
     return prompt;
+  },
+
+  // AI 星座运势分析
+  async getAIHoroscope(zodiacId, zodiacName) {
+    // 优先使用用户配置的 API Key，其次使用默认 Key
+    let apiKey = localStorage.getItem('minimax_api_key');
+    if (!apiKey) {
+      apiKey = import.meta.env.VITE_DEFAULT_API_KEY;
+    }
+
+    if (!apiKey) {
+      throw new Error('请先在设置中配置 MiniMax API Key');
+    }
+
+    const systemPrompt = `你是一位专业的星座运势分析师，专门为用户提供详细的每日/每周运势分析。你需要根据星座的特性和当前星象位置，给出准确、富有洞察力的运势预测。请用中文回答，以 Markdown 格式输出。`;
+
+    const userContent = `请分析 ${zodiacName} 今日的综合运势，包括但不限于：
+1. 整体运势走向
+2. 爱情运势
+3. 事业运势
+4. 财运
+5. 幸运数字、颜色、方向等小贴士
+
+请用专业但亲切的语气给出分析。`;
+
+    const requestBody = {
+      model: 'MiniMax-M2.7',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent }
+      ],
+      stream: false,
+      temperature: 1,
+      top_p: 0.95,
+      max_completion_tokens: 2048
+    };
+
+    let response;
+    try {
+      response = await fetch('https://api.minimaxi.com/v1/text/chatcompletion_v2', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+    } catch {
+      throw new Error('网络连接失败，请检查网络后重试');
+    }
+
+    if (!response.ok) {
+      let errorMsg = 'API 请求失败';
+      try {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          errorMsg = 'API Key 无效或已过期，请检查设置';
+        } else if (response.status === 403) {
+          errorMsg = 'API Key 权限不足';
+        } else if (response.status === 429) {
+          errorMsg = '请求过于频繁，请稍后重试';
+        } else if (errorData.base_resp?.status_msg) {
+          errorMsg = errorData.base_resp.status_msg;
+        } else if (errorData.error?.message) {
+          errorMsg = errorData.error.message;
+        }
+      } catch {
+        // ignore parse error
+      }
+      throw new Error(errorMsg);
+    }
+
+    const result = await response.json();
+
+    if (!result.choices || !Array.isArray(result.choices) || result.choices.length === 0) {
+      throw new Error('AI 响应格式错误，请稍后重试');
+    }
+
+    const choice = result.choices[0];
+    let aiContent;
+    if (choice.messages && Array.isArray(choice.messages)) {
+      aiContent = choice.messages.map(m => m.role === 'assistant' ? m.content : '').join('');
+    } else if (choice.message && choice.message.content) {
+      aiContent = choice.message.content;
+    } else {
+      throw new Error('AI 响应内容解析失败');
+    }
+
+    if (!aiContent || aiContent.trim() === '') {
+      throw new Error('AI 暂时无法提供解读，请稍后重试');
+    }
+
+    return aiContent.trim();
   }
 };
 

@@ -4,10 +4,9 @@
 }
 
 .zodiac-selector {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
   margin-bottom: 40px;
 }
 
@@ -124,8 +123,13 @@
     grid-template-columns: 1fr;
   }
 
+  .zodiac-selector {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
   .zodiac-btn {
-    padding: 8px 12px;
+    padding: 10px 8px;
   }
 
   .zodiac-symbol {
@@ -136,3 +140,163 @@
     padding: 20px;
   }
 }
+
+/* AI 运势分析样式 */
+.cooldown-toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(45, 27, 78, 0.95);
+  border: 1px solid var(--color-secondary);
+  border-radius: 8px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 1000;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.cooldown-icon {
+  font-size: 18px;
+}
+
+.cooldown-text {
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.ai-action {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.ai-error {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid var(--color-error);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.ai-error p {
+  color: var(--color-error);
+  margin-bottom: 12px;
+}
+
+.ai-error button {
+  background: transparent;
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ai-interpretation {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.ai-interpretation h3 {
+  color: var(--color-secondary);
+  font-size: 18px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* Markdown 样式 */
+.markdown-body {
+  color: var(--color-text);
+  line-height: 1.8;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  color: var(--color-secondary);
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+.markdown-body p {
+  margin-bottom: 12px;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin-bottom: 12px;
+  padding-left: 24px;
+}
+
+.markdown-body li {
+  margin-bottom: 6px;
+}
+
+.markdown-body blockquote {
+  border-left: 3px solid var(--color-secondary);
+  padding-left: 16px;
+  margin: 12px 0;
+  color: var(--color-text-secondary);
+}
+
+.markdown-body code {
+  background: rgba(45, 27, 78, 0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.markdown-body pre {
+  background: rgba(26, 15, 46, 0.8);
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+
+.markdown-body pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.markdown-body strong {
+  color: var(--color-secondary);
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-body th {
+  background: rgba(45, 27, 78, 0.6);
+  color: var(--color-secondary);
+}
+
