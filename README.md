@@ -7,93 +7,56 @@
 ## 功能特性
 
 - **78张完整塔罗牌**：大阿卡纳22张 + 小阿卡纳56张
-- **5种牌阵**：单牌阵、三牌阵、凯尔特十字、爱情金字塔、马蹄铁
+- **5种牌阵**：单牌、三牌、凯尔特十字、爱情金字塔、马蹄铁
 - **正位/逆位**：每张牌50%概率出现逆位，牌义解读不同
-- **每日运势**：十二星座每日运势
-- **本地图片**：78张塔罗牌图片存储于 `web/public/tarot-images/`，加载更快
-- **3D动画**：卡牌翻转动画、悬浮效果
-- **AI深度解读**：集成 MiniMax API，根据问题场景匹配合适的塔罗角色顾问，提供专业的深度解读
-- **Markdown渲染**：AI解读内容支持完整标准Markdown语法（加粗、斜体、列表、表格、引用等）
-- **速率限制**：AI深度解读60秒冷却，防止滥用
+- **每日运势**：十二星座每日运势，包含综合、爱情、事业、财运
+- **AI深度解读**：集成 MiniMax API，支持Markdown渲染
 
 ## 技术栈
 
 - React 18 + Vite 5
 - React Router DOM 6
-- CSS3 + CSS Variables
-- 纯前端，无需后端
+- markdown-it + DOMPurify
+- dayjs
+- Vitest
 
 ## 项目结构
 
 ```
 tarotqa-web/
 ├── web/
-│   ├── public/
-│   │   └── tarot-images/     # 本地塔罗牌图片 (78张)
+│   ├── public/tarot-images/  # 78张塔罗牌本地图片
 │   ├── src/
-│   │   ├── components/      # 组件：TarotCard, Layout, ScrollIndicator
-│   │   ├── pages/           # 页面：Home, Divination, Cards, Horoscope, Profile
-│   │   ├── services/        # api.js (本地JSON数据加载 + AI API调用)
-│   │   └── styles/           # global.css
+│   │   ├── components/       # TarotCard, Layout, PieChart, ErrorBoundary
+│   │   ├── pages/           # Home, Divination, Cards, Horoscope, Statistics, Profile
+│   │   ├── hooks/           # useDevice, useIntersectionObserver, useVisitStats
+│   │   ├── services/        # api.js
+│   │   ├── data/            # spreads.js, personas.js
+│   │   ├── styles/          # global.css
+│   │   └── tests/           # Vitest 测试
 │   └── index.html
 ├── resources/
-│   ├── tarot-data.json       # 78张塔罗牌完整数据
-│   └── tarot-personas.md      # AI角色设定
-├── dist/                      # 构建产物（GitHub Pages部署目录）
-├── SPEC.md                   # 项目规格说明书
+│   ├── tarot-data.json      # 78张塔罗牌数据
+│   └── tarot-personas.md     # AI角色设定
+├── dist/                    # 构建产物
+├── CLAUDE.md                # 开发指南
+├── CR.md                    # 代码审查
+├── test.md                  # 测试计划
 └── README.md
 ```
 
 ## 快速开始
 
-### 安装依赖
-
 ```bash
 cd web
 npm install
+npm run dev        # 开发服务器 (localhost:3000)
+npm run build      # 生产构建
+npm run preview    # 预览构建
+npm run lint       # ESLint 检查
+npm run test       # 测试（监视模式）
+npm run test:run   # 测试（单次）
 ```
-
-### 开发预览
-
-```bash
-cd web
-npm run dev
-```
-
-### 构建生产版本
-
-```bash
-cd web
-npm run build
-```
-
-构建产物在 `dist/` 目录，可直接部署到 GitHub Pages 或任意静态服务器。
-
-### 测试
-
-```bash
-cd web
-
-# 运行所有测试（监视模式）
-npm run test
-
-# 运行所有测试（单次）
-npm run test:run
-
-# 运行测试后预览
-npm run preview
-```
-
-**测试覆盖**：当前覆盖率 88%+（198 测试用例）
-
-| 文件 | 语句覆盖 | 分支覆盖 | 函数覆盖 | 行覆盖 |
-|------|----------|----------|----------|--------|
-| services/api.js | 93.7% | 86.2% | 100% | 93.5% |
-| components/* | 85.1% | 76.0% | 81.8% | 85.5% |
-| hooks/* | 86.3% | 77.3% | 88.1% | 85.4% |
-| **总体** | **88.9%** | **80.5%** | **89.3%** | **88.5%** |
-
-> 注：Horoscope.jsx 因 JSDOM 环境限制无法准确追踪 React Hooks 覆盖率，已排除于覆盖率统计。
 
 ## 牌阵说明
 
@@ -114,80 +77,24 @@ npm run preview
 
 ## AI 深度解读
 
-### 开箱即用
-
-部署版本已内置默认 API Key，可直接使用 AI 深度解读功能，无需自行配置。
-
-### 自定义 API Key（可选）
-
-如需使用自己的 API Key：
-
-1. 访问 [MiniMax Platform](https://platform.minimaxi.com) 注册并获取 API Key
-2. 在"我的"页面配置您的 API Key
-3. 自定义 Key 优先级高于默认 Key
-
-### 速率限制
-
-- 每60秒只能发起一次 AI 深度解读请求
-- 按钮会显示剩余冷却时间
-- 倒计时结束后自动恢复
-
-### AI 角色系统
-
-根据您的问题类型，系统会自动选择合适的塔罗角色顾问：
-
-| 角色 | 适用场景 | 关键词 |
-|------|----------|--------|
-| 综合顾问 | 通用问题 | 默认 |
-| 职涯发展顾问 | 事业抉择、工作问题 | 工作、事业、跳槽、面试 |
-| 爱情情感顾问 | 感情占卜、恋爱问题 | 爱情、感情、复合、桃花 |
-| 财富财务顾问 | 财运占卜，投资理财 | 金钱、财富，投资、理财 |
-| 决策指引顾问 | 重大决策、选择困难 | 选择、决定、纠结 |
-| 综合运势顾问 | 综合运势分析 | 运势、运气、趋势 |
-
-### Markdown 支持
-
-AI 解读内容支持完整的标准 Markdown 语法：
-
-- **加粗**：`**text**`
-- *斜体*：`*text*`
-- ***加粗+斜体***：`***text***`
-- 引用块：`> text`
-- 列表：`- item` 或 `1. item`
-- 表格：`| col1 | col2 |`
-- 标题：`## 标题`
-- 链接：`[text](url)`
-- 代码：`` `code` ``
-
-### 调试模式
-
-在占卜结果页面可以开启"显示调试信息"，查看：
-
-- 请求时间戳
-- 牌阵类型
-- 使用的 AI 角色
-- 卡牌数量
-- 用户问题
-- 完整请求数据（JSON）
-- 抽卡详情（JSON）
-
-## 图片资源
-
-塔罗牌图片来源于 fatemaster.ai，已下载至本地 `web/public/tarot-images/` 目录。
-
-## 浏览器支持
-
-- Chrome 80+
-- Firefox 75+
-- Safari 13+
-- Edge 80+
-
-## License
-
-MIT
+- 每60秒只能发起一次请求
+- 支持Markdown格式输出
+- AI角色根据问题类型自动匹配
 
 ---
 
-*文档版本：v2.9*
-*最后更新：2026-03-21*
-*测试覆盖率：90%+（152 测试用例）*
+## 版本规范
+
+**当前版本**: v3.0.0
+
+语义化版本 (SemVer)：`主版本.次版本.修订号`
+
+| 变更类型 | 更新示例 |
+|----------|----------|
+| 新功能 | v2.9 → v3.0 |
+| 功能优化 | v3.0 → v3.1 |
+| Bug修复 | v3.0 → v3.0.1 |
+
+---
+
+*详细规格说明参见 [SPEC.md](SPEC.md)*

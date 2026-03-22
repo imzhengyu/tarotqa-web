@@ -1,283 +1,64 @@
-# TarotQA 测试计划
+# 测试计划
 
-## 1. 测试工具
-
-项目使用 Vitest 作为测试框架。
-
-### 1.1 安装的测试依赖
-
-| 包名 | 说明 |
-|------|------|
-| vitest | 测试运行器 |
-| @testing-library/react | React 组件测试 |
-| @testing-library/jest-dom | Jest 断言扩展 |
-| jsdom | DOM 环境模拟 |
-
-### 1.2 测试命令
+## 测试命令
 
 ```bash
 cd web
-
-# 运行所有测试（监视模式）
-npm run test
-
-# 运行所有测试（单次）
-npm run test:run
-
-# 运行测试并生成回归报告（自动追加到 regression_report.md）
-npm run test:regression
-
-# 运行测试后预览
-npm run preview
+npm run test         # 测试（监视模式）
+npm run test:run     # 测试（单次）
+npm run test:regression  # 回归测试 + 覆盖率报告
+npm run lint         # ESLint 检查
+npm run lint:css     # Stylelint 检查
 ```
 
-### 1.3 回归测试报告
-
-每次运行 `npm run test:regression` 后，测试结果会自动追加到 `web/regression_report.md` 文件中，包含：
-- 时间戳
-- Git 分支和 commit SHA
-- 测试通过/失败状态
-- 覆盖率指标
-
-**回归报告示例**:
-```markdown
-## Regression Test Report
-**Timestamp**: 2026-03-22 02:28:07
-**Branch**: master (2ab1b07)
-**Status**: ✅ PASS
-
-### Test Results
-| Metric | Value |
-|--------|-------|
-| Passed | 169 |
-| Failed | 0 |
-| Total | 169 |
-| Coverage | 89.97% |
-
-### File Coverage
-| File | Coverage |
-|------|----------|
-| api.js | 100% |
-| useVisitStats.js | 88% |
-```
-
-### 1.4 测试文件位置
-
-- 测试文件：`web/src/tests/*.test.js`
-- 配置文件：`web/vitest.config.js`
-- 测试环境配置：`web/src/tests/setup.js`
-- 回归报告：`web/regression_report.md`
-
-## 2. 发布前测试检查清单
-
-### 2.1 功能测试
-
-- [ ] 首页加载正常，显示所有功能入口
-- [ ] 占卜流程：选择牌阵 → 输入问题 → 洗牌 → 抽牌 → 查看结果
-- [ ] AI 深度解读功能正常工作（60秒冷却验证）
-- [ ] 牌库搜索和筛选功能正常
-- [ ] 运势页面显示12星座数据
-- [ ] 统计页面显示访问数据
-- [ ] API 设置可以保存和清除 Key
-
-### 2.2 移动端测试
-
-- [x] 移动端导航在页面顶部
-- [ ] 所有页面在移动端可正常访问
-- [ ] 卡牌在移动端显示正常
-- [ ] 底部内容不被导航栏遮挡
-
-### 2.3 响应式测试
-
-- [ ] 桌面端 (≥1024px)：显示顶部导航和底部 footer
-- [ ] 平板端 (768-1023px)：显示顶部导航
-- [ ] 移动端 (<768px)：显示顶部导航，无 footer
-
-### 2.4 浏览器兼容性
-
-- [ ] Chrome 80+ 正常
-- [ ] Firefox 75+ 正常
-- [ ] Safari 13+ 正常
-- [ ] Edge 80+ 正常
-
-### 2.5 AI 解读调试信息测试
-
-- [ ] 勾选"显示调试信息"可展开调试面板
-- [ ] 调试面板显示 AI 原始回复
-- [ ] 调试面板显示完整请求 JSON
-
-### 2.6 安全测试
-
-- [ ] XSS 防护：确保用户输入经过 DOMPurify 净化
-- [ ] Markdown 渲染安全：AI 返回内容经过净化处理
-
-## 3. 单元测试
-
-### 3.1 API 服务测试 (`src/tests/api.test.js`)
-
-**57 个测试用例**，覆盖：
-
-| 测试组 | 测试内容 |
-|--------|----------|
-| getCards | 获取塔罗牌列表、牌数据字段验证 |
-| getCard | 根据 ID 获取单张牌 |
-| searchCards | 筛选（arcana/suit）、关键词搜索、多条件组合 |
-| createDivination | 占卜记录创建 |
-| getHoroscope | 星座运势获取 |
-| getAllHoroscopes | 获取所有12星座运势 |
-| personas | 角色定义完整性验证 |
-| getRecommendedPersona | 关键词匹配、牌阵推荐、优先级逻辑 |
-| buildTarotMessages | 消息构建、角色选择 |
-| buildTarotPrompt | 提示词构建、牌信息展示 |
-| getAIInterpretation | API Key 验证、格式校验、网络错误、HTTP 错误处理、响应解析 |
-| API Key Priority | 用户 Key 优先级、空 Key 处理 |
-
-### 3.2 Hooks 测试 (`src/tests/useVisitStats.test.js`)
-
-**72 个测试用例**，覆盖：
-
-| 测试组 | 测试内容 |
-|--------|----------|
-| generateUUID | UUID v4 格式验证、唯一性 |
-| anonymizeIp | IP 脱敏、null/空字符串处理 |
-| detectDeviceType | 桌面/平板/手机检测、边界值 |
-| detectOSType | iOS/Android/Windows/macOS/Linux/Other 检测 |
-| detectBrowser | Chrome/Firefox/Safari/Edge 检测 |
-| calculateDeviceStats | 设备统计计算、空记录处理 |
-| calculateOsStats | OS 统计计算、未知 OS 处理 |
-| getSessionIP | 伪 IP 生成 |
-| loadStats | localStorage 加载、错误处理 |
-| saveStats | localStorage 保存 |
-| createInitialStats | 初始数据结构验证 |
-| Error Handling | JSON 解析错误、存储异常处理 |
-| **useVisitStats Hook** | 初始化、incrementQuestionCount、getTodayQuestions、getWeekQuestions、getRecentRecords、getDeviceStatsWithPercentage、getOsStatsWithPercentage、clearAllStats |
-
-### 3.3 组件测试 (`src/tests/components.test.jsx`)
-
-**已实现**，覆盖：
-
-| 测试组 | 测试内容 |
-|--------|----------|
-| TarotCard | PropTypes 验证、正/逆位渲染、图片加载状态、error 状态 |
-| PieChart | PropTypes 验证、空数据渲染、数据比例计算 |
-| OsPieChart | PropTypes 验证、透传 PieChart props |
-| ErrorBoundary | 错误捕获、恢复选项（重试、返回首页、刷新页面） |
-| Horoscope | error 状态渲染、重试按钮功能 |
-| Layout | 移动端导航渲染、桌面端导航隐藏、移动端/桌面端环境判断 |
-
-## 4. 测试覆盖目标
-
-### 4.1 当前覆盖
-
-| 文件 | 语句覆盖 | 分支覆盖 | 函数覆盖 | 行覆盖 |
-|------|----------|----------|----------|--------|
-| services/api.js | 94% | 93% | 96% | 95% |
-| hooks/useVisitStats.js | 89% | 77% | 97% | 88% |
-| **总体** | **90%** | **85%** | **92%** | **91%** |
-
-**测试统计**：
-- 测试文件数：3
-- 测试用例数：152
-- 测试状态：Lint 通过 ✅
-
-### 4.2 目标覆盖
-
-- [x] API 服务函数（94%）
-- [x] 数据处理函数
-- [x] Hooks 基础功能（89%，工具函数+Hook逻辑已覆盖）
-- [x] React 组件渲染测试（已实现 30 个用例）
-- [ ] 用户交互测试（待实现）
-- [ ] 路由测试（待实现）
-
-### 4.3 测试文件说明
+## 测试文件
 
 | 文件 | 测试内容 |
 |------|----------|
-| `src/tests/api.test.js` | API 服务函数、角色匹配、构建消息、错误处理、网络请求模拟 |
-| `src/tests/useVisitStats.test.js` | 工具函数（UUID、IP脱敏、设备检测、OS检测、浏览器检测）、统计计算、错误处理 |
-| `src/tests/components.test.js` | TarotCard、PieChart、OsPieChart、ErrorBoundary 组件测试 |
+| `src/tests/api.test.js` | API 服务函数、角色匹配、错误处理 |
+| `src/tests/useVisitStats.test.js` | 工具函数、统计计算、localStorage |
+| `src/tests/components.test.jsx` | TarotCard、PieChart、ErrorBoundary、Layout |
 
-## 5. 新增测试用例计划
+## 覆盖率状态
 
-### 5.1 TarotCard 组件测试 ✅ 已实现
+| 文件 | 语句 | 分支 | 函数 | 行 |
+|------|------|------|------|-----|
+| services/api.js | 93.7% | 86.2% | 100% | 93.5% |
+| components/* | 85.1% | 76.0% | 81.8% | 85.5% |
+| hooks/* | 86.3% | 77.3% | 88.1% | 85.4% |
+| **总体** | **88.9%** | **80.5%** | **89.3%** | **88.5%** |
 
-```javascript
-describe('TarotCard', () => {
-  // 渲染状态
-  it('should render card element')
-  it('should include face-up class when faceUp is true')
-  it('should include selected class when selected is true')
-  it('should include small class when small is true')
-  it('should handle card with isReversed true')
-  it('should handle null card without error')
+> 注：Horoscope.jsx 因 JSDOM 环境限制无法准确追踪 React Hooks 覆盖率，已排除。
 
-  // 点击处理
-  it('should call onClick when card is clicked')
-})
-```
+## 发布前检查清单
 
-### 5.2 PieChart 组件测试 ✅ 已实现
+### 页面功能
 
-```javascript
-describe('PieChart', () => {
-  // 空数据渲染
-  it('should show empty data placeholder when data is empty array')
-  it('should show empty data placeholder when all counts are zero')
-  it('should render title when provided')
+- [ ] 首页：Banner轮播、功能入口、导航正常
+- [ ] 占卜页：5种牌阵选择、抽牌流程、正位/逆位显示
+- [ ] 牌库页：搜索、筛选、卡牌详情弹窗
+- [ ] 运势页：12星座数据、AI分析按钮
+- [ ] 统计页：访问数据饼图
+- [ ] 我的页：API Key设置
 
-  // 数据渲染
-  it('should render pie chart with data')
-  it('should render legend items')
-  it('should display correct percentages')
-  it('should display total count')
+### 响应式
 
-  // Color fallback
-  it('should handle missing color with fallback')
-})
-```
+- [ ] 桌面端 (≥1024px)：顶部导航 + 底部 footer
+- [ ] 移动端 (<768px)：顶部固定导航，内容不被遮挡
 
-### 5.3 ErrorBoundary 组件测试 ✅ 已实现
+### 安全
 
-```javascript
-describe('ErrorBoundary', () => {
-  // 正常渲染
-  it('should render children when no error')
-
-  // 错误捕获
-  it('should capture error and show error message')
-  it('should show retry button')
-  it('should show home link')
-  it('should show refresh button')
-})
-```
-  it('应该显示"刷新页面"按钮')
-  it('点击重试应该调用 resetErrorBoundary')
-  it('点击返回首页应该导航到首页')
-})
-```
-
-### 5.4 Horoscope 组件测试
-
-```javascript
-describe('Horoscope', () => {
-  // 加载状态
-  it('应该显示加载状态当获取运势数据中')
-  it('should hide loading when data is loaded')
-
-  // 错误状态
-  it('should display error message when loading fails')
-  it('should show retry button when error occurs')
-  it('should call loadHoroscope when retry button is clicked')
-  it('should hide error when switching zodiac signs')
-
-  // 成功状态
-  it('should display horoscope content when loaded')
-  it('should update content when selected zodiac changes')
-})
-```
+- [ ] XSS防护：用户输入经过 DOMPurify 净化
+- [ ] AI内容：Markdown 渲染安全
 
 ---
 
-*最后更新：2026-03-21*
-*当前覆盖率：90%+（152 测试用例）*
-*已完成：组件测试 30 个用例 + Hook 测试 11 个用例*
+## 版本规范
+
+**当前版本**: v3.0.0
+
+语义化版本 (SemVer)：`主版本.次版本.修订号`
+
+---
+
+*最后更新：2026-03-22*
