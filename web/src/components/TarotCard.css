@@ -109,6 +109,8 @@
   height: 85%;
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
+  will-change: opacity, filter;
 }
 
 /* 逆位时图片旋转180度，文字保持正常 */
@@ -131,12 +133,6 @@
 .card-image.loaded {
   opacity: 1;
   filter: blur(0);
-}
-
-/* GPU acceleration for smooth animations */
-.card-image-container {
-  transform: translateZ(0);
-  will-change: opacity, filter;
 }
 
 .card-image-placeholder {
