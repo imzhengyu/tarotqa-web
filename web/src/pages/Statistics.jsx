@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import useVisitStats from '../hooks/useVisitStats';
 import PieChart from '../components/PieChart';
 import './Statistics.css';

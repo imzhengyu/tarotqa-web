@@ -31,7 +31,7 @@ function Profile() {
       try {
         const userData = await api.getMe();
         setUser(userData);
-      } catch (error) {
+      } catch {
         localStorage.removeItem('token');
       }
     }
@@ -47,7 +47,7 @@ function Profile() {
       await api.sendCode(phone);
       setCodeSent(true);
       setMessage('验证码已发送');
-    } catch (error) {
+    } catch {
       setMessage('发送失败，请重试');
     } finally {
       setLoading(false);
@@ -65,7 +65,7 @@ function Profile() {
       localStorage.setItem('token', result.token);
       setUser(result.user);
       setMessage('登录成功');
-    } catch (error) {
+    } catch {
       setMessage('验证失败');
     } finally {
       setLoading(false);

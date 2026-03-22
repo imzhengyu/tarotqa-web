@@ -120,7 +120,23 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+.card-image.loading {
+  opacity: 0;
+  filter: blur(10px);
+}
+
+.card-image.loaded {
+  opacity: 1;
+  filter: blur(0);
+}
+
+/* GPU acceleration for smooth animations */
+.card-image-container {
+  transform: translateZ(0);
+  will-change: opacity, filter;
 }
 
 .card-image-placeholder {

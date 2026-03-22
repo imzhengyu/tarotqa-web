@@ -1,16 +1,28 @@
 import { useState, memo } from 'react';
 import PropTypes from 'prop-types';
+import useIntersectionObserver from '../hooks/useIntersectionObserver';
 import './TarotCard.css';
 
 const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small = false, selected = false }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  // IntersectionObserver for preload before viewport entry
+  const { elementRef, isIntersecting } = useIntersectionObserver({
+    rootMargin: '300px', // Start loading 300px before entering viewport
+    enabled: !imageLoaded && !imageError
+  });
+
   const isReversed = card?.isReversed ?? false;
   const showReversed = faceUp && isReversed;
 
+  // Determine image source - only load when approaching viewport
+  const imageSrc = card?.localPath ? `${import.meta.env.BASE_URL}${card.localPath}` : card?.imageUrl;
+  const shouldLoadImage = isIntersecting && !imageError && !imageLoaded;
+
   return (
     <div
+      ref={elementRef}
       className={`tarot-card ${faceUp ? 'face-up' : ''} ${small ? 'small' : ''} ${selected ? 'selected' : ''} ${showReversed ? 'reversed' : ''}`}
       onClick={onClick}
     >
@@ -35,9 +47,21 @@ const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small
                     <span className="error-text">图片加载失败</span>
                   </div>
                 )}
-                {!imageError && (
+                {imageLoaded && !imageError && (
                   <img
-                    src={card.localPath ? `${import.meta.env.BASE_URL}${card.localPath}` : card.imageUrl}
+                    src={imageSrc}
+                    alt={card.name}
+                    className="card-image loaded"
+                    onLoad={() => setImageLoaded(true)}
+                    onError={() => {
+                      setImageLoaded(true);
+                      setImageError(true);
+                    }}
+                  />
+                )}
+                {!imageLoaded && !imageError && (
+                  <img
+                    src={shouldLoadImage ? imageSrc : imageSrc}
                     alt={card.name}
                     className="card-image"
                     loading="lazy"
@@ -46,7 +70,6 @@ const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small
                       setImageLoaded(true);
                       setImageError(true);
                     }}
-                    style={{ opacity: imageLoaded ? 1 : 0 }}
                   />
                 )}
               </div>

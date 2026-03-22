@@ -54,7 +54,7 @@ const api = {
     };
   },
 
-  async getDivination(id) {
+  async getDivination(_id) {
     return null;
   },
 
@@ -158,11 +158,11 @@ const api = {
   },
 
   // 认证相关 - 简化版本
-  async sendCode(phone) {
+  async sendCode(_phone) {
     return { success: true };
   },
 
-  async verifyCode(phone, code) {
+  async verifyCode(_phone, _code) {
     return { success: true, token: 'demo-token' };
   },
 
@@ -233,11 +233,9 @@ const api = {
     // 错误场景4: HTTP 状态码错误
     if (!response.ok) {
       let errorMsg = 'API 请求失败';
-      let errorDetail = null;
 
       try {
         const errorData = await response.json();
-        errorDetail = errorData;
         console.error('[AI解读] API 错误响应:', errorData);
 
         // 解析常见错误
@@ -254,9 +252,8 @@ const api = {
         } else if (errorData.error?.message) {
           errorMsg = errorData.error.message;
         }
-      } catch (parseError) {
-        console.error('[AI解读] 解析错误响应失败:', parseError);
-        errorDetail = await response.text().catch(() => '无法读取响应');
+      } catch {
+        // 忽略解析错误
       }
 
       throw new Error(errorMsg);
@@ -317,7 +314,7 @@ const api = {
   },
 
   buildTarotMessages(data) {
-    const { question, selectedSpread, drawnCards } = data;
+    const { question, selectedSpread } = data;
 
     // 获取合适的角色
     const persona = this.getRecommendedPersona(selectedSpread?.id, question);

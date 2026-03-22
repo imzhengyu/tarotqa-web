@@ -24,15 +24,49 @@ npm run test
 # 运行所有测试（单次）
 npm run test:run
 
+# 运行测试并生成回归报告（自动追加到 regression_report.md）
+npm run test:regression
+
 # 运行测试后预览
 npm run preview
 ```
 
-### 1.3 测试文件位置
+### 1.3 回归测试报告
 
-- 测试文件：`src/tests/*.test.js`
-- 配置文件：`vitest.config.js`
-- 测试环境配置：`src/tests/setup.js`
+每次运行 `npm run test:regression` 后，测试结果会自动追加到 `web/regression_report.md` 文件中，包含：
+- 时间戳
+- Git 分支和 commit SHA
+- 测试通过/失败状态
+- 覆盖率指标
+
+**回归报告示例**:
+```markdown
+## Regression Test Report
+**Timestamp**: 2026-03-22 02:28:07
+**Branch**: master (2ab1b07)
+**Status**: ✅ PASS
+
+### Test Results
+| Metric | Value |
+|--------|-------|
+| Passed | 169 |
+| Failed | 0 |
+| Total | 169 |
+| Coverage | 89.97% |
+
+### File Coverage
+| File | Coverage |
+|------|----------|
+| api.js | 100% |
+| useVisitStats.js | 88% |
+```
+
+### 1.4 测试文件位置
+
+- 测试文件：`web/src/tests/*.test.js`
+- 配置文件：`web/vitest.config.js`
+- 测试环境配置：`web/src/tests/setup.js`
+- 回归报告：`web/regression_report.md`
 
 ## 2. 发布前测试检查清单
 

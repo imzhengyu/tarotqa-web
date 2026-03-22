@@ -79,8 +79,10 @@
 /* 移动端顶部导航栏 */
 .mobile-nav {
   display: none;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   background: rgba(26, 15, 46, 0.98);
   border-bottom: 1px solid rgba(212, 175, 55, 0.4);

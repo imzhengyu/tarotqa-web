@@ -815,5 +815,207 @@ describe('API Service', () => {
         expect(error.message).toBe('MiniMax 服务器繁忙，请稍后重试');
       }
     });
+
+    it('应该处理 choices 为 null 的响应', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ choices: null })
+      });
+
+      try {
+        await api.getAIInterpretation(mockData);
+        expect.fail('应该抛出错误');
+      } catch (error) {
+        expect(error.message).toBe('AI 响应格式错误，请稍后重试');
+      }
+    });
+
+    it('应该处理 choices 为 undefined 的响应', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({})
+      });
+
+      try {
+        await api.getAIInterpretation(mockData);
+        expect.fail('应该抛出错误');
+      } catch (error) {
+        expect(error.message).toBe('AI 响应格式错误，请稍后重试');
+      }
+    });
+
+    it('应该处理 choice 对象所有必需字段都缺失的情况', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          choices: [{ notAFinishReason: 'test', notMessages: [] }]
+        })
+      });
+
+      try {
+        await api.getAIInterpretation(mockData);
+        expect.fail('应该抛出错误');
+      } catch (error) {
+        expect(error.message).toBe('AI 响应格式错误，请稍后重试');
+      }
+    });
+
+    it('应该处理 choice 中 delta 和 message 都不存在的情况', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          choices: [{ finish_reason: 'stop' }]
+        })
+      });
+
+      try {
+        await api.getAIInterpretation(mockData);
+        expect.fail('应该抛出错误');
+      } catch (error) {
+        expect(error.message).toBe('AI 响应内容解析失败');
+      }
+    });
+
+    it('应该处理 message.content 为空字符串的情况', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          choices: [{
+            finish_reason: 'stop',
+            message: { content: '' }
+          }]
+        })
+      });
+
+      try {
+        await api.getAIInterpretation(mockData);
+        expect.fail('应该抛出错误');
+      } catch (error) {
+        // 空字符串 content 会因为无法提取内容而抛出此错误
+        expect(error.message).toBe('AI 响应内容解析失败');
+      }
+    });
+
+    it('应该处理 delta.content 为空字符串的情况', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          choices: [{
+            finish_reason: 'stop',
+            delta: { content: '' }
+          }]
+        })
+      });
+
+      try {
+        await api.getAIInterpretation(mockData);
+        expect.fail('应该抛出错误');
+      } catch (error) {
+        // 空字符串 content 会因为无法提取内容而抛出此错误
+        expect(error.message).toBe('AI 响应内容解析失败');
+      }
+    });
+
+    it('应该处理 messages 数组全为空内容的情况', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          choices: [{
+            finish_reason: 'stop',
+            messages: [
+              { role: 'user', content: '问题' },
+              { role: 'assistant', content: '' },
+              { role: 'system', content: '' }
+            ]
+          }]
+        })
+      });
+
+      try {
+        await api.getAIInterpretation(mockData);
+        expect.fail('应该抛出错误');
+      } catch (error) {
+        expect(error.message).toBe('AI 暂时无法提供解读，请稍后重试');
+      }
+    });
+
+    it('应该正确拼接多个 assistant 消息的内容', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          choices: [{
+            finish_reason: 'stop',
+            messages: [
+              { role: 'assistant', content: '第一部分' },
+              { role: 'assistant', content: '第二部分' },
+              { role: 'assistant', content: '第三部分' }
+            ]
+          }]
+        })
+      });
+
+      const result = await api.getAIInterpretation(mockData);
+      expect(result).toBe('第一部分第二部分第三部分');
+    });
+
+    it('应该忽略非 assistant 角色的消息', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          choices: [{
+            finish_reason: 'stop',
+            messages: [
+              { role: 'user', content: '用户内容' },
+              { role: 'system', content: '系统内容' },
+              { role: 'assistant', content: '助手内容' }
+            ]
+          }]
+        })
+      });
+
+      const result = await api.getAIInterpretation(mockData);
+      expect(result).toBe('助手内容');
+    });
+
+    it('应该处理 HTTP 400 错误', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: vi.fn().mockResolvedValue({ base_resp: { status_msg: 'Bad Request' } })
+      });
+
+      try {
+        await api.getAIInterpretation(mockData);
+        expect.fail('应该抛出错误');
+      } catch (error) {
+        expect(error.message).toBe('Bad Request');
+      }
+    });
+
+    it('应该处理 HTTP 502 错误', async () => {
+      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 502,
+        json: vi.fn().mockResolvedValue({ base_resp: { status_msg: 'Bad Gateway' } })
+      });
+
+      try {
+        await api.getAIInterpretation(mockData);
+        expect.fail('应该抛出错误');
+      } catch (error) {
+        expect(error.message).toBe('MiniMax 服务器繁忙，请稍后重试');
+      }
+    });
   });
 });

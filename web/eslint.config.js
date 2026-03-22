@@ -56,7 +56,8 @@ const browserGlobals = {
   status: 'readonly',
   top: 'readonly',
   URL: 'readonly',
-  window: 'readonly'
+  window: 'readonly',
+  IntersectionObserver: 'readonly'
 };
 
 const vitestGlobals = {

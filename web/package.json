@@ -7,6 +7,7 @@
     "build": "vite build",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:regression": "node scripts/regression-reporter.js",
     "preview": "vitest run && vite preview",
     "lint": "eslint src --ext js,jsx",
     "lint:fix": "eslint src --ext js,jsx --fix",
