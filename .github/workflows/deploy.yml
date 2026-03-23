@@ -51,6 +51,9 @@ jobs:
           VITE_DEFAULT_API_KEY: ${{ secrets.DEFAULT_MINIMAX_API_KEY }}
           VITE_GIT_SHA: ${{ github.sha }}
 
+      - name: Copy git SHA to dist
+        run: cp web/*.txt dist/ 2>/dev/null || true
+
       - name: Deploy
         uses: actions/upload-pages-artifact@v3
         with:
