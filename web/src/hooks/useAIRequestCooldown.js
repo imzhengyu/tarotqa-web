@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { TIMING } from '../constants';
 
-const AI_COOLDOWN_SECONDS = 60;
+const AI_COOLDOWN_SECONDS = TIMING.AI_COOLDOWN_SECONDS;
 
 /**
  * AI 请求冷却 hook

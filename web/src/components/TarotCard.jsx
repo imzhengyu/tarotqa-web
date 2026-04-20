@@ -1,24 +1,30 @@
-import { useState, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import PropTypes from 'prop-types';
 import useIntersectionObserver from '../hooks/useIntersectionObserver';
+import { INTERSECTION } from '../constants';
 import './TarotCard.css';
 
 const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small = false, selected = false }) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [imageState, setImageState] = useState('pending'); // 'pending' | 'loading' | 'loaded' | 'error'
 
-  // IntersectionObserver for preload before viewport entry
   const { elementRef, isIntersecting } = useIntersectionObserver({
-    rootMargin: '300px', // Start loading 300px before entering viewport
-    enabled: !imageLoaded && !imageError
+    rootMargin: INTERSECTION.ROOT_MARGIN_PRELOAD,
+    enabled: imageState === 'pending'
   });
+
+  // When intersecting, transition to loading state to show blur effect
+  useEffect(() => {
+    if (isIntersecting && imageState === 'pending') {
+      setImageState('loading');
+    }
+  }, [isIntersecting, imageState]);
 
   const isReversed = card?.isReversed ?? false;
   const showReversed = faceUp && isReversed;
-
-  // Determine image source - only load when approaching viewport
   const imageSrc = card?.localPath ? `${import.meta.env.BASE_URL}${card.localPath}` : card?.imageUrl;
-  const shouldLoadImage = isIntersecting && !imageError && !imageLoaded;
+
+  const handleImageLoad = () => setImageState('loaded');
+  const handleImageError = () => setImageState('error');
 
   return (
     <div
@@ -44,40 +50,25 @@ const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small
           {card && (
             <>
               <div className="card-image-container">
-                {!imageLoaded && !imageError && (
+                {imageState === 'pending' && (
                   <div className="card-image-placeholder">
                     <div className="placeholder-pattern"></div>
                   </div>
                 )}
-                {imageError && (
+                {imageState === 'error' && (
                   <div className="card-image-error">
                     <span className="error-icon">🖼️</span>
                     <span className="error-text">图片加载失败</span>
                   </div>
                 )}
-                {imageLoaded && !imageError && (
+                {imageState !== 'pending' && imageState !== 'error' && (
                   <img
                     src={imageSrc}
                     alt={card.name}
-                    className="card-image loaded"
-                    onLoad={() => setImageLoaded(true)}
-                    onError={() => {
-                      setImageLoaded(true);
-                      setImageError(true);
-                    }}
-                  />
-                )}
-                {!imageLoaded && !imageError && shouldLoadImage && (
-                  <img
-                    src={imageSrc}
-                    alt={card.name}
-                    className="card-image"
+                    className={`card-image ${imageState === 'loading' ? 'loading' : 'loaded'}`}
                     loading="lazy"
-                    onLoad={() => setImageLoaded(true)}
-                    onError={() => {
-                      setImageLoaded(true);
-                      setImageError(true);
-                    }}
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
                   />
                 )}
               </div>

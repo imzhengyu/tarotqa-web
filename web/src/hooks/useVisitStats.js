@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { TIMING, BREAKPOINTS } from '../constants';
 
 const STORAGE_KEY = 'tarotqa_visit_stats';
 const MAX_RECORDS = 100;
-const DEVICE_STATS_UPDATE_INTERVAL = 60 * 60 * 1000; // 1 hour in ms
+const DEVICE_STATS_UPDATE_INTERVAL = TIMING.DEVICE_STATS_UPDATE_INTERVAL_MS;
 
 // Generate UUID v4
 export const generateUUID = () => {
@@ -26,8 +27,8 @@ export const anonymizeIp = (ip) => {
 // Detect device type from screen width
 export const detectDeviceType = () => {
   const width = window.innerWidth;
-  if (width < 768) return 'mobile';
-  if (width < 1024) return 'tablet';
+  if (width < BREAKPOINTS.TABLET) return 'mobile';
+  if (width < BREAKPOINTS.DESKTOP) return 'tablet';
   return 'desktop';
 };
 

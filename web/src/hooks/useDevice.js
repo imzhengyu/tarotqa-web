@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BREAKPOINTS } from '../constants';
 
 const getDeviceInfo = () => {
   const ua = navigator.userAgent;
@@ -11,8 +12,8 @@ const getDeviceInfo = () => {
     isMobile,
     isIOS,
     isAndroid,
-    isTablet: isMobile && width >= 768,
-    isPhone: isMobile && width < 768,
+    isTablet: isMobile && width >= BREAKPOINTS.TABLET,
+    isPhone: isMobile && width < BREAKPOINTS.TABLET,
     isDesktop: !isMobile,
     width,
     height: window.innerHeight

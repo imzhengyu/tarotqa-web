@@ -2,6 +2,7 @@
 import tarotData from '../../../resources/tarot-data.json';
 import { spreads, getRecommendedPersona as getSpreadPersona } from '../data/spreads';
 import { personas, getPersona } from '../data/personas';
+import { AI_CONFIG } from '../constants';
 
 // 辅助函数：获取 API Key
 const _getApiKey = () => {
@@ -221,16 +222,16 @@ const api = {
     }
 
     const requestBody = {
-      model: 'MiniMax-M2.7-highspeed',
+      model: AI_CONFIG.MODEL,
       messages: this.buildTarotMessages(data),
-      stream: false,  // 使用非流式响应便于处理
-      temperature: 1,
-      top_p: 0.95,
-      max_completion_tokens: 2048
+      stream: false,
+      temperature: AI_CONFIG.TEMPERATURE,
+      top_p: AI_CONFIG.TOP_P,
+      max_completion_tokens: AI_CONFIG.MAX_COMPLETION_TOKENS
     };
 
     console.log('[AI解读] 发送请求:', {
-      url: 'https://api.minimaxi.com/v1/text/chatcompletion_v2',
+      url: AI_CONFIG.API_URL,
       model: requestBody.model,
       messagesCount: requestBody.messages.length,
       cardsCount: data.drawnCards.length
@@ -238,7 +239,7 @@ const api = {
 
     let response;
     try {
-      response = await fetch('https://api.minimaxi.com/v1/text/chatcompletion_v2', {
+      response = await fetch(AI_CONFIG.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -370,20 +371,20 @@ const api = {
 请用专业但亲切的语气给出分析。`;
 
     const requestBody = {
-      model: 'MiniMax-M2.7-highspeed',
+      model: AI_CONFIG.MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userContent }
       ],
       stream: false,
-      temperature: 1,
-      top_p: 0.95,
-      max_completion_tokens: 2048
+      temperature: AI_CONFIG.TEMPERATURE,
+      top_p: AI_CONFIG.TOP_P,
+      max_completion_tokens: AI_CONFIG.MAX_COMPLETION_TOKENS
     };
 
     let response;
     try {
-      response = await fetch('https://api.minimaxi.com/v1/text/chatcompletion_v2', {
+      response = await fetch(AI_CONFIG.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -279,4 +279,51 @@
 | **状态** | ✅ 已修复 |
 
 *CR 创建日期：2026-03-21*
-*更新日期：2026-03-23*
+*更新日期：2026-04-20*
+
+---
+
+## 16. SPEC.md Model 名称修正 ✅ 已修正
+
+| 项目 | 内容 |
+|------|------|
+| **问题描述** | SPEC.md 中 model 名称为 `"MiniMax M2.7-highspeed"`（空格），与实际代码 `"MiniMax-M2.7-highspeed"`（连字符）不一致 |
+| **修正方案** | SPEC.md 已更新为连字符格式 `MiniMax-M2.7-highspeed`，与代码保持一致 |
+| **结论** | 代码始终正确，SPEC 描述有误 |
+
+---
+
+## 15. 硬编码参数分散多处 ✅ 已修复
+
+| 项目 | 内容 |
+|------|------|
+| **问题描述** | 多处硬编码数值散落在不同文件中，难以统一维护和调整 |
+| **涉及文件** | `api.js`, `useAIRequestCooldown.js`, `useVisitStats.js`, `useIntersectionObserver.js`, `TarotCard.jsx`, `Divination.jsx`, `Profile.jsx` |
+| **修复方案** | 新建 `web/src/constants.js` 集中管理所有配置常量 |
+
+### 常量分类
+
+| 分类 | 常量 | 用途 |
+|------|------|------|
+| `AI_CONFIG` | `MODEL`, `API_URL`, `TEMPERATURE`, `TOP_P`, `MAX_COMPLETION_TOKENS` | AI API 调用参数 |
+| `UI_LIMITS` | `MAX_QUESTION_LENGTH`, `QUESTION_WARNING_THRESHOLD`, `MAX_PHONE_LENGTH`, `MAX_VERIFICATION_CODE_LENGTH` | UI 输入限制 |
+| `TIMING` | `AI_COOLDOWN_SECONDS`, `DEVICE_STATS_UPDATE_INTERVAL_MS`, `DURATION_HOUR_MS`, `DURATION_MINUTE_MS` | 时间和间隔配置 |
+| `INTERSECTION` | `ROOT_MARGIN_PRELOAD`, `ROOT_MARGIN_DEFAULT` | 图片懒加载配置 |
+| `BREAKPOINTS` | `TABLET: 768`, `DESKTOP: 1024` | 响应式断点 |
+
+### 修复文件
+
+| 文件 | 修改内容 |
+|------|----------|
+| `constants.js` | 新建 - 所有硬编码常量 |
+| `api.js` | 引用 `AI_CONFIG` |
+| `useAIRequestCooldown.js` | 引用 `TIMING.AI_COOLDOWN_SECONDS` |
+| `useVisitStats.js` | 引用 `TIMING.DEVICE_STATS_UPDATE_INTERVAL_MS`, `BREAKPOINTS` |
+| `useIntersectionObserver.js` | 引用 `INTERSECTION.ROOT_MARGIN_DEFAULT` |
+| `useDevice.js` | 引用 `BREAKPOINTS` |
+| `TarotCard.jsx` | 引用 `INTERSECTION.ROOT_MARGIN_PRELOAD` |
+| `Divination.jsx` | 引用 `UI_LIMITS`, `TIMING` |
+| `Profile.jsx` | 引用 `UI_LIMITS` |
+
+| **状态** | ✅ 已修复 |
+| **修复日期** | 2026-04-20 |

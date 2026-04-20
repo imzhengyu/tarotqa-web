@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import { UI_LIMITS } from '../constants';
 import './Profile.css';
 
 function Profile() {
@@ -155,7 +156,7 @@ if (user) {
             placeholder="请输入手机号"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            maxLength={11}
+            maxLength={UI_LIMITS.MAX_PHONE_LENGTH}
           />
 
           {!codeSent ? (
@@ -173,7 +174,7 @@ if (user) {
                 placeholder="请输入验证码"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                maxLength={6}
+                maxLength={UI_LIMITS.MAX_VERIFICATION_CODE_LENGTH}
               />
               <button
                 className="btn btn-primary"

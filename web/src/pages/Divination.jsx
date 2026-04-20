@@ -7,6 +7,7 @@ import api from '../services/api';
 import { spreads } from '../data/spreads';
 import useVisitStats from '../hooks/useVisitStats';
 import { useAIRequestCooldown } from '../hooks/useAIRequestCooldown';
+import { UI_LIMITS, TIMING } from '../constants';
 import './Divination.css';
 
 // 创建 markdown-it 实例
@@ -261,13 +262,13 @@ function Divination() {
               className="question-textarea"
               placeholder="请描述您想要咨询的问题..."
               value={question}
-              onChange={(e) => setQuestion(e.target.value.slice(0, 1500))}
+              onChange={(e) => setQuestion(e.target.value.slice(0, UI_LIMITS.MAX_QUESTION_LENGTH))}
               rows={4}
-              maxLength={1500}
+              maxLength={UI_LIMITS.MAX_QUESTION_LENGTH}
             />
             <div className="textarea-hint">
-              <span className={`char-count ${question.length >= 1400 ? 'warning' : ''} ${question.length >= 1500 ? 'error' : ''}`}>
-                {question.length} / 1500
+              <span className={`char-count ${question.length >= UI_LIMITS.QUESTION_WARNING_THRESHOLD ? 'warning' : ''} ${question.length >= UI_LIMITS.MAX_QUESTION_LENGTH ? 'error' : ''}`}>
+                {question.length} / {UI_LIMITS.MAX_QUESTION_LENGTH}
               </span>
             </div>
           </div>
@@ -375,7 +376,7 @@ function Divination() {
               <h3>
                 AI 深度解读
                 {aiRequestDuration !== null && (
-                  <span className="ai-duration">⏱️ {Math.floor(aiRequestDuration / 3600000).toString().padStart(2, '0')}:{Math.floor((aiRequestDuration % 3600000) / 60000).toString().padStart(2, '0')}:{(aiRequestDuration % 60000 / 1000).toFixed(0).padStart(2, '0')}</span>
+                  <span className="ai-duration">⏱️ {Math.floor(aiRequestDuration / TIMING.DURATION_HOUR_MS).toString().padStart(2, '0')}:{Math.floor((aiRequestDuration % TIMING.DURATION_HOUR_MS) / TIMING.DURATION_MINUTE_MS).toString().padStart(2, '0')}:{(aiRequestDuration % TIMING.DURATION_MINUTE_MS / 1000).toFixed(0).padStart(2, '0')}</span>
                 )}
               </h3>
 

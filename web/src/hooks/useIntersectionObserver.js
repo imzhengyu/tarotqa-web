@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { INTERSECTION } from '../constants';
 
 /**
  * IntersectionObserver hook for lazy loading
@@ -7,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
  * @param {boolean} options.enabled - Whether observer is enabled
  */
 export function useIntersectionObserver({
-  rootMargin = '200px',
+  rootMargin = INTERSECTION.ROOT_MARGIN_DEFAULT,
   enabled = true
 } = {}) {
   const [isIntersecting, setIsIntersecting] = useState(false);

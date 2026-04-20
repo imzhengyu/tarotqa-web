@@ -250,7 +250,7 @@ Error:        #F44336 (红)
 **请求格式**:
 ```json
 {
-  "model": "MiniMax M2.7-highspeed",
+  "model": "MiniMax-M2.7-highspeed",
   "messages": [
     { "role": "system", "content": "<系统提示词>" },
     { "role": "user", "content": "<用户问题+抽卡信息>" }
