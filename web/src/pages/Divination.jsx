@@ -43,6 +43,7 @@ function Divination() {
   const [aiInterpretation, setAiInterpretation] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [aiRequestDuration, setAiRequestDuration] = useState(null);
   const [debugMode, setDebugMode] = useState(false);
   const [lastRequest, setLastRequest] = useState(null);
 
@@ -125,6 +126,9 @@ function Divination() {
 
     setAiLoading(true);
     setAiError(null);
+    setAiRequestDuration(null);
+
+    const requestStartTime = Date.now();
 
     // 获取将使用的角色
     const persona = api.getRecommendedPersona(selectedSpread?.id, question);
@@ -146,6 +150,8 @@ function Divination() {
         drawnCards
       });
       startCooldown();
+      const duration = Date.now() - requestStartTime;
+      setAiRequestDuration(duration);
       setAiInterpretation(interpretation);
       // Update debug info with raw AI response
       setLastRequest(prev => prev ? { ...prev, aiRawResponse: interpretation } : null);
@@ -154,6 +160,8 @@ function Divination() {
     } catch (error) {
       console.error('[AI解读] 捕获错误:', error.message);
       startCooldown();
+      const duration = Date.now() - requestStartTime;
+      setAiRequestDuration(duration);
       setAiError(error.message);
     } finally {
       setAiLoading(false);
@@ -364,7 +372,12 @@ function Divination() {
 
           {aiInterpretation && (
             <div className="ai-interpretation">
-              <h3>AI 深度解读</h3>
+              <h3>
+                AI 深度解读
+                {aiRequestDuration !== null && (
+                  <span className="ai-duration">⏱️ {Math.floor(aiRequestDuration / 3600000).toString().padStart(2, '0')}:{Math.floor((aiRequestDuration % 3600000) / 60000).toString().padStart(2, '0')}:{(aiRequestDuration % 60000 / 1000).toFixed(0).padStart(2, '0')}</span>
+                )}
+              </h3>
 
               <div className="interpretation-question">
                 <div className="question-label">

@@ -333,6 +333,16 @@
   color: var(--color-secondary);
   margin-bottom: 16px;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ai-duration {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-weight: normal;
 }
 
 .interpretation-question {

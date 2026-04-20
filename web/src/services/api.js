@@ -221,7 +221,7 @@ const api = {
     }
 
     const requestBody = {
-      model: 'MiniMax-M2.7',
+      model: 'MiniMax-M2.7-highspeed',
       messages: this.buildTarotMessages(data),
       stream: false,  // 使用非流式响应便于处理
       temperature: 1,
@@ -370,7 +370,7 @@ const api = {
 请用专业但亲切的语气给出分析。`;
 
     const requestBody = {
-      model: 'MiniMax-M2.7',
+      model: 'MiniMax-M2.7-highspeed',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userContent }

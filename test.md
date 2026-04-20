@@ -40,6 +40,7 @@ npm run lint:css     # Stylelint 检查
 - [ ] 运势页：12星座数据、AI分析按钮
 - [ ] 统计页：访问数据饼图
 - [ ] 我的页：API Key设置
+- [ ] **AI耗时计时**：AI深度解读显示 ⏱️ 图标，格式 HH:MM:SS
 
 ### 响应式
 

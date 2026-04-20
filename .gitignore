@@ -23,7 +23,7 @@ npm-debug.log*
 Thumbs.db
 
 # Build
-# dist/              # Don't ignore root dist (used for GitHub Pages)
+dist/
 web/dist/
 build/
 *.min.js

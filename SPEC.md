@@ -84,6 +84,7 @@
 - **速率限制**: 每60秒一次请求
 - **默认API Key**: 通过GitHub Secrets配置，开箱即用
 - **用户API Key**: 存储于localStorage，优先级高于默认Key
+- **耗时计时**: 显示 ⏱️ 图标，格式 `HH:MM:SS`，从请求开始计时至结果返回
 
 ---
 
@@ -249,7 +250,7 @@ Error:        #F44336 (红)
 **请求格式**:
 ```json
 {
-  "model": "MiniMax-M2.7",
+  "model": "MiniMax M2.7-highspeed",
   "messages": [
     { "role": "system", "content": "<系统提示词>" },
     { "role": "user", "content": "<用户问题+抽卡信息>" }
