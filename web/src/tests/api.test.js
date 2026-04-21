@@ -381,7 +381,7 @@ describe('API Service', () => {
       };
 
       const messages = api.buildTarotMessages(data);
-      expect(messages[1].content).toContain('无特定问题');
+      expect(messages[1].content).toContain('整体运势');
     });
   });
 
@@ -427,8 +427,10 @@ describe('API Service', () => {
       };
 
       const prompt = api.buildTarotPrompt(data);
-      expect(prompt).toContain('1. 过去 - 愚者 (正位)');
-      expect(prompt).toContain('2. 现在 - 魔术师 (逆位)');
+      expect(prompt).toContain('过去');
+      expect(prompt).toContain('愚者');
+      expect(prompt).toContain('现在');
+      expect(prompt).toContain('魔术师');
     });
 
     it('应该包含牌的描述和关键词', () => {
@@ -439,9 +441,8 @@ describe('API Service', () => {
       };
 
       const prompt = api.buildTarotPrompt(data);
-      expect(prompt).toContain('牌义');
-      expect(prompt).toContain('关键词');
       expect(prompt).toContain('冒险');
+      expect(prompt).toContain('正');
     });
 
     it('应该正确处理逆位牌', () => {
@@ -452,8 +453,7 @@ describe('API Service', () => {
       };
 
       const prompt = api.buildTarotPrompt(data);
-      expect(prompt).toContain('逆位');
-      expect(prompt).toContain('鲁莽、冒险、轻率');
+      expect(prompt).toContain('逆');
     });
 
     it('应该处理缺少位置的牌', () => {
@@ -464,7 +464,7 @@ describe('API Service', () => {
       };
 
       const prompt = api.buildTarotPrompt(data);
-      expect(prompt).toContain('位置 1');
+      expect(prompt).toContain('位1');
     });
 
     it('应该包含结束语', () => {
@@ -475,8 +475,8 @@ describe('API Service', () => {
       };
 
       const prompt = api.buildTarotPrompt(data);
-      expect(prompt).toContain('请解读这些牌与用户问题的关系');
-      expect(prompt).toContain('Markdown 格式输出');
+      expect(prompt).toContain('简析');
+      expect(prompt).toContain('Markdown');
     });
   });
 

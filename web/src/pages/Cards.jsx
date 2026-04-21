@@ -17,6 +17,7 @@ function Cards() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [selectedCard, setSelectedCard] = useState(null);
+  const [cardsLoaded, setCardsLoaded] = useState(false);
 
   useEffect(() => {
     loadCards();
@@ -41,6 +42,8 @@ function Cards() {
       const data = await api.getCards();
       setCards(data);
       setFilteredCards(data);
+      // Trigger entrance animation after data is set
+      setTimeout(() => setCardsLoaded(true), 50);
     } catch (error) {
       console.error('Failed to load cards:', error);
     } finally {
@@ -116,34 +119,39 @@ function Cards() {
       <p className="cards-count">共 {filteredCards.length} 张牌</p>
 
       <div className="cards-container">
-        {groups.map((group, idx) => (
-          <div key={idx} className="card-group">
+        {groups.map((group, groupIdx) => (
+          <div key={groupIdx} className="card-group">
             <div className="card-group-header">
               <h2>{group.title}</h2>
               <span className="card-group-subtitle">{group.subtitle}</span>
             </div>
             <div className="cards-grid">
-              {group.cards.map(card => (
-                <div
-                  key={card.id}
-                  className={`card-item ${selectedCard?.id === card.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedCard(card)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedCard(card);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <TarotCard card={card} faceUp small />
-                  <div className="card-info">
-                    <h3>{card.name}</h3>
-                    <p className="card-name-en">{card.nameEn.replace(/_/g, ' ')}</p>
+              {group.cards.map((card, cardIdx) => {
+                const globalIdx = groups.slice(0, groupIdx).reduce((sum, g) => sum + g.cards.length, 0) + cardIdx;
+                const delay = Math.min(globalIdx * 30, 500);
+                return (
+                  <div
+                    key={card.id}
+                    className={`card-item ${selectedCard?.id === card.id ? 'selected' : ''} ${cardsLoaded ? 'animate-in' : ''}`}
+                    style={{ animationDelay: `${delay}ms` }}
+                    onClick={() => setSelectedCard(card)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedCard(card);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <TarotCard card={card} faceUp small />
+                    <div className="card-info">
+                      <h3>{card.name}</h3>
+                      <p className="card-name-en">{card.nameEn.replace(/_/g, ' ')}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}

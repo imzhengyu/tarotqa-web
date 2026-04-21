@@ -1,11 +1,13 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useRef } from 'react';
 import PropTypes from 'prop-types';
 import useIntersectionObserver from '../hooks/useIntersectionObserver';
 import { INTERSECTION } from '../constants';
 import './TarotCard.css';
 
-const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small = false, selected = false }) {
+const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small = false, selected = false, dealing = false, shuffling = false }) {
   const [imageState, setImageState] = useState('pending'); // 'pending' | 'loading' | 'loaded' | 'error'
+  const [justRevealed, setJustRevealed] = useState(false);
+  const prevFaceUpRef = useRef(faceUp);
 
   const { elementRef, isIntersecting } = useIntersectionObserver({
     rootMargin: INTERSECTION.ROOT_MARGIN_PRELOAD,
@@ -19,6 +21,16 @@ const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small
     }
   }, [isIntersecting, imageState]);
 
+  // Detect faceUp transition for justRevealed glow effect
+  useEffect(() => {
+    if (faceUp && !prevFaceUpRef.current) {
+      setJustRevealed(true);
+      const timer = setTimeout(() => setJustRevealed(false), 800);
+      return () => clearTimeout(timer);
+    }
+    prevFaceUpRef.current = faceUp;
+  }, [faceUp]);
+
   const isReversed = card?.isReversed ?? false;
   const showReversed = faceUp && isReversed;
   const imageSrc = card?.localPath ? `${import.meta.env.BASE_URL}${card.localPath}` : card?.imageUrl;
@@ -29,7 +41,7 @@ const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small
   return (
     <div
       ref={elementRef}
-      className={`tarot-card ${faceUp ? 'face-up' : ''} ${small ? 'small' : ''} ${selected ? 'selected' : ''} ${showReversed ? 'reversed' : ''}`}
+      className={`tarot-card ${faceUp ? 'face-up' : ''} ${small ? 'small' : ''} ${selected ? 'selected' : ''} ${showReversed ? 'reversed' : ''} ${dealing ? 'dealing' : ''} ${justRevealed ? 'just-revealed' : ''} ${shuffling ? 'shuffling' : ''}`}
       onClick={onClick}
       onKeyDown={(e) => {
         if (onClick && (e.key === 'Enter' || e.key === ' ')) {
@@ -93,7 +105,9 @@ TarotCard.propTypes = {
   faceUp: PropTypes.bool,
   onClick: PropTypes.func,
   small: PropTypes.bool,
-  selected: PropTypes.bool
+  selected: PropTypes.bool,
+  dealing: PropTypes.bool,
+  shuffling: PropTypes.bool
 };
 
 export default TarotCard;

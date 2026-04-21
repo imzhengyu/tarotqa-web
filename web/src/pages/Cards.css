@@ -104,18 +104,56 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+}
+
+.card-item.animate-in {
+  animation: cardEntrance 0.4s ease-out forwards;
+}
+
+@keyframes cardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .card-item:hover {
   background: rgba(45, 27, 78, 0.6);
   border-color: var(--color-secondary);
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(212, 175, 55, 0.2),
+    0 0 20px rgba(212, 175, 55, 0.15);
+}
+
+.card-item:hover::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), transparent);
+  opacity: 1;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .card-item.selected {
   background: rgba(212, 175, 55, 0.1);
   border-color: var(--color-secondary);
   border-style: solid;
+}
+
+.card-item.selected:hover {
+  transform: translateY(-8px) scale(1.03);
 }
 
 .card-info {
@@ -318,6 +356,27 @@
     display: none;
   }
 
+  /* Disable entrance animation on mobile */
+  .card-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Simplify hover on mobile */
+  .card-item:hover {
+    transform: translateY(-2px) scale(1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-item:hover::before {
+    display: none;
+  }
+
+  .card-item.selected:hover {
+    transform: translateY(-4px) scale(1);
+  }
+
   /* 移动端模态框 */
   .card-modal {
     padding: 12px;
@@ -360,5 +419,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .card-item {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .card-item:hover {
+    transform: none;
   }
 }

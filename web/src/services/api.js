@@ -330,18 +330,19 @@ const api = {
 
   buildTarotPrompt(data) {
     const { question, selectedSpread, drawnCards } = data;
-    let prompt = `牌阵类型：${selectedSpread.name}\n`;
-    prompt += `用户问题：${question || '无特定问题，希望了解整体运势'}\n\n`;
-    prompt += `抽到的牌：\n`;
+    let prompt = `牌阵：${selectedSpread.name}\n`;
+    prompt += `问题：${question || '整体运势'}\n\n`;
+    prompt += `抽牌：`;
 
     drawnCards.forEach((card, idx) => {
-      const positionName = selectedSpread.positions?.[idx]?.name || `位置 ${idx + 1}`;
-      prompt += `${idx + 1}. ${positionName} - ${card.name} (${card.isReversed ? '逆位' : '正位'})\n`;
-      prompt += `   牌义：${card.isReversed ? card.reversedDescription : card.description}\n`;
-      prompt += `   关键词：${card.keywords?.join(', ') || '无'}\n\n`;
+      const positionName = selectedSpread.positions?.[idx]?.name || `位${idx + 1}`;
+      const pos = card.isReversed ? '逆' : '正';
+      const keywords = card.keywords?.slice(0, 3).join(', ') || '';
+      prompt += `${idx + 1}.${positionName}:${card.name}(${pos}) ${keywords}`;
+      if (idx < drawnCards.length - 1) prompt += ' | ';
     });
 
-    prompt += `请解读这些牌与用户问题的关系，提供深入的分析和指导建议。请用中文回答，以 Markdown 格式输出即可。`;
+    prompt += `\n\n简析这些牌与问题的关系，用Markdown格式回答。`;
     return prompt;
   },
 

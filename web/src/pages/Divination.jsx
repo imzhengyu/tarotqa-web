@@ -47,6 +47,8 @@ function Divination() {
   const [aiRequestDuration, setAiRequestDuration] = useState(null);
   const [debugMode, setDebugMode] = useState(false);
   const [lastRequest, setLastRequest] = useState(null);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [dealingCard, setDealingCard] = useState(null);
 
   // Visit stats tracking
   const { incrementQuestionCount } = useVisitStats();
@@ -87,7 +89,11 @@ function Divination() {
     shuffleDeck();
     setDrawnCards([]);
     setCurrentDrawIndex(0);
-    setStep('draw');
+    setIsShuffling(true);
+    setTimeout(() => {
+      setIsShuffling(false);
+      setStep('draw');
+    }, 800);
   };
 
   const handleDrawCard = () => {
@@ -96,12 +102,21 @@ function Divination() {
     const card = shuffledDeck[currentDrawIndex];
     // 50% 概率正位或逆位
     const isReversed = Math.random() < 0.5;
-    setDrawnCards([...drawnCards, { ...card, position: currentDrawIndex, isReversed }]);
-    setCurrentDrawIndex(currentDrawIndex + 1);
+    const newCard = { ...card, position: currentDrawIndex, isReversed };
 
-    if (currentDrawIndex + 1 >= selectedSpread.cards) {
-      setStep('reveal');
-    }
+    // Start dealing animation
+    setDealingCard(newCard);
+
+    // After animation completes, add card to drawnCards
+    setTimeout(() => {
+      setDrawnCards([...drawnCards, newCard]);
+      setDealingCard(null);
+      setCurrentDrawIndex(currentDrawIndex + 1);
+
+      if (currentDrawIndex + 1 >= selectedSpread.cards) {
+        setStep('reveal');
+      }
+    }, 500);
   };
 
   const handleReset = () => {
@@ -114,6 +129,8 @@ function Divination() {
     setAiInterpretation(null);
     setAiError(null);
     setLastRequest(null);
+    setIsShuffling(false);
+    setDealingCard(null);
   };
 
   const handleAIInterpretation = async () => {
@@ -272,12 +289,20 @@ function Divination() {
               </span>
             </div>
           </div>
+          <div className="deck-area">
+            <div
+              className={`deck ${isShuffling ? 'shuffling' : ''}`}
+            >
+              <TarotCard faceUp={false} shuffling={isShuffling} />
+            </div>
+            <p className="draw-hint">{isShuffling ? '洗牌中...' : '准备开始抽牌'}</p>
+          </div>
           <div className="action-bar">
             <button className="btn btn-secondary" onClick={() => setStep('select')}>
               返回
             </button>
-            <button className="btn btn-primary" onClick={handleStartQuestion}>
-              开始抽牌
+            <button className="btn btn-primary" onClick={handleStartQuestion} disabled={isShuffling}>
+              {isShuffling ? '洗牌中...' : '开始抽牌'}
             </button>
           </div>
         </section>
@@ -292,10 +317,10 @@ function Divination() {
 
           <div className="deck-area">
             <div
-              className="deck"
-              onClick={handleDrawCard}
+              className={`deck ${isShuffling ? 'shuffling' : ''}`}
+              onClick={!isShuffling ? handleDrawCard : undefined}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+                if (!isShuffling && (e.key === 'Enter' || e.key === ' ')) {
                   e.preventDefault();
                   handleDrawCard();
                 }
@@ -303,9 +328,9 @@ function Divination() {
               role="button"
               tabIndex={0}
             >
-              <TarotCard faceUp={false} />
+              <TarotCard faceUp={false} shuffling={isShuffling} />
             </div>
-            <p className="draw-hint">点击卡牌抽取</p>
+            <p className="draw-hint">{isShuffling ? '洗牌中...' : '点击卡牌抽取'}</p>
           </div>
 
           {drawnCards.length > 0 && (
@@ -319,6 +344,13 @@ function Divination() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Dealing animation overlay */}
+          {dealingCard && (
+            <div className="dealing-overlay">
+              <TarotCard card={dealingCard} faceUp={true} />
             </div>
           )}
 
