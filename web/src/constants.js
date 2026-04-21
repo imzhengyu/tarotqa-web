@@ -24,8 +24,8 @@ export const TIMING = {
 };
 
 export const INTERSECTION = {
-  ROOT_MARGIN_PRELOAD: '300px',
-  ROOT_MARGIN_DEFAULT: '200px'
+  ROOT_MARGIN_PRELOAD: '50px',
+  ROOT_MARGIN_DEFAULT: '100px'
 };
 
 // Responsive breakpoints

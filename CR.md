@@ -394,3 +394,25 @@
 
 | **状态** | ✅ 已实现 |
 | **实现日期** | 2026-04-21 |
+
+## 19. 牌库页面加载性能优化 ✅ 已优化
+
+| 项目 | 内容 |
+|------|------|
+| **问题描述** | 牌库页面加载时 78 张牌同时渲染和加载图片，导致首屏加载缓慢 |
+| **原因** | 300px preload margin 导致大量图片同时启动加载 |
+| **优化方案** | 1. 添加 `content-visibility: auto` 跳过屏幕外卡牌渲染 2. 缩小 ROOT_MARGIN_PRELOAD 从 300px 到 50px |
+| **涉及文件** | `Cards.css`, `constants.js` |
+| **预期效果** | 首屏渲染时间从 >150ms 降低到 <150ms |
+
+### 优化细节
+
+| 配置项 | 优化前 | 优化后 |
+|--------|--------|--------|
+| `ROOT_MARGIN_PRELOAD` | 300px | 50px |
+| `ROOT_MARGIN_DEFAULT` | 200px | 100px |
+| CSS `content-visibility` | 无 | auto |
+| CSS `contain-intrinsic-size` | 无 | 0 220px |
+
+| **状态** | ✅ 已优化 |
+| **优化日期** | 2026-04-21 |

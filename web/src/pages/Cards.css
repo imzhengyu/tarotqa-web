@@ -107,6 +107,10 @@
   position: relative;
   opacity: 0;
   transform: translateY(20px) scale(0.95);
+
+  /* Performance: skip rendering off-screen cards */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 220px;
 }
 
 .card-item.animate-in {
