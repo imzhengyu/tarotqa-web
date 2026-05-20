@@ -45,11 +45,31 @@ function getZodiacFromLongitude(longitude) {
 function createAstroTime(birthData) {
   const { year, month, day, hour, minute, timezone } = birthData;
 
-  // Create date in local time
-  const localDate = new Date(year, month - 1, day, hour, minute);
+  // Format the date in the specified timezone, then create a Date in UTC
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
 
-  // Convert to UTC
-  const utcDate = new Date(localDate.toLocaleString('en-US', { timeZone: timezone }));
+  const parts = formatter.formatToParts(new Date(year, month - 1, day, hour, minute));
+  const getPart = (type) => parseInt(parts.find(p => p.type === type).value, 10);
+
+  // Create UTC date from the timezone-converted parts
+  const utcDate = new Date(Date.UTC(
+    getPart('year'),
+    getPart('month') - 1,
+    getPart('day'),
+    getPart('hour'),
+    getPart('minute'),
+    0,
+    0
+  ));
 
   return new AstroTime(utcDate);
 }
