@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd web
-          pnpm install --ignore-scripts
+          pnpm install
 
       - name: Lint
         run: |
