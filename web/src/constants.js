@@ -6,7 +6,7 @@ export const AI_CONFIG = {
   API_URL: 'https://api.minimaxi.com/v1/text/chatcompletion_v2',
   TEMPERATURE: 1,
   TOP_P: 0.95,
-  MAX_COMPLETION_TOKENS: 4096
+  MAX_COMPLETION_TOKENS: 8192
 };
 
 export const UI_LIMITS = {
