@@ -166,6 +166,12 @@ input, textarea {
   background: rgba(212, 175, 55, 0.1);
 }
 
+.btn-secondary:disabled {
+  border-color: #666;
+  color: #666;
+  cursor: not-allowed;
+}
+
 .page-title {
   font-size: 32px;
   color: var(--color-secondary);
