@@ -32,21 +32,26 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '9'
+
       - name: Install dependencies
         run: |
           cd web
-          npm install --include=optional
+          pnpm install --ignore-scripts
 
       - name: Lint
         run: |
           cd web
-          npm run lint
-          npm run lint:css
+          pnpm run lint
+          pnpm run lint:css
 
       - name: Build
         run: |
           cd web
-          npm run build
+          pnpm run build
         env:
           VITE_DEFAULT_API_KEY: ${{ secrets.DEFAULT_MINIMAX_API_KEY }}
           VITE_GIT_SHA: ${{ github.sha }}
