@@ -1,62 +1,30 @@
 # TarotQA - AI塔罗占卜平台
 
-纯前端静态Web应用，提供塔罗牌占卜服务。无需安装，直接在浏览器中使用。
-
 **在线体验**：https://imzhengyu.github.io/tarotqa-web/
 
-## 功能特性
+纯前端静态Web应用，提供塔罗牌、紫微斗数、西方星盘占卜服务。无需安装，直接在浏览器中使用。
 
+---
+
+## 功能介绍
+
+### 塔罗占卜
 - **78张完整塔罗牌**：大阿卡纳22张 + 小阿卡纳56张
 - **5种牌阵**：单牌、三牌、凯尔特十字、爱情金字塔、马蹄铁
 - **正位/逆位**：每张牌50%概率出现逆位，牌义解读不同
-- **每日运势**：十二星座每日运势，包含综合、爱情、事业、财运
-- **AI深度解读**：集成 MiniMax API，支持Markdown渲染
+- **AI深度解读**：集成 MiniMax AI，支持Markdown格式输出
 
-## 技术栈
+### 紫微斗数
+- 基于传统紫微斗数排盘算法
+- 支持出生信息输入（年、月、日、时、分、时区、性别）
+- AI命盘分析解读
 
-- React 18 + Vite 5
-- React Router DOM 6
-- markdown-it + DOMPurify
-- dayjs
-- Vitest
+### 西方星盘
+- 基于天文学计算行星位置
+- 自定义SVG图表渲染
+- AI星盘分析解读
 
-## 项目结构
-
-```
-tarotqa-web/
-├── web/
-│   ├── public/tarot-images/  # 78张塔罗牌本地图片
-│   ├── src/
-│   │   ├── components/       # TarotCard, Layout, PieChart, ErrorBoundary
-│   │   ├── pages/           # Home, Divination, Cards, Horoscope, Statistics, Profile
-│   │   ├── hooks/           # useDevice, useIntersectionObserver, useVisitStats
-│   │   ├── services/        # api.js
-│   │   ├── data/            # spreads.js, personas.js
-│   │   ├── styles/          # global.css
-│   │   └── tests/           # Vitest 测试
-│   └── index.html
-├── resources/
-│   ├── tarot-data.json      # 78张塔罗牌数据
-│   └── tarot-personas.md     # AI角色设定
-├── dist/                    # 构建产物
-├── CLAUDE.md                # 开发指南
-├── CR.md                    # 代码审查
-├── test.md                  # 测试计划
-└── README.md
-```
-
-## 快速开始
-
-```bash
-cd web
-npm install
-npm run dev        # 开发服务器 (localhost:3000)
-npm run build      # 生产构建
-npm run preview    # 预览构建
-npm run lint       # ESLint 检查
-npm run test       # 测试（监视模式）
-npm run test:run   # 测试（单次）
-```
+---
 
 ## 牌阵说明
 
@@ -68,6 +36,8 @@ npm run test:run   # 测试（单次）
 | 爱情金字塔 | 4 | 情感专项 |
 | 马蹄铁 | 7 | 运势综合分析 |
 
+---
+
 ## 正位与逆位
 
 每张塔罗牌在占卜时有50%概率出现逆位：
@@ -75,26 +45,51 @@ npm run test:run   # 测试（单次）
 - **正位**：图片朝上，牌义积极正面
 - **逆位**：图片旋转180度，牌义复杂挑战
 
-## AI 深度解读
+---
 
-- 每60秒只能发起一次请求
-- 支持Markdown格式输出
-- AI角色根据问题类型自动匹配
+## 使用说明
+
+### 塔罗占卜流程
+
+1. **选择牌阵** - 从5种牌阵中选择
+2. **描述问题** - 输入您想要咨询的问题
+3. **洗牌抽牌** - 点击卡牌进行洗牌和抽牌
+4. **查看结果** - 显示抽中牌的含义
+5. **AI解读** - 获取AI专业分析（每60秒一次）
+
+### 紫微斗数/星盘
+
+1. **输入出生信息** - 年、月、日、时、分、时区、性别
+2. **查看命盘** - 自动生成紫微斗数命盘或西方星盘
+3. **AI分析** - 获取命盘解读
 
 ---
 
-## 版本规范
+## 隐私说明
 
-**当前版本**: v3.0.0
-
-语义化版本 (SemVer)：`主版本.次版本.修订号`
-
-| 变更类型 | 更新示例 |
-|----------|----------|
-| 新功能 | v2.9 → v3.0 |
-| 功能优化 | v3.0 → v3.1 |
-| Bug修复 | v3.0 → v3.0.1 |
+- 所有数据仅在浏览器内存中处理
+- 不存储到任何服务器或本地存储
+- 访问统计采用脱敏处理
 
 ---
 
-*详细规格说明参见 [SPEC.md](SPEC.md)*
+## 支持设备
+
+| 设备类型 | 屏幕宽度 | 布局 |
+|----------|----------|------|
+| 桌面 | ≥1024px | 完整导航 |
+| 平板 | 768px-1023px | 两列网格 |
+| 手机 | <768px | 底部导航 |
+
+---
+
+## 浏览器支持
+
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
+
+---
+
+*TarotQA - AI塔罗占卜*

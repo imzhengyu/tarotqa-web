@@ -23,11 +23,23 @@ const _getErrorMessageFromStatus = (response, errorData) => {
 
 // 辅助函数：从 AI 响应中提取内容
 const _extractAIContent = (choice) => {
+  console.log('[DEBUG] _extractAIContent 收到的 choice keys:', Object.keys(choice));
+  console.log('[DEBUG] choice.message.content:', choice?.message?.content);
+  console.log('[DEBUG] choice.message.reasoning_content:', choice?.message?.reasoning_content?.substring(0, 200));
+
   if (choice.messages && Array.isArray(choice.messages)) {
     return choice.messages.map(m => m.role === 'assistant' ? m.content : '').join('');
   }
   if (choice.delta?.content) return choice.delta.content;
-  if (choice.message?.content) return choice.message.content;
+  // 优先使用 content 字段（最终结果）
+  if (choice.message?.content) {
+    return choice.message.content;
+  }
+  // 如果 content 为空，使用 reasoning_content（思考过程）
+  if (choice.message?.reasoning_content) return choice.message.reasoning_content;
+  // 尝试其他可能的格式
+  if (choice.message?.reply) return choice.message.reply;
+  if (choice.content) return choice.content;
   throw new Error('AI 响应内容解析失败');
 };
 
@@ -250,7 +262,7 @@ const api = {
     } catch (networkError) {
       // 错误场景3: 网络连接失败
       console.error('[AI解读] 网络错误:', networkError);
-      throw new Error('网络连接失败，请检查网络后重试');
+      throw new Error('网络连接失败，请检查网络后重试', { cause: networkError });
     }
 
     // 错误场景4: HTTP 状态码错误
@@ -272,7 +284,7 @@ const api = {
       result = await response.json();
     } catch (parseError) {
       console.error('[AI解读] 解析响应 JSON 失败:', parseError);
-      throw new Error('服务器响应格式错误，请稍后重试');
+      throw new Error('服务器响应格式错误，请稍后重试', { cause: parseError });
     }
 
     console.log('[AI解读] 响应结构:', Object.keys(result));
@@ -368,6 +380,258 @@ const api = {
 3. 事业运势
 4. 财运
 5. 幸运数字、颜色、方向等小贴士
+
+请用专业但亲切的语气给出分析。`;
+
+    const requestBody = {
+      model: AI_CONFIG.MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent }
+      ],
+      stream: false,
+      temperature: AI_CONFIG.TEMPERATURE,
+      top_p: AI_CONFIG.TOP_P,
+      max_completion_tokens: AI_CONFIG.MAX_COMPLETION_TOKENS
+    };
+
+    let response;
+    try {
+      response = await fetch(AI_CONFIG.API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+    } catch {
+      throw new Error('网络连接失败，请检查网络后重试');
+    }
+
+    if (!response.ok) {
+      let errorMsg = 'API 请求失败';
+      try {
+        const errorData = await response.json();
+        errorMsg = _getErrorMessageFromStatus(response, errorData);
+      } catch {
+        // ignore parse error
+      }
+      throw new Error(errorMsg);
+    }
+
+    const result = await response.json();
+
+    if (!result.choices || !Array.isArray(result.choices) || result.choices.length === 0) {
+      throw new Error('AI 响应格式错误，请稍后重试');
+    }
+
+    const choice = result.choices[0];
+    let aiContent;
+    try {
+      aiContent = _extractAIContent(choice);
+    } catch {
+      throw new Error('AI 暂时无法提供解读，请稍后重试');
+    }
+
+    if (!aiContent || aiContent.trim() === '') {
+      throw new Error('AI 暂时无法提供解读，请稍后重试');
+    }
+
+    return aiContent.trim();
+  },
+
+  // AI 紫微斗数命盘解读
+  async getAIZiweiInterpretation(birthData) {
+    const apiKey = _getApiKey();
+    if (!apiKey) {
+      throw new Error('请先在设置中配置 MiniMax API Key');
+    }
+
+    // 错误场景2: API Key 格式无效
+    if (!apiKey.startsWith('sk-') && !apiKey.startsWith('eyJ')) {
+      console.error('[AI紫微解读] 无效的 API Key 格式:', apiKey.substring(0, 10) + '...');
+      throw new Error('API Key 格式无效，请检查设置');
+    }
+
+    const { birthday, birthTime, gender, birthdayType, ziweiData } = birthData;
+
+    const systemPrompt = `你是一位专业的紫微斗数命理师，精通紫微斗数各宫含义、星曜特性、四化飞星以及三方四正关系。你需要根据命盘数据给出专业、准确、有洞察力的分析。请用中文回答，以 Markdown 格式输出。`;
+
+    // 如果有完整的命盘数据，使用详细数据；否则使用基本信息
+    let userContent;
+    if (ziweiData) {
+      userContent = `请分析以下详细的紫微斗数命盘数据：
+
+${ziweiData}
+
+请给出详细的命盘分析，包括：
+1. 命宫特点与性格分析
+2. 身宫对命主的影响
+3. 主要星曜分布与组合分析
+4. 四化飞星详细分析（禄权科忌）
+5. 事业、财运、感情方面的发展建议
+
+请用专业但亲切的语气给出分析。请直接给出分析结果，不要包含思考过程。`;
+    } else {
+      userContent = `请分析以下紫微斗数命盘：
+
+出生信息：
+- 阳历生日：${birthday}
+- 出生时辰：${birthTime}时
+- 性别：${gender === 'male' ? '男' : '女'}
+- 排盘类型：${birthdayType === 'lunar' ? '农历' : '阳历'}
+
+请给出详细的命盘分析，包括：
+1. 命宫特点
+2. 主要星曜分布
+3. 四化飞星分析
+4. 事业、财运、感情方面的发展建议
+
+请用专业但亲切的语气给出分析。请直接给出分析结果，不要包含思考过程。`;
+    }
+
+    const requestBody = {
+      model: AI_CONFIG.MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent }
+      ],
+      stream: false,
+      temperature: AI_CONFIG.TEMPERATURE,
+      top_p: AI_CONFIG.TOP_P,
+      max_completion_tokens: AI_CONFIG.MAX_COMPLETION_TOKENS
+    };
+
+    console.log('[AI紫微解读] 发送请求:', {
+      url: AI_CONFIG.API_URL,
+      model: requestBody.model,
+      birthday,
+      birthTime,
+      gender,
+      birthdayType
+    });
+
+    let response;
+    try {
+      response = await fetch(AI_CONFIG.API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+    } catch (networkError) {
+      console.error('[AI紫微解读] 网络错误:', networkError);
+      throw new Error('网络连接失败，请检查网络后重试', { cause: networkError });
+    }
+
+    // 错误场景4: HTTP 状态码错误
+    if (!response.ok) {
+      let errorMsg = 'API 请求失败';
+      try {
+        const errorData = await response.json();
+        console.error('[AI紫微解读] API 错误响应:', errorData);
+        errorMsg = _getErrorMessageFromStatus(response, errorData);
+      } catch {
+        // ignore parse error
+      }
+      throw new Error(errorMsg);
+    }
+
+    // 错误场景5: 响应格式解析失败
+    let result;
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      console.error('[AI紫微解读] 解析响应 JSON 失败:', parseError);
+      throw new Error('服务器响应格式错误，请稍后重试', { cause: parseError });
+    }
+
+    console.log('[AI紫微解读] 响应结构:', Object.keys(result));
+    console.log('[AI紫微解读] 完整响应:', JSON.stringify(result, null, 2).substring(0, 2000));
+
+    // 检查是否有 API 错误
+    if (result.base_resp && result.base_resp.status_code !== 0) {
+      console.error('[AI紫微解读] API 错误:', result.base_resp);
+      throw new Error(result.base_resp.status_msg || 'API 请求失败');
+    }
+
+    // 错误场景6: 响应中缺少必要字段
+    if (!result.choices || !Array.isArray(result.choices) || result.choices.length === 0) {
+      console.error('[AI紫微解读] 无效的响应结构:', result);
+      throw new Error('AI 响应格式错误，请稍后重试');
+    }
+
+    const choice = result.choices[0];
+    console.log('[AI紫微解读] choice:', choice);
+    console.log('[AI紫微解读] choice 结构:', JSON.stringify(choice, null, 2).substring(0, 2000));
+    console.log('[AI紫微解读] choice.keys:', Object.keys(choice));
+    console.log('[AI紫微解读] choice.message keys:', Object.keys(choice.message || {}));
+    console.log('[AI紫微解读] choice.message.content 长度:', choice.message?.content?.length);
+    console.log('[AI紫微解读] choice.message.reasoning_content 长度:', choice.message?.reasoning_content?.length);
+    console.log('[AI紫微解读] choice.messages:', choice.messages);
+    console.log('[AI紫微解读] choice.delta:', choice.delta);
+
+    if (!choice.finish_reason && !choice.messages) {
+      console.error('[AI紫微解读] 无效的 choice 结构:', choice);
+      throw new Error('AI 响应格式错误，请稍后重试');
+    }
+
+    // 提取 AI 回复内容
+    let aiContent;
+    try {
+      aiContent = _extractAIContent(choice);
+    } catch (err) {
+      console.error('[AI紫微解读] 无法提取内容, choice:', choice, '错误:', err);
+      throw err;
+    }
+
+    if (!aiContent || aiContent.trim() === '') {
+      console.warn('[AI紫微解读] AI 返回空内容');
+      throw new Error('AI 暂时无法提供解读，请稍后重试');
+    }
+
+    console.log('[AI紫微解读] 成功获取回复, 长度:', aiContent.length);
+    return aiContent.trim();
+  },
+
+  // AI 西方星盘解读
+  async getAIAstrologyInterpretation(chartData) {
+    const apiKey = _getApiKey();
+    if (!apiKey) {
+      throw new Error('请先在设置中配置 MiniMax API Key');
+    }
+
+    const { planets, ascendant, midheaven, birthData } = chartData;
+
+    const systemPrompt = `你是一位专业的西方占星师，精通十二星座、行星相位、宫位含义以及星盘综合分析。你需要根据星盘数据给出专业、准确、有洞察力的分析。请用中文回答，以 Markdown 格式输出。`;
+
+    const sunPlanet = planets.find(p => p.id === 'sun');
+    const moonPlanet = planets.find(p => p.id === 'moon');
+
+    const userContent = `请分析以下西方星盘：
+
+出生信息：
+- 出生日期：${birthData.year}年${birthData.month}月${birthData.day}日
+- 出生时间：${String(birthData.hour).padStart(2, '0')}:${String(birthData.minute).padStart(2, '0')}
+
+星盘数据：
+- 太阳星座：${sunPlanet?.sign?.name || '未知'} ${sunPlanet ? Math.round(sunPlanet.degree) + '°' : ''}
+- 月亮星座：${moonPlanet?.sign?.name || '未知'} ${moonPlanet ? Math.round(moonPlanet.degree) + '°' : ''}
+- 上升星座：${ascendant?.sign?.name || '未知'} ${ascendant ? Math.round(ascendant.degree) + '°' : ''}
+- 天顶星座：${midheaven?.sign?.name || '未知'}
+
+行星分布：
+${planets.map(p => `- ${p.name}：${p.sign?.name} ${Math.round(p.degree)}°`).join('\n')}
+
+请给出详细的星盘分析，包括：
+1. 太阳星座特点
+2. 月亮星座特点
+3. 上升星座对外表现
+4. 主要行星相位分析
+5. 事业、感情、财运方面的发展建议
 
 请用专业但亲切的语气给出分析。`;
 

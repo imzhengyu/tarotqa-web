@@ -6,7 +6,7 @@ export const AI_CONFIG = {
   API_URL: 'https://api.minimaxi.com/v1/text/chatcompletion_v2',
   TEMPERATURE: 1,
   TOP_P: 0.95,
-  MAX_COMPLETION_TOKENS: 1024
+  MAX_COMPLETION_TOKENS: 4096
 };
 
 export const UI_LIMITS = {
@@ -17,7 +17,7 @@ export const UI_LIMITS = {
 };
 
 export const TIMING = {
-  AI_COOLDOWN_SECONDS: 60,
+  AI_COOLDOWN_SECONDS: 5, // 调试模式：5秒冷却
   DEVICE_STATS_UPDATE_INTERVAL_MS: 60 * 60 * 1000, // 1 hour
   DURATION_HOUR_MS: 3600000,
   DURATION_MINUTE_MS: 60000

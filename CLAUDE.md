@@ -29,7 +29,9 @@ npm run lint:css:fix # Stylelint 自动修复
 - **数据**: `resources/tarot-data.json` → `api.js` → 组件
 - **AI**: 前端 → MiniMax API（默认 Key 开箱即用）
 - **统计**: localStorage 存储，`useVisitStats.js` 管理
-- **运势**: `api.js` 内置 12 星座运势
+- **塔罗占卜**: `spreads.js` 牌阵定义，`personas.js` AI 角色
+- **紫微斗数**: `iztro` + `react-iztro` 排盘和渲染
+- **西方星盘**: `astronomy-engine` 天文计算 + 自定义 SVG 渲染
 
 ## 关键文件
 
@@ -38,10 +40,30 @@ npm run lint:css:fix # Stylelint 自动修复
 | `api.js` | 数据加载和 AI API 入口 |
 | `TarotCard.jsx` | 卡牌组件（正位/逆位、懒加载） |
 | `Layout.jsx` | 响应式布局（桌面/移动端） |
-| `Horoscope.jsx` | 每日运势（3x4 星座网格 + AI 分析） |
+| `Divination.jsx` | 塔罗占卜主页面 |
+| `BirthInfoForm.jsx` | 出生信息输入组件（紫微/星盘共用） |
+| `DisclaimerModal.jsx` | 免责声明弹窗（tarot/ziwei/astrology） |
+| `ZiweiChart.jsx` | 紫微斗数排盘页面（react-iztro） |
+| `AstrologyChart.jsx` | 西方星盘页面（astronomy-engine + SVG） |
 | `spreads.js` | 牌阵定义 |
 | `personas.js` | AI 角色定义 |
-| `useAIRequestCooldown.js` | AI 请求冷却逻辑（Divination/Horoscope 共用） |
+| `useAIRequestCooldown.js` | AI 请求冷却逻辑 |
+| `utils/astrology/calculations.js` | 西方星盘天文计算 |
+| `utils/ziwei/ziweiData.js` | 紫微斗数数据生成 |
+
+## 新功能说明
+
+### 紫微斗数
+- 使用 `iztro` 库进行排盘计算
+- 使用 `react-iztro` 的 `Iztrolabe` 组件渲染命盘
+- AI 解读调用 `api.getAIZiweiInterpretation()`
+- 首次使用需阅读免责声明
+
+### 西方星盘
+- 使用 `astronomy-engine` 库计算行星位置
+- 自定义 SVG 渲染星盘图表
+- AI 解读调用 `api.getAIAstrologyInterpretation()`
+- 支持点击行星查看详细信息
 
 ## Deploy Rule
 

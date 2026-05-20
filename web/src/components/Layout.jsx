@@ -25,11 +25,14 @@ function Layout() {
               <NavLink to="/cards" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 牌库
               </NavLink>
-              <NavLink to="/horoscope" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                运势
-              </NavLink>
               <NavLink to="/statistics" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 统计
+              </NavLink>
+              <NavLink to="/ziwei/chart" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                紫微
+              </NavLink>
+              <NavLink to="/astrology/chart" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                星盘
               </NavLink>
               <NavLink to="/profile" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 我的
@@ -58,13 +61,17 @@ function Layout() {
             <span className="nav-icon">🃏</span>
             <span className="nav-label">牌库</span>
           </NavLink>
-          <NavLink to="/horoscope" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
-            <span className="nav-icon">♈</span>
-            <span className="nav-label">运势</span>
-          </NavLink>
           <NavLink to="/statistics" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
             <span className="nav-icon">📊</span>
             <span className="nav-label">统计</span>
+          </NavLink>
+          <NavLink to="/ziwei/chart" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+            <span className="nav-icon">🀄</span>
+            <span className="nav-label">紫微</span>
+          </NavLink>
+          <NavLink to="/astrology/chart" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
+            <span className="nav-icon">⭐</span>
+            <span className="nav-label">星盘</span>
           </NavLink>
           <NavLink to="/profile" className={({ isActive }) => isActive ? 'mobile-nav-item active' : 'mobile-nav-item'}>
             <span className="nav-icon">👤</span>

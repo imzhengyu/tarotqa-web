@@ -3,6 +3,7 @@ import MarkdownIt from 'markdown-it';
 import markdownitMark from 'markdown-it-mark';
 import DOMPurify from 'dompurify';
 import TarotCard from '../components/TarotCard';
+import DisclaimerModal from '../components/common/DisclaimerModal';
 import api from '../services/api';
 import { spreads } from '../data/spreads';
 import useVisitStats from '../hooks/useVisitStats';
@@ -34,6 +35,7 @@ const spreadList = Object.values(spreads).map(s => ({
 
 function Divination() {
   const [cards, setCards] = useState([]);
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [selectedSpread, setSelectedSpread] = useState(null);
   const [step, setStep] = useState('select');
   const [question, setQuestion] = useState('');
@@ -488,6 +490,12 @@ function Divination() {
           </div>
         </section>
       )}
+
+      <DisclaimerModal
+        isOpen={showDisclaimer}
+        onClose={() => setShowDisclaimer(false)}
+        type="tarot"
+      />
     </div>
   );
 }

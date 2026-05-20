@@ -1,0 +1,71 @@
+# TarotQA Web - Package Dependencies
+
+This file documents all npm packages used in the TarotQA Web project.
+
+---
+
+## Production Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| react | ^18.2.0 | UI framework |
+| react-dom | ^18.2.0 | React DOM rendering |
+| react-router-dom | ^6.20.0 | Client-side routing |
+| axios | ^1.6.0 | HTTP client for API calls |
+| dayjs | ^1.11.20 | Date manipulation |
+| markdown-it | ^14.1.1 | Markdown parsing and rendering |
+| markdown-it-mark | ^4.0.0 | Markdown-it plugin for ==highlight== syntax |
+| dompurify | ^3.3.3 | HTML sanitization (XSS protection) |
+| prop-types | ^15.8.1 | Runtime type checking for React props |
+| astronomy-engine | ^2.1.19 | Astronomical calculations for Western astrology |
+| iztro | ^2.5.8 | Ziwei Dou Shu (紫微斗数) calculation engine |
+| react-iztro | ^1.4.2 | React components for Ziwei chart rendering |
+
+---
+
+## Development Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| vite | ^5.4.0 | Build tool and dev server |
+| @vitejs/plugin-react | ^4.3.0 | Vite plugin for React |
+| eslint | ^9.39.4 | JavaScript/JSX linting |
+| eslint-plugin-react | ^7.37.0 | ESLint rules for React |
+| eslint-plugin-react-hooks | ^5.0.0 | ESLint rules for React Hooks |
+| eslint-plugin-jsx-a11y | ^6.10.0 | ESLint rules for accessibility |
+| stylelint | ^16.0.0 | CSS/SCSS linting |
+| stylelint-config-standard | ^36.0.0 | Stylelint standard configuration |
+| stylelint-config-recess-order | ^5.0.0 | Stylelint plugin for property ordering |
+| vitest | ^1.6.0 | Unit testing framework |
+| @vitest/coverage-v8 | ^1.6.0 | V8-based coverage reporter |
+| @testing-library/react | ^16.3.2 | React component testing utilities |
+| @testing-library/jest-dom | ^6.9.1 | Custom Jest matchers |
+| jsdom | ^29.0.1 | DOM simulation for testing |
+| @playwright/test | ^1.58.2 | E2E testing framework |
+| rollup | ^4.59.1 | JavaScript bundler |
+| concurrently | ^8.2.0 | Run multiple commands concurrently |
+
+---
+
+## Optional Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| @rollup/rollup-win32-x64-msvc | ^4.60.4 | Windows x64 Rollup binding |
+| @rolldown/binding-win32-x64-msvc | ^1.0.2 | Windows x64 Rolldown binding |
+
+---
+
+## Installation
+
+```bash
+cd web
+npm install
+```
+
+---
+
+## Version
+
+Project Version: 2.9
+Last Updated: 2026-05-20

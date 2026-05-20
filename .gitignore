@@ -17,6 +17,7 @@ npm-debug.log*
 .vscode/
 *.swp
 *.swo
+*.code-workspace
 
 # OS
 .DS_Store
@@ -30,16 +31,28 @@ build/
 
 # Test
 coverage/
+web/coverage/
+web/scripts/coverage/
+
+# Playwright
+.playwright-mcp/
 
 # Temporary files
 tmp/
 temp/
+server/
 
-# WeChat Mini Program
+# Project specific
+regression_report.md
+
+# WeChat Mini Program (legacy)
 miniprogram/app.js
 miniprogram/app.json
 
-# Resources (large files)
-resources/tarot-images/*.jpg
-resources/tarot-images/*.png
-resources/tarot-images/*.webp
+# Tarot card images (large files - only ignore actual image files, keep the directory)
+web/public/tarot-images/*.jpg
+web/public/tarot-images/*.png
+web/public/tarot-images/*.webp
+
+# Documentation dependencies
+doc/node_modules/

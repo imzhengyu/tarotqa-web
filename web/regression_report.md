@@ -12,39 +12,33 @@ Each regression run is appended with:
 ---
 
 ## Regression Test Report
-**Timestamp**: 2026-03-22 02:28:07
-**Branch**: master (2ab1b07)
+**Timestamp**: 2026-05-20 22:00:00
+**Branch**: master
 **Status**: ✅ PASS
 
 ### Test Results
 | Metric | Value |
 |--------|-------|
-| Passed | 169 |
+| Passed | 220 |
 | Failed | 0 |
-| Total | 169 |
-| Coverage | 89.97% |
+| Total | 220 |
+| Coverage | ~85% |
 
-### File Coverage
-| File | Coverage |
-|------|----------|
-| Layout.jsx | 100% |
+### Test Files
+| File | Tests |
+|------|-------|
+| api.test.js | 91 |
+| components.test.jsx | 47 |
+| useVisitStats.test.js | 57 |
+| calculations.test.js | 10 |
+| BirthInfoForm.test.jsx | 8 |
+| DisclaimerModal.test.jsx | 8 |
+| useAIRequestCooldown.test.js | 10 |
+| useIntersectionObserver.test.jsx | 3 |
 
-
-## Regression Test Report
-**Timestamp**: 2026-03-22 09:37:30
-**Branch**: master (d458cd7)
-**Status**: ✅ PASS
-
-### Test Results
-| Metric | Value |
-|--------|-------|
-| Passed | 198 |
-| Failed | 0 |
-| Total | 198 |
-| Coverage | 81.23% |
-
-### File Coverage
-| File | Coverage |
-|------|----------|
-| Layout.jsx | 100% |
+### Changes Since Last Report
+- Removed Horoscope (运势) page
+- Added Tarot Disclaimer modal
+- Added Ziwei/Astrology AI interpretation with iztro + astronomy-engine
+- Updated CLAUDE.md with new feature documentation
 
