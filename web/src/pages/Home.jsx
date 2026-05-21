@@ -4,67 +4,91 @@ import './Home.css';
 function Home() {
   return (
     <div className="home">
-      <section className="hero">
-        <h1 className="hero-title">
-          AI塔罗占卜
-        </h1>
-        <p className="hero-subtitle">
-          探索命运的奥秘，获取专属解读
-        </p>
-        <Link to="/divination" className="btn btn-primary hero-btn">
-          开始占卜
-        </Link>
-      </section>
-
-      <section className="features">
-        <h2 className="section-title">核心功能</h2>
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">🎴</div>
-            <h3>78张塔罗牌</h3>
-            <p>涵盖大阿卡纳与小阿卡纳，详解每张牌的含义</p>
+      {/* 塔罗占卜区块 */}
+      <section className="service-block tarot-hero">
+        <div className="service-decoration">
+          <div className="deco-star">♠</div>
+          <div className="deco-star">♥</div>
+          <div className="deco-star">♣</div>
+          <div className="deco-star">♦</div>
+        </div>
+        <div className="service-content">
+          <div className="service-icon">🎴</div>
+          <div className="service-info">
+            <h2 className="service-title">AI塔罗占卜</h2>
+            <p className="service-desc">
+              探索命运的奥秘，获取专属解读。78张塔罗牌，多种牌阵，AI智能解读
+            </p>
+            <ul className="service-features">
+              <li>78张塔罗牌详解</li>
+              <li>多种牌阵可选</li>
+              <li>AI智能解读分析</li>
+              <li>12星座每日运势</li>
+            </ul>
           </div>
-          <div className="feature-card">
-            <div className="feature-icon">🤖</div>
-            <h3>AI智能解读</h3>
-            <p>MiniMax大模型驱动，深度分析您的命运走向</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">⭐</div>
-            <h3>每日运势</h3>
-            <p>12星座专属运势，助您把握每日机遇</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">💎</div>
-            <h3>VIP专属牌阵</h3>
-            <p>命运之轮、灵魂探索等高级牌阵</p>
+          <div className="service-action">
+            <Link to="/divination" className="btn btn-primary">
+              开始占卜
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="spreads">
-        <h2 className="section-title">热门牌阵</h2>
-        <div className="spreads-grid">
-          <div className="spread-card">
-            <h3>单牌阵</h3>
-            <p>快速简单，适合简单问题</p>
-            <span className="spread-info">1张牌</span>
+      {/* 紫微斗数区块 */}
+      <section className="service-block ziwei-block">
+        <div className="service-decoration">
+          <div className="deco-star">☆</div>
+          <div className="deco-star">◇</div>
+          <div className="deco-star">☆</div>
+        </div>
+        <div className="service-content">
+          <div className="service-icon">🀄</div>
+          <div className="service-info">
+            <h2 className="service-title">紫微斗数</h2>
+            <p className="service-desc">
+              中国传统命理体系，通过星曜分布解读人生运势、事业财运、感情婚姻
+            </p>
+            <ul className="service-features">
+              <li>命宫主星与身宫主星分析</li>
+              <li>十二宫位星曜分布</li>
+              <li>四化飞星论断</li>
+              <li>AI智能命盘解读</li>
+            </ul>
           </div>
-          <div className="spread-card">
-            <h3>三牌阵</h3>
-            <p>过去-现在-未来时间线</p>
-            <span className="spread-info">3张牌</span>
-          </div>
-          <div className="spread-card">
-            <h3>凯尔特十字</h3>
-            <p>深度详细分析</p>
-            <span className="spread-info">10张牌</span>
+          <div className="service-action">
+            <Link to="/ziwei/chart" className="btn btn-primary">
+              立即排盘
+            </Link>
           </div>
         </div>
-        <div className="spreads-action">
-          <Link to="/divination" className="btn btn-secondary">
-            查看全部牌阵
-          </Link>
+      </section>
+
+      {/* 十二宫星盘区块 */}
+      <section className="service-block astrology-block">
+        <div className="service-decoration">
+          <div className="deco-star">☉</div>
+          <div className="deco-star">☽</div>
+          <div className="deco-star">★</div>
+        </div>
+        <div className="service-content">
+          <div className="service-icon">⭐</div>
+          <div className="service-info">
+            <h2 className="service-title">十二宫星盘</h2>
+            <p className="service-desc">
+              西方占星术，通过行星相位与宫位分析性格特点、运势走向，人际关系
+            </p>
+            <ul className="service-features">
+              <li>十大行星精确位置</li>
+              <li>十二星座分布</li>
+              <li>行星相位与 aspect 分析</li>
+              <li>AI深度星盘解读</li>
+            </ul>
+          </div>
+          <div className="service-action">
+            <Link to="/astrology/chart" className="btn btn-primary">
+              立即排盘
+            </Link>
+          </div>
         </div>
       </section>
     </div>
