@@ -2,6 +2,8 @@ import {
   AstroTime,
   Body,
   EclipticLongitude,
+  Ecliptic,
+  GeoVector,
   Equator,
   Observer
 } from 'astronomy-engine';
@@ -85,8 +87,16 @@ export function calculatePlanets(birthData) {
     if (!body) return null;
 
     try {
-      // Get ecliptic longitude for the planet
-      const longitude = EclipticLongitude(body, time);
+      let longitude;
+
+      // Sun uses GeoVector + Ecliptic (EclipticLongitude throws for Sun)
+      if (planet.id === 'sun') {
+        const sunGeo = GeoVector(Body.Sun, time, true);
+        const sunEcl = Ecliptic(sunGeo);
+        longitude = sunEcl.elon;
+      } else {
+        longitude = EclipticLongitude(body, time);
+      }
 
       // Get zodiac sign info
       const { sign, degree } = getZodiacFromLongitude(longitude);

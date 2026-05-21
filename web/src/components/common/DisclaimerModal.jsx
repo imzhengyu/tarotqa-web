@@ -57,8 +57,14 @@ function DisclaimerModal({ isOpen, onClose, type = 'ziwei' }) {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
   return (
-    <div className="disclaimer-modal-overlay" onClick={handleOverlayClick}>
+    <div className="disclaimer-modal-overlay" onClick={handleOverlayClick} onKeyDown={handleKeyDown} role="presentation">
       <div className="disclaimer-modal">
         <div className="disclaimer-modal-header">
           <h2>{disclaimer.title}</h2>

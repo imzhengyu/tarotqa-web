@@ -4,8 +4,13 @@ import { astro } from 'iztro';
  * 生成紫微斗数命盘完整数据用于 AI 分析
  */
 export function generateZiweiData(birthday, birthTime, gender, birthdayType = 'solar') {
+  // iztro expects time period index (0-11), not hour (0-23)
+  // 子时=0, 丑时=1, ... 亥时=11
+  // hour 0-1 -> 子时(0), hour 2-3 -> 丑时(1), etc.
+  const timePeriod = typeof birthTime === 'number' ? Math.floor(birthTime / 2) % 12 : birthTime;
+
   // 使用 iztro 生成命盘数据
-  const astrolabe = astro.bySolar(birthday, birthTime, gender, true, 'zh-CN');
+  const astrolabe = astro.bySolar(birthday, timePeriod, gender, true, 'zh-CN');
 
   // 格式化宫位数据
   const palaces = astrolabe.palaces.map((palace, index) => {

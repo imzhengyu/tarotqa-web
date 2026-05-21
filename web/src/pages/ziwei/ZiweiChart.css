@@ -235,6 +235,34 @@
   color: var(--color-secondary);
 }
 
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-body table th {
+  background: rgba(45, 27, 78, 0.8);
+  color: var(--color-secondary);
+  font-weight: 600;
+}
+
+.markdown-body table tr:nth-child(even) {
+  background: rgba(45, 27, 78, 0.4);
+}
+
+.markdown-body table tr:hover {
+  background: rgba(45, 27, 78, 0.6);
+}
+
 /* Mobile responsive */
 @media (max-width: 1024px) {
   .ziwei-layout {

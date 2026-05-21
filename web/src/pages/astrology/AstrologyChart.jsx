@@ -329,6 +329,9 @@ function AstrologyChart() {
                   key={planet.id}
                   className="planet-item"
                   onClick={() => setSelectedPlanet(planet)}
+                  onKeyDown={(e) => e.key === 'Enter' && setSelectedPlanet(planet)}
+                  role="button"
+                  tabIndex={0}
                 >
                   <span
                     className="planet-symbol"
@@ -387,8 +390,16 @@ function AstrologyChart() {
       </div>
 
       {selectedPlanet && (
-        <div className="planet-detail-modal-overlay" onClick={() => setSelectedPlanet(null)}>
-          <div className="planet-detail-modal" onClick={e => e.stopPropagation()}>
+        <div
+          className="planet-detail-modal-overlay"
+          onClick={() => setSelectedPlanet(null)}
+          onKeyDown={(e) => e.key === 'Escape' && setSelectedPlanet(null)}
+          role="presentation"
+        >
+          <dialog
+            className="planet-detail-modal"
+            aria-modal="true"
+          >
             <button className="close-btn" onClick={() => setSelectedPlanet(null)}>×</button>
             <h2>
               <span style={{ color: PLANET_COLORS[selectedPlanet.id] }}>
@@ -401,7 +412,7 @@ function AstrologyChart() {
               <p><strong>精确度：</strong>{Math.round(selectedPlanet.degree)}°</p>
               <p><strong>黄经：</strong>{Math.round(selectedPlanet.longitude)}°</p>
             </div>
-          </div>
+          </dialog>
         </div>
       )}
 

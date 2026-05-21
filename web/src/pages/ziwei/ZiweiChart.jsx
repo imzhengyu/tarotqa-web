@@ -148,7 +148,7 @@ function ZiweiChart() {
             <div className="chart-container">
               <Iztrolabe
                 birthday={formatBirthday()}
-                birthTime={birthData.hour}
+                birthTime={Math.floor(birthData.hour / 2) % 12}
                 birthdayType="solar"
                 gender={birthData.gender}
                 width="100%"
