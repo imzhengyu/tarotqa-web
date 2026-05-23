@@ -553,41 +553,44 @@
   fill: none;
 }
 
-/* Mobile not supported message */
-.mobile-not-supported {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 60px 24px;
-  background: rgba(45, 27, 78, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 16px;
-  margin-top: 24px;
-}
+/* Mobile responsive: chart scales to viewport */
+@media (max-width: 768px) {
+  .astrology-layout {
+    gap: 12px;
+  }
 
-.not-supported-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
-  opacity: 0.8;
-}
+  .chart-container {
+    min-height: auto;
+    height: calc(100vw - 40px);
+    max-height: calc(100vh - 250px);
+    padding: 8px;
+  }
 
-.mobile-not-supported h2 {
-  color: var(--color-secondary);
-  font-size: 24px;
-  margin-bottom: 16px;
-}
-
-.mobile-not-supported p {
-  color: var(--color-text-secondary);
-  font-size: 16px;
-  line-height: 1.6;
-  max-width: 400px;
-}
-
-@media (min-width: 769px) {
-  .mobile-not-supported {
+  .chartDecorations {
     display: none;
+  }
+
+  .chart-placeholder {
+    min-height: calc(100vw - 40px);
+  }
+
+  /* Scale down SVG text on mobile */
+  .astrology-svg text {
+    font-size: 10px;
+  }
+
+  .planet-list {
+    padding: 12px;
+  }
+
+  .planet-item {
+    padding: 6px 8px;
+  }
+}
+
+/* Tablet responsive */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chart-container {
+    min-height: 450px;
   }
 }

@@ -491,21 +491,44 @@
   opacity: 0.8;
 }
 
-.mobile-not-supported h2 {
-  color: var(--color-secondary);
-  font-size: 24px;
-  margin-bottom: 16px;
-}
+/* Mobile responsive: chart scales to viewport */
+@media (max-width: 768px) {
+  .ziwei-layout {
+    gap: 12px;
+  }
 
-.mobile-not-supported p {
-  color: var(--color-text-secondary);
-  font-size: 16px;
-  line-height: 1.6;
-  max-width: 400px;
-}
+  .chart-container {
+    min-height: auto;
+    height: calc(100vw - 40px);
+    max-height: calc(100vh - 280px);
+    padding: 8px;
+  }
 
-@media (min-width: 769px) {
-  .mobile-not-supported {
+  .chartDecorations {
     display: none;
+  }
+
+  /* Scale down iztro chart fonts on mobile */
+  .iztro-astrolabe {
+    font-size: 10px;
+  }
+
+  .iztro-palace {
+    padding: 2px;
+  }
+
+  .iztro-palace-fate .stars {
+    gap: 1px;
+  }
+
+  .chart-placeholder {
+    min-height: calc(100vw - 40px);
+  }
+}
+
+/* Tablet responsive */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chart-container {
+    min-height: 450px;
   }
 }

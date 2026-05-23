@@ -8,7 +8,6 @@ import DelayedPoofButton from '../../components/common/DelayedPoofButton';
 import { StarIcon, SparkleEffect, ConstellationPattern } from '../../components/common/DecorativeElements';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
-import { useDevice } from '../../hooks/useDevice';
 import { calculateAstrologyChart } from '../../utils/astrology/calculations';
 import { ZODIAC_SIGNS, PLANET_COLORS } from '../../utils/astrology/constants';
 import { useLanguage } from '../../context/LanguageContext';
@@ -59,7 +58,6 @@ function AstrologyChart() {
   const [aiError, setAiError] = useState(null);
   const [chartError, setChartError] = useState(null);
   const { showBackToTop, scrollToTop } = useBackToTop();
-  const { isPhone } = useDevice();
 
   const {
     aiCooldown,
@@ -318,15 +316,6 @@ function AstrologyChart() {
 
       <h1 className="page-title">{t('西方星盘排盘', 'Western Astrology Chart')}</h1>
 
-      {isPhone && (
-        <div className="mobile-not-supported">
-          <div className="not-supported-icon">📱</div>
-          <h2>{t('暂不支持手机访问', 'Not Supported on Mobile')}</h2>
-          <p>{t('西方星盘内容较多，建议使用桌面端或平板设备访问', 'Western astrology chart has complex layout. Please use desktop or tablet device.')}</p>
-        </div>
-      )}
-
-      {!isPhone && (
       <div className="astrology-layout">
         <div className="astrology-form-section">
           <div className="form-card">
@@ -442,7 +431,6 @@ function AstrologyChart() {
           )}
         </div>
       </div>
-      )}
 
       {selectedPlanet && (
         <div

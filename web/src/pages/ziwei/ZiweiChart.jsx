@@ -9,7 +9,6 @@ import DelayedPoofButton from '../../components/common/DelayedPoofButton';
 import { StarIcon, SparkleEffect, OrbGlow } from '../../components/common/DecorativeElements';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
-import { useDevice } from '../../hooks/useDevice';
 import { generateZiweiData, formatZiweiPrompt } from '../../utils/ziwei/ziweiData';
 import { useLanguage } from '../../context/LanguageContext';
 import { exportToPNG } from '../../utils/export';
@@ -44,7 +43,6 @@ function ZiweiChart() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
   const { showBackToTop, scrollToTop } = useBackToTop();
-  const { isPhone } = useDevice();
 
   const {
     aiCooldown,
@@ -124,15 +122,6 @@ function ZiweiChart() {
 
       <h1 className="page-title">{t('紫微斗数排盘', 'Ziwei Dou Shu Chart')}</h1>
 
-      {isPhone && (
-        <div className="mobile-not-supported">
-          <div className="not-supported-icon">📱</div>
-          <h2>{t('暂不支持手机访问', 'Not Supported on Mobile')}</h2>
-          <p>{t('紫微斗数命盘内容较多，建议使用桌面端或平板设备访问', 'Ziwei chart has complex layout. Please use desktop or tablet device.')}</p>
-        </div>
-      )}
-
-      {!isPhone && (
       <div className="ziwei-layout">
         <div className="ziwei-form-section">
           <div className="form-card">
@@ -201,7 +190,6 @@ function ZiweiChart() {
           )}
         </div>
       </div>
-      )}
 
       {(aiInterpretation || aiError) && (
         <div className="ziwei-ai-section">
