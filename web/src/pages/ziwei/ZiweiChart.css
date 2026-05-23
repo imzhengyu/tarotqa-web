@@ -46,11 +46,121 @@
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 16px;
   padding: 16px;
-  overflow: auto;
-  min-height: 500px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  max-width: 100%;
+}
+
+.chartWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chart-container > div {
+  width: 100% !important;
+  max-width: 100%;
+  height: auto !important;
+}
+
+.chartDecorations {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chartOrb {
+  position: absolute;
+  opacity: 0.12;
+  filter: blur(25px);
+}
+
+.chartOrb.orbLeft {
+  left: -30px;
+  top: 20%;
+  animation: orbPulse 6s ease-in-out infinite;
+}
+
+.chartOrb.orbRight {
+  right: -20px;
+  bottom: 25%;
+  animation: orbPulse 8s ease-in-out infinite reverse;
+}
+
+@keyframes orbPulse {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.2;
+    transform: scale(1.1);
+  }
+}
+
+.chartStar {
+  position: absolute;
+  color: var(--color-secondary);
+  filter: drop-shadow(0 0 4px var(--color-secondary));
+}
+
+.chartStar.star1 {
+  top: 15%;
+  left: 8%;
+  animation: starTwinkle 3s ease-in-out infinite;
+}
+
+.chartStar.star2 {
+  top: 40%;
+  right: 5%;
+  animation: starTwinkle 4s ease-in-out infinite 1s;
+}
+
+.chartStar.star3 {
+  bottom: 20%;
+  right: 12%;
+  animation: starTwinkle 3.5s ease-in-out infinite 0.5s;
+}
+
+@keyframes starTwinkle {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.chartSparkle {
+  position: absolute;
+  top: 5%;
+  right: 15%;
+  opacity: 0.4;
+  animation: sparkleRotate 20s linear infinite;
+}
+
+@keyframes sparkleRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .chart-placeholder {
@@ -117,8 +227,21 @@
 .ai-interpretation h3 {
   color: var(--color-secondary);
   font-size: 18px;
-  margin-bottom: 16px;
   text-align: center;
+  margin-bottom: 16px;
+}
+
+.ai-export-section {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.export-ai-btn {
+  padding: 12px 24px;
+  font-size: 16px;
+  min-width: 180px;
 }
 
 /* AI interpretation section - full width below layout */
@@ -179,6 +302,7 @@
 .markdown-body {
   color: var(--color-text);
   line-height: 1.8;
+  white-space: pre-wrap;
 }
 
 .markdown-body h1,
@@ -295,4 +419,54 @@
   .chart-placeholder {
     min-height: 320px;
   }
+}
+
+/* 回到顶部浮动按钮 */
+.back-to-top {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: rgba(45, 27, 78, 0.9);
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  color: var(--color-secondary);
+  cursor: pointer;
+  z-index: 999;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.back-to-top:hover {
+  background: rgba(45, 27, 78, 1);
+  transform: translateY(-3px);
+  border-color: var(--color-secondary);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+.back-to-top:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 56px;
+  right: 0;
+  background: rgba(45, 27, 78, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: var(--color-secondary);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.back-to-top svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentcolor;
+  stroke-width: 3;
+  fill: none;
 }

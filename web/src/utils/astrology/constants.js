@@ -1,31 +1,31 @@
 // Astrology constants
 
 export const ZODIAC_SIGNS = [
-  { id: 'aries', name: '白羊座', symbol: '♈', element: '火', modality: '本位' },
-  { id: 'taurus', name: '金牛座', symbol: '♉', element: '土', modality: '固定' },
-  { id: 'gemini', name: '双子座', symbol: '♊', element: '风', modality: '变动' },
-  { id: 'cancer', name: '巨蟹座', symbol: '♋', element: '水', modality: '本位' },
-  { id: 'leo', name: '狮子座', symbol: '♌', element: '火', modality: '固定' },
-  { id: 'virgo', name: '处女座', symbol: '♍', element: '土', modality: '变动' },
-  { id: 'libra', name: '天秤座', symbol: '♎', element: '风', modality: '本位' },
-  { id: 'scorpio', name: '天蝎座', symbol: '♏', element: '水', modality: '固定' },
-  { id: 'sagittarius', name: '射手座', symbol: '♐', element: '火', modality: '变动' },
-  { id: 'capricorn', name: '摩羯座', symbol: '♑', element: '土', modality: '本位' },
-  { id: 'aquarius', name: '水瓶座', symbol: '♒', element: '风', modality: '固定' },
-  { id: 'pisces', name: '双鱼座', symbol: '♓', element: '水', modality: '变动' }
+  { id: 'aries', name: '白羊座', nameEn: 'Aries', symbol: '♈', element: '火', elementEn: 'Fire', modality: '本位', modalityEn: 'Cardinal' },
+  { id: 'taurus', name: '金牛座', nameEn: 'Taurus', symbol: '♉', element: '土', elementEn: 'Earth', modality: '固定', modalityEn: 'Fixed' },
+  { id: 'gemini', name: '双子座', nameEn: 'Gemini', symbol: '♊', element: '风', elementEn: 'Air', modality: '变动', modalityEn: 'Mutable' },
+  { id: 'cancer', name: '巨蟹座', nameEn: 'Cancer', symbol: '♋', element: '水', elementEn: 'Water', modality: '本位', modalityEn: 'Cardinal' },
+  { id: 'leo', name: '狮子座', nameEn: 'Leo', symbol: '♌', element: '火', elementEn: 'Fire', modality: '固定', modalityEn: 'Fixed' },
+  { id: 'virgo', name: '处女座', nameEn: 'Virgo', symbol: '♍', element: '土', elementEn: 'Earth', modality: '变动', modalityEn: 'Mutable' },
+  { id: 'libra', name: '天秤座', nameEn: 'Libra', symbol: '♎', element: '风', elementEn: 'Air', modality: '本位', modalityEn: 'Cardinal' },
+  { id: 'scorpio', name: '天蝎座', nameEn: 'Scorpio', symbol: '♏', element: '水', elementEn: 'Water', modality: '固定', modalityEn: 'Fixed' },
+  { id: 'sagittarius', name: '射手座', nameEn: 'Sagittarius', symbol: '♐', element: '火', elementEn: 'Fire', modality: '变动', modalityEn: 'Mutable' },
+  { id: 'capricorn', name: '摩羯座', nameEn: 'Capricorn', symbol: '♑', element: '土', elementEn: 'Earth', modality: '本位', modalityEn: 'Cardinal' },
+  { id: 'aquarius', name: '水瓶座', nameEn: 'Aquarius', symbol: '♒', element: '风', elementEn: 'Air', modality: '固定', modalityEn: 'Fixed' },
+  { id: 'pisces', name: '双鱼座', nameEn: 'Pisces', symbol: '♓', element: '水', elementEn: 'Water', modality: '变动', modalityEn: 'Mutable' }
 ];
 
 export const PLANETS = [
-  { id: 'sun', name: '太阳', symbol: '☉', isOuter: false },
-  { id: 'moon', name: '月亮', symbol: '☽', isOuter: false },
-  { id: 'mercury', name: '水星', symbol: '☿', isOuter: false },
-  { id: 'venus', name: '金星', symbol: '♀', isOuter: false },
-  { id: 'mars', name: '火星', symbol: '♂', isOuter: false },
-  { id: 'jupiter', name: '木星', symbol: '♃', isOuter: true },
-  { id: 'saturn', name: '土星', symbol: '♄', isOuter: true },
-  { id: 'uranus', name: '天王星', symbol: '♅', isOuter: true },
-  { id: 'neptune', name: '海王星', symbol: '♆', isOuter: true },
-  { id: 'pluto', name: '冥王星', symbol: '♇', isOuter: true }
+  { id: 'sun', name: '太阳', nameEn: 'Sun', symbol: '☉', isOuter: false },
+  { id: 'moon', name: '月亮', nameEn: 'Moon', symbol: '☽', isOuter: false },
+  { id: 'mercury', name: '水星', nameEn: 'Mercury', symbol: '☿', isOuter: false },
+  { id: 'venus', name: '金星', nameEn: 'Venus', symbol: '♀', isOuter: false },
+  { id: 'mars', name: '火星', nameEn: 'Mars', symbol: '♂', isOuter: false },
+  { id: 'jupiter', name: '木星', nameEn: 'Jupiter', symbol: '♃', isOuter: true },
+  { id: 'saturn', name: '土星', nameEn: 'Saturn', symbol: '♄', isOuter: true },
+  { id: 'uranus', name: '天王星', nameEn: 'Uranus', symbol: '♅', isOuter: true },
+  { id: 'neptune', name: '海王星', nameEn: 'Neptune', symbol: '♆', isOuter: true },
+  { id: 'pluto', name: '冥王星', nameEn: 'Pluto', symbol: '♇', isOuter: true }
 ];
 
 export const ASPECTS = [

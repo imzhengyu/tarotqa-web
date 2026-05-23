@@ -6,16 +6,24 @@
 
 ```bash
 cd web
-npm run dev          # 开发服务器 (localhost:3000)
-npm run build        # 生产构建
-npm run preview      # 预览构建
-npm run test         # 测试（监视模式）
-npm run test:run     # 测试（单次）
-npm run lint         # ESLint 检查（必须 0 errors, 0 warnings）
-npm run lint:fix     # ESLint 自动修复
-npm run lint:css     # Stylelint 检查
-npm run lint:css:fix # Stylelint 自动修复
+pnpm install         # 安装依赖（必须使用 pnpm）
+pnpm run dev         # 开发服务器 (localhost:3000)
+pnpm run build       # 生产构建
+pnpm run preview     # 预览构建
+pnpm run test        # 测试（监视模式）
+pnpm run test:run    # 测试（单次）
+pnpm run lint        # ESLint 检查（必须 0 errors, 0 warnings）
+pnpm run lint:fix    # ESLint 自动修复
+pnpm run lint:css    # Stylelint 检查
+pnpm run lint:css:fix # Stylelint 自动修复
 ```
+
+## 包管理规则
+
+**必须使用 pnpm 安装所有 npm 依赖**
+- 使用 `pnpm add <package>` 安装新包
+- 使用 `pnpm remove <package>` 卸载包
+- 不要使用 npm install 或 yarn
 
 ## 代码规范
 
@@ -32,6 +40,8 @@ npm run lint:css:fix # Stylelint 自动修复
 - **塔罗占卜**: `spreads.js` 牌阵定义，`personas.js` AI 角色
 - **紫微斗数**: `iztro` + `react-iztro` 排盘和渲染
 - **西方星盘**: `astronomy-engine` 天文计算 + 自定义 SVG 渲染
+- **i18n**: `LanguageContext` 提供 `t(zh, en)` 翻译 helper
+- **导出**: `utils/export.js` 提供 `exportToPNG` PNG 导出
 
 ## 关键文件
 
@@ -48,8 +58,11 @@ npm run lint:css:fix # Stylelint 自动修复
 | `spreads.js` | 牌阵定义 |
 | `personas.js` | AI 角色定义 |
 | `useAIRequestCooldown.js` | AI 请求冷却逻辑 |
+| `useBackToTop.js` | 回到顶部浮动按钮逻辑 |
 | `utils/astrology/calculations.js` | 西方星盘天文计算 |
 | `utils/ziwei/ziweiData.js` | 紫微斗数数据生成 |
+| `utils/export.js` | PNG 导出功能（html2canvas） |
+| `context/LanguageContext.jsx` | 语言上下文，含 `t()` 翻译 helper |
 
 ## 新功能说明
 
@@ -64,6 +77,12 @@ npm run lint:css:fix # Stylelint 自动修复
 - 自定义 SVG 渲染星盘图表
 - AI 解读调用 `api.getAIAstrologyInterpretation()`
 - 支持点击行星查看详细信息
+
+### 通用功能
+- **导出 PNG**: AI 分析结果可导出为 PNG 图片（html2canvas）
+- **回到顶部**: 所有页面支持滚动后浮动按钮快速返回顶部
+- **Markdown 表格**: AI 返回的表格内容使用 `markdown-it-multimd-table` 正确渲染
+- **中英切换**: 所有页面文案支持中英文，`t(zh, en)` helper 简化翻译
 
 ## Deploy Rule
 

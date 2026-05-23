@@ -1,31 +1,48 @@
 import { useState, useCallback } from 'react';
 import MarkdownIt from 'markdown-it';
+import markdownItMultimdTable from 'markdown-it-multimd-table';
 import DOMPurify from 'dompurify';
 import { Iztrolabe } from 'react-iztro';
 import BirthInfoForm from '../../components/common/BirthInfoForm';
 import DisclaimerModal from '../../components/common/DisclaimerModal';
+import DelayedPoofButton from '../../components/common/DelayedPoofButton';
+import { StarIcon, SparkleEffect, OrbGlow } from '../../components/common/DecorativeElements';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
+import { useBackToTop } from '../../hooks/useBackToTop';
 import { generateZiweiData, formatZiweiPrompt } from '../../utils/ziwei/ziweiData';
+import { useLanguage } from '../../context/LanguageContext';
+import { exportToPNG } from '../../utils/export';
+import { formatTimestamp } from '../../utils/date';
 import api from '../../services/api';
 import './ZiweiChart.css';
 
-// 创建 markdown-it 实例
 const md = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true
+}).use(markdownItMultimdTable, {
+  multiline: true,
+  header: true
 });
 
-// 启用表格支持
-md.enable('table');
+const generateZiweiFilename = (birthData) => {
+  if (!birthData) return `ziwei-${formatTimestamp()}`;
+  const { year, month, day, hour, minute } = birthData;
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateStr = `${year}${pad(month)}${pad(day)}`;
+  const timeStr = `${pad(hour)}${pad(minute)}`;
+  return `ziwei-${dateStr}_${timeStr}-${formatTimestamp()}`;
+};
 
 function ZiweiChart() {
+  const { language, t } = useLanguage();
   const [birthData, setBirthData] = useState(null);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [chartGenerated, setChartGenerated] = useState(false);
   const [aiInterpretation, setAiInterpretation] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const { showBackToTop, scrollToTop } = useBackToTop();
 
   const {
     aiCooldown,
@@ -55,7 +72,6 @@ function ZiweiChart() {
     try {
       const birthdayStr = `${birthData.year}-${String(birthData.month).padStart(2, '0')}-${String(birthData.day).padStart(2, '0')}`;
 
-      // 使用 iztro 生成完整的命盘数据
       const ziweiData = generateZiweiData(birthdayStr, birthData.hour, birthData.gender, 'solar');
       const ziweiPrompt = formatZiweiPrompt(ziweiData);
 
@@ -64,7 +80,8 @@ function ZiweiChart() {
         birthTime: birthData.hour,
         gender: birthData.gender,
         birthdayType: 'solar',
-        ziweiData: ziweiPrompt
+        ziweiData: ziweiPrompt,
+        language
       });
       startCooldown();
       setAiInterpretation(interpretation);
@@ -99,28 +116,28 @@ function ZiweiChart() {
       {showCooldownToast && aiCooldown > 0 && (
         <div className="cooldown-toast">
           <span className="cooldown-icon">⏳</span>
-          <span className="cooldown-text">请等待 {aiCooldown}s 后再试</span>
+          <span className="cooldown-text">{language === 'zh' ? `请等待 ${aiCooldown}s 后再试` : `Please wait ${aiCooldown}s`}</span>
         </div>
       )}
 
-      <h1 className="page-title">紫微斗数排盘</h1>
+      <h1 className="page-title">{t('紫微斗数排盘', 'Ziwei Dou Shu Chart')}</h1>
 
       <div className="ziwei-layout">
         <div className="ziwei-form-section">
           <div className="form-card">
-            <h2>出生信息</h2>
+            <h2>{t('出生信息', 'Birth Information')}</h2>
             <BirthInfoForm
               value={birthData}
               onChange={handleBirthDataChange}
               showGender={true}
             />
-            <button
+            <DelayedPoofButton
               className="btn btn-primary generate-btn"
               onClick={handleGenerateChart}
               disabled={!birthData}
             >
-              生成命盘
-            </button>
+              {t('生成命盘', 'Generate Chart')}
+            </DelayedPoofButton>
           </div>
 
           {chartGenerated && birthData && (
@@ -130,35 +147,45 @@ function ZiweiChart() {
                 onClick={handleAIInterpretation}
                 disabled={aiLoading || aiCooldown > 0}
               >
-                {aiLoading ? '分析中...' : aiCooldown > 0 ? `请等待 ${aiCooldown}s` : 'AI 命盘分析'}
+                {aiLoading ? t('分析中...', 'Analyzing...') : aiCooldown > 0 ? `${t('请等待', 'Wait')} ${aiCooldown}s` : t('AI 命盘分析', 'AI Chart Analysis')}
               </button>
             </div>
           )}
 
           {aiError && (
             <div className="ai-error">
-              <p>错误: {aiError}</p>
-              <button onClick={() => setAiError(null)}>关闭</button>
+              <p>{t('错误: ', 'Error: ')}{aiError}</p>
+              <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
             </div>
           )}
         </div>
 
         <div className="ziwei-chart-section">
           {chartGenerated && birthData ? (
-            <div className="chart-container">
-              <Iztrolabe
-                birthday={formatBirthday()}
-                birthTime={Math.floor(birthData.hour / 2) % 12}
-                birthdayType="solar"
-                gender={birthData.gender}
-                width="100%"
-                horoscopeDate={new Date()}
-              />
+            <div className="chartWrapper">
+              <div className="chartDecorations">
+                <OrbGlow size={80} className="chartOrb orbLeft" />
+                <OrbGlow size={60} className="chartOrb orbRight" />
+                <StarIcon size={18} className="chartStar star1" />
+                <StarIcon size={14} className="chartStar star2" />
+                <StarIcon size={16} className="chartStar star3" />
+                <SparkleEffect size={45} intensity={0.5} className="chartSparkle" />
+              </div>
+              <div className="chart-container">
+                <Iztrolabe
+                  birthday={formatBirthday()}
+                  birthTime={Math.floor(birthData.hour / 2) % 12}
+                  birthdayType="solar"
+                  gender={birthData.gender}
+                  width="100%"
+                  horoscopeDate={new Date()}
+                />
+              </div>
             </div>
           ) : (
             <div className="chart-placeholder">
               <div className="placeholder-icon">🀄</div>
-              <p>请填写出生信息并点击&quot;生成命盘&quot;</p>
+              <p>{t('请填写出生信息并点击"生成命盘"', 'Please fill in birth info and click "Generate Chart"')}</p>
             </div>
           )}
         </div>
@@ -168,15 +195,26 @@ function ZiweiChart() {
         <div className="ziwei-ai-section">
           {aiError && (
             <div className="ai-error">
-              <p>错误: {aiError}</p>
-              <button onClick={() => setAiError(null)}>关闭</button>
+              <p>{t('错误: ', 'Error: ')}{aiError}</p>
+              <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
             </div>
           )}
           {aiInterpretation && (
-            <div className="ai-interpretation">
-              <h3>AI 命盘分析</h3>
-              {renderMarkdownContent(aiInterpretation)}
-            </div>
+            <>
+              <div className="ai-interpretation" id="ziwei-ai-result">
+                <h3>{t('AI 命盘分析', 'AI Chart Analysis')}</h3>
+                {renderMarkdownContent(aiInterpretation)}
+              </div>
+              <div className="ai-export-section">
+                <button
+                  className="btn btn-secondary export-ai-btn"
+                  onClick={() => exportToPNG('ziwei-ai-result', generateZiweiFilename(birthData))}
+                  title={t('输出PNG图片', 'Export as PNG')}
+                >
+                  📥 {t('导出分析结果', 'Export Analysis')}
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -186,6 +224,11 @@ function ZiweiChart() {
         onClose={() => setShowDisclaimer(false)}
         type="ziwei"
       />
+      {showBackToTop && (
+        <button className="back-to-top" onClick={scrollToTop} title={t('回到顶部', 'Back to Top')} data-tooltip={t('回到顶部', 'Back to Top')}>
+          <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10.5v10.5h14V10.5" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      )}
     </div>
   );
 }

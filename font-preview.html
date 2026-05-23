@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>字体选择预览 - Font Preview</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600&family=Playfair+Display:wght@400;500;600&family=Raleway:wght@300;400;500;600&family=ZCOOL+XiaoWei&family=Ma+Shan+Zheng&family=Liu+Jian+Mao+Cao&family=Source+Serif+4:wght@400;500;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Serif SC', serif;
+      background: linear-gradient(135deg, #1A1028 0%, #2D1B4E 100%);
+      color: #F5F0FA;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #FFD700;
+      font-size: 32px;
+      margin-bottom: 40px;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+
+    h2 {
+      color: #C8A2D6;
+      font-size: 20px;
+      margin: 30px 0 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(200, 162, 214, 0.3);
+    }
+
+    .font-section {
+      background: rgba(45, 27, 78, 0.6);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 30px;
+      max-width: 1000px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .font-card {
+      background: rgba(26, 16, 40, 0.8);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .font-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .font-name {
+      color: #FFD700;
+      font-size: 14px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .font-preview {
+      font-size: 28px;
+      line-height: 1.6;
+      color: #F5F0FA;
+    }
+
+    .font-preview-large {
+      font-size: 42px;
+      color: #F5F0FA;
+      margin-bottom: 8px;
+    }
+
+    .font-preview-small {
+      font-size: 14px;
+      color: #B8A9C9;
+      margin-top: 8px;
+    }
+
+    /* Font Family: Cinzel - Mystical Ancient Roman */
+    .cinzel {
+      font-family: 'Cinzel', serif;
+    }
+
+    /* Font Family: Cormorant Garamond - Elegant Classical */
+    .cormorant {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* Font Family: Playfair Display - Elegant Modern Serif */
+    .playfair {
+      font-family: 'Playfair Display', serif;
+    }
+
+    /* Font Family: Raleway - Clean Modern Sans */
+    .raleway {
+      font-family: 'Raleway', sans-serif;
+    }
+
+    /* Font Family: Noto Serif SC - Chinese Serif */
+    .noto-serif-sc {
+      font-family: 'Noto Serif SC', serif;
+    }
+
+    /* Font Family: ZCOOL XiaoWei - Chinese Artistic */
+    .zcool {
+      font-family: 'ZCOOL XiaoWei', serif;
+    }
+
+    /* Font Family: Ma Shan Zheng - Chinese Calligraphy */
+    .mashan {
+      font-family: 'Ma Shan Zheng', cursive;
+    }
+
+    /* Font Family: Liu Jian Mao Cao - Chinese Brush */
+    .liujian {
+      font-family: 'Liu Jian Mao Cao', cursive;
+    }
+
+    /* Font Family: Source Serif 4 - Modern Chinese Serif */
+    .source-serif {
+      font-family: 'Source Serif 4', serif;
+    }
+
+    .comparison-table {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .recommendation {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(200, 162, 214, 0.1));
+      border: 2px solid #FFD700;
+      position: relative;
+    }
+
+    .recommendation::after {
+      content: '★ 推荐';
+      position: absolute;
+      top: -12px;
+      right: 16px;
+      background: #FFD700;
+      color: #1A1028;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .preview-text {
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ 字体选择预览 Font Preview ✨</h1>
+
+  <div class="font-section">
+    <h2>🌟 推荐组合 Recommended Combinations</h2>
+    <div class="comparison-table">
+      <div class="font-card recommendation">
+        <div class="font-name">组合一：经典神秘风格（推荐）</div>
+        <div class="font-preview-large noto-serif-sc">塔罗占卜</div>
+        <div class="font-preview cinzel">Tarot Divination</div>
+        <div class="font-preview-small noto-serif-sc">英文：Cinzel | 中文：思源宋体</div>
+      </div>
+
+      <div class="font-card">
+        <div class="font-name">组合二：优雅艺术风格</div>
+        <div class="font-preview-large zcool">塔罗占卜</div>
+        <div class="font-preview cormorant">Tarot Divination</div>
+        <div class="font-preview-small">英文：Cormorant Garamond | 中文：站酷小薇体</div>
+      </div>
+
+      <div class="font-card">
+        <div class="font-name">组合三：现代简约风格</div>
+        <div class="font-preview-large source-serif">塔罗占卜</div>
+        <div class="font-preview raleway">Tarot Divination</div>
+        <div class="font-preview-small">英文：Raleway | 中文：思源宋体4</div>
+      </div>
+
+      <div class="font-card">
+        <div class="font-name">组合四：东方神秘风格</div>
+        <div class="font-preview-large mashan">塔罗占卜</div>
+        <div class="font-preview playfair">Tarot Divination</div>
+        <div class="font-preview-small">英文：Playfair Display | 中文：马山正楷</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="font-section">
+    <h2>🇬🇧 英文/拉丁字体 English Fonts</h2>
+
+    <div class="font-card recommendation">
+      <div class="font-name">Cinzel - 古典神秘字体（强烈推荐）</div>
+      <div class="font-preview cinzel">Tarot Divination Mystical Astrology</div>
+      <div class="preview-text">
+        <div class="font-preview-small cinzel">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+        <div class="font-preview-small cinzel">abcdefghijklmnopqrstuvwxyz 0123456789</div>
+      </div>
+      <div class="font-preview-small cinzel">
+        特点：古罗马风格，常用于《英雄联盟》《暗黑破坏神》等游戏界面，极具神秘感
+      </div>
+    </div>
+
+    <div class="font-card">
+      <div class="font-name">Cormorant Garamond - 优雅衬线体</div>
+      <div class="font-preview cormorant">Tarot Divination Mystical Astrology</div>
+      <div class="preview-text">
+        <div class="font-preview-small cormorant">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+        <div class="font-preview-small cormorant">abcdefghijklmnopqrstuvwxyz 0123456789</div>
+      </div>
+      <div class="font-preview-small cormorant">
+        特点：纤细优雅的衬线体，阅读舒适性好
+      </div>
+    </div>
+
+    <div class="font-card">
+      <div class="font-name">Playfair Display - 现代优雅衬线体</div>
+      <div class="font-preview playfair">Tarot Divination Mystical Astrology</div>
+      <div class="preview-text">
+        <div class="font-preview-small playfair">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+        <div class="font-preview-small playfair">abcdefghijklmnopqrstuvwxyz 0123456789</div>
+      </div>
+      <div class="font-preview-small playfair">
+        特点：现代感强，对比度高，适合标题
+      </div>
+    </div>
+
+    <div class="font-card">
+      <div class="font-name">Raleway - 简约现代无衬线体</div>
+      <div class="font-preview raleway">Tarot Divination Mystical Astrology</div>
+      <div class="preview-text">
+        <div class="font-preview-small raleway">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+        <div class="font-preview-small raleway">abcdefghijklmnopqrstuvwxyz 0123456789</div>
+      </div>
+      <div class="font-preview-small raleway">
+        特点：几何感强，干净现代
+      </div>
+    </div>
+  </div>
+
+  <div class="font-section">
+    <h2>🇨🇳 中文字体 Chinese Fonts</h2>
+
+    <div class="font-card recommendation">
+      <div class="font-name">思源宋体 (Noto Serif SC) - 经典中文衬线体</div>
+      <div class="font-preview noto-serif-sc">塔罗占卜 · 探索命运的奥秘</div>
+      <div class="font-preview-small noto-serif-sc">
+        特点：Adobe 与 Google 合作开发，字体粗细变化丰富，屏幕显示效果好，支持繁体简体
+      </div>
+    </div>
+
+    <div class="font-card recommendation">
+      <div class="font-name">站酷小薇体 (ZCOOL XiaoWei) - 艺术风格</div>
+      <div class="font-preview zcool">塔罗占卜 · 探索命运的奥秘</div>
+      <div class="font-preview-small zcool">
+        特点：站酷推荐字体，文艺感强，略带手写风格，适合艺术类网站
+      </div>
+    </div>
+
+    <div class="font-card">
+      <div class="font-name">思源宋体4 (Source Serif 4) - 现代中文衬线</div>
+      <div class="font-preview source-serif">塔罗占卜 · 探索命运的奥秘</div>
+      <div class="font-preview-small source-serif">
+        特点：最新版本，OpenType 功能支持，字形丰富
+      </div>
+    </div>
+
+    <div class="font-card">
+      <div class="font-name">马山正楷 (Ma Shan Zheng) - 毛笔楷书</div>
+      <div class="font-preview mashan">塔罗占卜</div>
+      <div class="font-preview-small mashan">
+        特点：毛笔书写风格，有东方神秘感，适合标题装饰
+      </div>
+    </div>
+
+    <div class="font-card">
+      <div class="font-name">刘健毛草 (Liu Jian Mao Cao) - 毛笔草书</div>
+      <div class="font-preview liujian">塔罗</div>
+      <div class="font-preview-small liujian">
+        特点：豪放派草书风格，艺术感强，适合LOGO或特殊标题
+      </div>
+    </div>
+  </div>
+
+  <div class="font-section">
+    <h2>📋 实际应用预览 Application Preview</h2>
+
+    <div class="font-card">
+      <div class="font-name">导航栏 Navigation (Cinzel + Noto Serif SC)</div>
+      <div style="display: flex; gap: 24px; flex-wrap: wrap; font-family: 'Cinzel', serif;">
+        <span style="color: #FFD700;">首页</span>
+        <span style="color: #C8A2D6;">塔罗占卜</span>
+        <span style="color: #C8A2D6;">塔罗牌库</span>
+        <span style="color: #C8A2D6;">紫微星盘</span>
+        <span style="color: #C8A2D6;">西方星盘</span>
+        <span style="color: #C8A2D6;">统计</span>
+        <span style="color: #C8A2D6;">我的</span>
+      </div>
+    </div>
+
+    <div class="font-card">
+      <div class="font-name">页面标题 Title (Noto Serif SC)</div>
+      <div style="font-family: 'Noto Serif SC', serif; font-size: 32px; color: #FFD700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);">
+        AI 深度解读
+      </div>
+    </div>
+
+    <div class="font-card">
+      <div class="font-name">正文内容 Body (Noto Serif SC)</div>
+      <div style="font-family: 'Noto Serif SC', serif; font-size: 16px; line-height: 1.8; color: #F5F0FA;">
+        本平台提供的塔罗占卜结果仅供参考娱乐，不构成任何形式的决策建议。
+        塔罗牌是一种古老的占卜工具，通过牌面图案和直觉解读来探索问题可能的走向。
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv tool *)",
+      "Bash(gh --version)",
+      "Bash(gh --help)",
+      "Bash(winget install *)",
+      "Bash(\"/c/Program Files/GitHub/cli/gh.exe\" --version)",
+      "Bash(where gh *)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" auth status)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:docs.iztro.com)",
+      "Bash(npm search *)",
+      "Bash(npm view *)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm pack *)",
+      "Bash(pnpm add *)",
+      "Bash(curl -s http://localhost:3001)",
+      "Bash(netstat -ano)",
+      "Bash(pnpm run *)",
+      "Bash(node -e \"const a = require\\('astronomy-engine'\\); console.log\\(typeof a.EclipticLongitude, typeof a.Ecliptic, typeof a.Body\\)\")",
+      "Bash(node -e \"const a = require\\('astronomy-engine'\\); console.log\\('EclipticLongitude:', a.EclipticLongitude.toString\\(\\).substring\\(0, 200\\)\\); console.log\\('---'\\); console.log\\('Ecliptic:', typeof a.Ecliptic\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const {astro} = require\\('iztro'\\); console.log\\('astro:', typeof astro, 'keys:', Object.keys\\(astro\\).slice\\(0,10\\)\\)\")",
+      "Bash(node --input-type=module -e ' *)",
+      "Skill(update-config)",
+      "Bash(jobs -l)",
+      "Bash(npm list *)",
+      "Bash(curl -s http://localhost:3002)",
+      "Bash(npx stylelint *)",
+      "Bash(node -e \"import\\('./src/utils/export.js'\\).then\\(m => console.log\\('export.js loaded:', Object.keys\\(m\\)\\)\\)\")",
+      "Bash(node --check src/pages/Divination.jsx)",
+      "Bash(git diff *)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "MiniMax"
+  ],
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
+  }
+}

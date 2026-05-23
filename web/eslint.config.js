@@ -57,7 +57,9 @@ const browserGlobals = {
   top: 'readonly',
   URL: 'readonly',
   window: 'readonly',
-  IntersectionObserver: 'readonly'
+  IntersectionObserver: 'readonly',
+  CustomEvent: 'readonly',
+  requestAnimationFrame: 'readonly'
 };
 
 const vitestGlobals = {

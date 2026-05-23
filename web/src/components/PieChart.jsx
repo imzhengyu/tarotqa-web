@@ -1,13 +1,17 @@
 import PropTypes from 'prop-types';
+import { useLanguage } from '../context/LanguageContext';
 import './PieChart.css';
 
 function PieChart({ data, size = 200, title }) {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
+
   if (!data || data.length === 0 || data.every(item => item.count === 0)) {
     return (
       <div className="pie-chart-container">
         {title && <h4 className="pie-chart-title">{title}</h4>}
         <div className="pie-chart-empty" style={{ width: size, height: size }}>
-          <span>暂无数据</span>
+          <span>{isZh ? '暂无数据' : 'No Data'}</span>
         </div>
       </div>
     );
@@ -47,7 +51,7 @@ function PieChart({ data, size = 200, title }) {
         >
           <div className="pie-chart-inner">
             <span className="pie-chart-total">{total}</span>
-            <span className="pie-chart-label">总会话</span>
+            <span className="pie-chart-label">{isZh ? '总会话' : 'Total'}</span>
           </div>
         </div>
         <div className="pie-chart-legend">

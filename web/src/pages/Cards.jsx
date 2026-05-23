@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import TarotCard from '../components/TarotCard';
 import api from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
+import { useBackToTop } from '../hooks/useBackToTop';
 import './Cards.css';
 
 const suitNames = {
-  wands: '权杖',
-  cups: '圣杯',
-  swords: '宝剑',
-  pentacles: '金币'
+  wands: { zh: '权杖', en: 'Wands' },
+  cups: { zh: '圣杯', en: 'Cups' },
+  swords: { zh: '宝剑', en: 'Swords' },
+  pentacles: { zh: '金币', en: 'Pentacles' }
 };
 
 function Cards() {
+  const { language, t } = useLanguage();
   const [cards, setCards] = useState([]);
   const [filteredCards, setFilteredCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +21,7 @@ function Cards() {
   const [filter, setFilter] = useState('all');
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardsLoaded, setCardsLoaded] = useState(false);
+  const { showBackToTop, scrollToTop } = useBackToTop();
 
   useEffect(() => {
     loadCards();
@@ -42,7 +46,6 @@ function Cards() {
       const data = await api.getCards();
       setCards(data);
       setFilteredCards(data);
-      // Trigger entrance animation after data is set
       setTimeout(() => setCardsLoaded(true), 50);
     } catch (error) {
       console.error('Failed to load cards:', error);
@@ -51,11 +54,9 @@ function Cards() {
     }
   };
 
-  // 按大阿卡纳/小阿卡纳分组
   const getGroupedCards = () => {
     if (filter !== 'all') {
-      // 单filter时直接返回一組
-      return [{ title: filter === 'major' ? '大阿卡纳' : '小阿卡纳', cards: filteredCards }];
+      return [{ title: filter === 'major' ? t('大阿卡纳', 'Major Arcana') : t('小阿卡纳', 'Minor Arcana'), cards: filteredCards }];
     }
 
     const majorCards = filteredCards.filter(c => c.arcana === 'major');
@@ -64,16 +65,15 @@ function Cards() {
     const groups = [];
 
     if (majorCards.length > 0) {
-      groups.push({ title: '大阿卡纳', subtitle: 'Major Arcana', cards: majorCards });
+      groups.push({ title: t('大阿卡纳', 'Major Arcana'), subtitle: 'Major Arcana', cards: majorCards });
     }
 
-    // 小阿卡纳按花色分组
     const suits = ['wands', 'cups', 'swords', 'pentacles'];
     suits.forEach(suit => {
       const suitCards = minorCards.filter(c => c.suit === suit);
       if (suitCards.length > 0) {
         groups.push({
-          title: suitNames[suit],
+          title: suitNames[suit][language === 'zh' ? 'zh' : 'en'],
           subtitle: suit.charAt(0).toUpperCase() + suit.slice(1),
           cards: suitCards
         });
@@ -95,13 +95,13 @@ function Cards() {
 
   return (
     <div className="cards">
-      <h1 className="page-title">塔罗牌库</h1>
+      <h1 className="page-title">{t('塔罗牌库', 'Tarot Card Library')}</h1>
 
       <div className="filters">
         <input
           type="text"
           className="search-input"
-          placeholder="搜索塔罗牌..."
+          placeholder={t('搜索塔罗牌...', 'Search tarot cards...')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -110,13 +110,13 @@ function Cards() {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         >
-          <option value="all">全部</option>
-          <option value="major">大阿卡纳 (22)</option>
-          <option value="minor">小阿卡纳 (56)</option>
+          <option value="all">{t('全部', 'All')}</option>
+          <option value="major">{t('大阿卡纳 (22)', 'Major Arcana (22)')}</option>
+          <option value="minor">{t('小阿卡纳 (56)', 'Minor Arcana (56)')}</option>
         </select>
       </div>
 
-      <p className="cards-count">共 {filteredCards.length} 张牌</p>
+      <p className="cards-count">{language === 'zh' ? `共 ${filteredCards.length} 张牌` : `${filteredCards.length} cards`}</p>
 
       <div className="cards-container">
         {groups.map((group, groupIdx) => (
@@ -186,16 +186,16 @@ function Cards() {
               <p className="card-name-en">{selectedCard.nameEn}</p>
               <div className="card-tags">
                 <span className={`tag ${selectedCard.arcana}`}>
-                  {selectedCard.arcana === 'major' ? '大阿卡纳' : '小阿卡纳'}
+                  {selectedCard.arcana === 'major' ? t('大阿卡纳', 'Major Arcana') : t('小阿卡纳', 'Minor Arcana')}
                 </span>
                 {selectedCard.element && <span className="tag element">{selectedCard.element}</span>}
                 {selectedCard.number !== null && selectedCard.number !== undefined && (
-                  <span className="tag number">数字 {selectedCard.number}</span>
+                  <span className="tag number">{language === 'zh' ? `数字 ${selectedCard.number}` : `Number ${selectedCard.number}`}</span>
                 )}
               </div>
               <p className="card-description">{selectedCard.description}</p>
               <div className="card-keywords">
-                <h4>关键词</h4>
+                <h4>{t('关键词', 'Keywords')}</h4>
                 <div className="keywords-list">
                   {selectedCard.keywords?.map((kw, idx) => (
                     <span key={idx} className="keyword">{kw}</span>
@@ -203,11 +203,16 @@ function Cards() {
                 </div>
               </div>
               <button className="btn btn-secondary" onClick={() => setSelectedCard(null)}>
-                关闭
+                {t('关闭', 'Close')}
               </button>
             </div>
           </div>
         </div>
+      )}
+      {showBackToTop && (
+        <button className="back-to-top" onClick={scrollToTop} title={t('回到顶部', 'Back to Top')} data-tooltip={t('回到顶部', 'Back to Top')}>
+          <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10.5v10.5h14V10.5" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
       )}
     </div>
   );

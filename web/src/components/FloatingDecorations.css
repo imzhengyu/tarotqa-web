@@ -1,0 +1,200 @@
+.floatingDecor {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.floatingDecor.topLeft {
+  top: 80px;
+  left: 20px;
+}
+
+.floatingDecor.topRight {
+  top: 80px;
+  right: 20px;
+}
+
+.floatingDecor.bottomLeft {
+  bottom: 100px;
+  left: 20px;
+}
+
+.floatingDecor.bottomRight {
+  bottom: 100px;
+  right: 20px;
+}
+
+.floatStar {
+  position: absolute;
+  animation: floatDrift 6s ease-in-out infinite;
+}
+
+.floatStar.star1 {
+  top: 0;
+  left: 0;
+  animation-delay: 0s;
+}
+
+.floatStar.star2 {
+  top: 30px;
+  left: 40px;
+  animation-delay: 1s;
+}
+
+.floatStar.star3 {
+  top: 10px;
+  right: 10px;
+  animation-delay: 0.5s;
+}
+
+.floatStar.star4 {
+  top: 50px;
+  right: 0;
+  animation-delay: 1.5s;
+}
+
+.floatStar.star5 {
+  bottom: 20px;
+  left: 10px;
+  animation-delay: 2s;
+}
+
+.floatStar.star6 {
+  bottom: 0;
+  left: 50px;
+  animation-delay: 0.3s;
+}
+
+.floatStar.star7 {
+  bottom: 30px;
+  right: 20px;
+  animation-delay: 1.2s;
+}
+
+.floatStar.star8 {
+  bottom: 60px;
+  right: 0;
+  animation-delay: 2.2s;
+}
+
+@keyframes floatDrift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.7;
+  }
+
+  25% {
+    transform: translateY(-8px) rotate(5deg);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(-4px) rotate(-3deg);
+    opacity: 0.8;
+  }
+
+  75% {
+    transform: translateY(-12px) rotate(3deg);
+    opacity: 1;
+  }
+}
+
+.floatParticle {
+  position: absolute;
+  animation: particleDrift 8s ease-in-out infinite;
+}
+
+.floatParticle.particle1 {
+  top: 20px;
+  left: 20px;
+  animation-delay: 0s;
+}
+
+.floatParticle.particle2 {
+  top: 40px;
+  right: 30px;
+  animation-delay: 2s;
+}
+
+.floatParticle.particle3 {
+  bottom: 40px;
+  left: 30px;
+  animation-delay: 4s;
+}
+
+.floatParticle.particle4 {
+  bottom: 10px;
+  right: 10px;
+  animation-delay: 6s;
+}
+
+@keyframes particleDrift {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.4;
+  }
+
+  25% {
+    transform: translateY(-15px) translateX(5px);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translateY(-8px) translateX(-5px);
+    opacity: 0.6;
+  }
+
+  75% {
+    transform: translateY(-20px) translateX(3px);
+    opacity: 0.9;
+  }
+}
+
+.floatSparkle {
+  position: absolute;
+  animation: sparkleRotate 10s linear infinite;
+}
+
+.floatSparkle.sparkle1 {
+  top: 50px;
+  left: 10px;
+  animation-duration: 12s;
+}
+
+.floatSparkle.sparkle2 {
+  top: 80px;
+  right: 20px;
+  animation-duration: 15s;
+  animation-direction: reverse;
+}
+
+.floatSparkle.sparkle3 {
+  bottom: 60px;
+  left: 0;
+  animation-duration: 10s;
+}
+
+.floatSparkle.sparkle4 {
+  bottom: 80px;
+  right: 40px;
+  animation-duration: 18s;
+  animation-direction: reverse;
+}
+
+@keyframes sparkleRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .floatingDecor {
+    display: none;
+  }
+}

@@ -33,3 +33,26 @@ export const BREAKPOINTS = {
   TABLET: 768,
   DESKTOP: 1024
 };
+
+// Persona IDs for AI interpretation
+export const PERSONA_IDS = {
+  GENERAL: 'general',
+  CAREER: 'career',
+  LOVE: 'love',
+  FINANCE: 'finance',
+  DECISION: 'decision',
+  FORTUNE: 'fortune'
+};
+
+// Astrology chart constants
+export const ASTROLOGY_CHART = {
+  CHART_SIZE: 500,
+  CENTER: 250,
+  OUTER_RADIUS: 230,
+  INNER_RADIUS: 180,
+  HOUSE_RADIUS: 150,
+  PLANET_RADIUS: 120,
+  ZODIAC_SEGMENT_DEGREES: 30,
+  ZODIAC_OFFSET_DEGREES: 90,
+  ZODIAC_MIDPOINT_OFFSET: 15
+};

@@ -8,6 +8,7 @@ import PieChart from '../components/PieChart';
 import OsPieChart from '../components/OsPieChart';
 import ErrorBoundary from '../components/ErrorBoundary';
 import Layout from '../components/Layout';
+import { LanguageProvider } from '../context/LanguageContext';
 
 const mockCard = {
   id: 'fool',
@@ -22,7 +23,13 @@ const mockCard = {
 };
 
 const TestWrapper = ({ children }) => (
-  <BrowserRouter>{children}</BrowserRouter>
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>{children}</BrowserRouter>
+);
+
+const LayoutTestWrapper = ({ children }) => (
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <LanguageProvider>{children}</LanguageProvider>
+  </BrowserRouter>
 );
 
 describe('TarotCard', () => {
@@ -86,7 +93,7 @@ describe('PieChart', () => {
 
   describe('Empty Data Rendering', () => {
     it('should show empty data placeholder when data is empty array', () => {
-      render(<PieChart data={[]} />);
+      render(<PieChart data={[]} />, { wrapper: LayoutTestWrapper });
       expect(screen.getByText('暂无数据')).toBeInTheDocument();
     });
 
@@ -95,40 +102,39 @@ describe('PieChart', () => {
         { label: '桌面', count: 0, color: '#0078D4' },
         { label: '移动', count: 0, color: '#3DDC84' },
       ];
-      render(<PieChart data={zeroData} />);
+      render(<PieChart data={zeroData} />, { wrapper: LayoutTestWrapper });
       expect(screen.getByText('暂无数据')).toBeInTheDocument();
     });
 
     it('should render title when provided', () => {
-      render(<PieChart data={mockData} title="设备分布" />);
+      render(<PieChart data={mockData} title="设备分布" />, { wrapper: LayoutTestWrapper });
       expect(screen.getByText('设备分布')).toBeInTheDocument();
     });
   });
 
   describe('Data Rendering', () => {
     it('should render pie chart with data', () => {
-      render(<PieChart data={mockData} />);
+      render(<PieChart data={mockData} />, { wrapper: LayoutTestWrapper });
       const pieChart = document.querySelector('.pie-chart');
       expect(pieChart).toBeInTheDocument();
     });
 
     it('should render legend items', () => {
-      render(<PieChart data={mockData} />);
+      render(<PieChart data={mockData} />, { wrapper: LayoutTestWrapper });
       expect(screen.getByText('桌面')).toBeInTheDocument();
       expect(screen.getByText('移动')).toBeInTheDocument();
       expect(screen.getByText('平板')).toBeInTheDocument();
     });
 
     it('should display correct percentages', () => {
-      render(<PieChart data={mockData} />);
-      // 50/(50+30+20) = 50%, 30% = 30%, 20% = 20%
+      render(<PieChart data={mockData} />, { wrapper: LayoutTestWrapper });
       expect(screen.getByText('50.0%')).toBeInTheDocument();
       expect(screen.getByText('30.0%')).toBeInTheDocument();
       expect(screen.getByText('20.0%')).toBeInTheDocument();
     });
 
     it('should display total count', () => {
-      render(<PieChart data={mockData} />);
+      render(<PieChart data={mockData} />, { wrapper: LayoutTestWrapper });
       expect(screen.getByText('100')).toBeInTheDocument();
       expect(screen.getByText('总会话')).toBeInTheDocument();
     });
@@ -139,7 +145,7 @@ describe('PieChart', () => {
       const dataWithoutColor = [
         { label: '测试', count: 100 },
       ];
-      render(<PieChart data={dataWithoutColor} />);
+      render(<PieChart data={dataWithoutColor} />, { wrapper: LayoutTestWrapper });
       const pieChart = document.querySelector('.pie-chart');
       expect(pieChart).toBeInTheDocument();
     });
@@ -154,12 +160,12 @@ describe('OsPieChart', () => {
   ];
 
   it('should render with title', () => {
-    render(<OsPieChart data={mockOsData} title="操作系统" />);
+    render(<OsPieChart data={mockOsData} title="操作系统" />, { wrapper: LayoutTestWrapper });
     expect(screen.getByText('操作系统')).toBeInTheDocument();
   });
 
   it('should render pie chart container', () => {
-    render(<OsPieChart data={mockOsData} />);
+    render(<OsPieChart data={mockOsData} />, { wrapper: LayoutTestWrapper });
     const container = document.querySelector('.os-pie-chart-container');
     expect(container).toBeInTheDocument();
   });
@@ -268,9 +274,9 @@ describe('Layout', () => {
       });
 
       render(
-        <BrowserRouter>
+        <LayoutTestWrapper>
           <Layout />
-        </BrowserRouter>
+        </LayoutTestWrapper>
       );
 
       const mobileNav = document.querySelector('.mobile-nav');
@@ -286,14 +292,15 @@ describe('Layout', () => {
       });
 
       render(
-        <BrowserRouter>
+        <LayoutTestWrapper>
           <Layout />
-        </BrowserRouter>
+        </LayoutTestWrapper>
       );
 
-      // On desktop, mobile-nav is not rendered at all (isMobile is false)
+      // On desktop, mobile-nav is rendered (always rendered, hidden via CSS on desktop)
+      // Note: jsdom doesn't evaluate CSS media queries, so we just verify the element exists
       const mobileNav = document.querySelector('.mobile-nav');
-      expect(mobileNav).toBeNull();
+      expect(mobileNav).not.toBeNull();
     });
 
     it('should render desktop footer on desktop screens', () => {
@@ -304,9 +311,9 @@ describe('Layout', () => {
       });
 
       render(
-        <BrowserRouter>
+        <LayoutTestWrapper>
           <Layout />
-        </BrowserRouter>
+        </LayoutTestWrapper>
       );
 
       const footer = document.querySelector('.footer');
@@ -350,9 +357,9 @@ describe('Layout', () => {
       });
 
       render(
-        <BrowserRouter>
+        <LayoutTestWrapper>
           <Layout />
-        </BrowserRouter>
+        </LayoutTestWrapper>
       );
 
       const footer = document.querySelector('.footer');
@@ -368,9 +375,9 @@ describe('Layout', () => {
       });
 
       render(
-        <BrowserRouter>
+        <LayoutTestWrapper>
           <Layout />
-        </BrowserRouter>
+        </LayoutTestWrapper>
       );
 
       const footer = document.querySelector('.footer');

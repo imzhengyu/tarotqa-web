@@ -1,32 +1,54 @@
 import { useState, useCallback, useMemo } from 'react';
 import MarkdownIt from 'markdown-it';
+import markdownItMultimdTable from 'markdown-it-multimd-table';
 import DOMPurify from 'dompurify';
 import BirthInfoForm from '../../components/common/BirthInfoForm';
 import DisclaimerModal from '../../components/common/DisclaimerModal';
+import DelayedPoofButton from '../../components/common/DelayedPoofButton';
+import { StarIcon, SparkleEffect, ConstellationPattern } from '../../components/common/DecorativeElements';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
+import { useBackToTop } from '../../hooks/useBackToTop';
 import { calculateAstrologyChart } from '../../utils/astrology/calculations';
 import { ZODIAC_SIGNS, PLANET_COLORS } from '../../utils/astrology/constants';
+import { useLanguage } from '../../context/LanguageContext';
+import { ASTROLOGY_CHART } from '../../constants';
+import { exportToPNG } from '../../utils/export';
+import { formatTimestamp } from '../../utils/date';
 import api from '../../services/api';
 import './AstrologyChart.css';
 
-// 创建 markdown-it 实例
 const md = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true
+}).use(markdownItMultimdTable, {
+  multiline: true,
+  header: true
 });
 
-// 启用表格支持
-md.enable('table');
+const generateAstrologyFilename = (birthData) => {
+  if (!birthData) return `astrology-${formatTimestamp()}`;
+  const { year, month, day, hour, minute } = birthData;
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateStr = `${year}${pad(month)}${pad(day)}`;
+  const timeStr = `${pad(hour)}${pad(minute)}`;
+  return `astrology-${dateStr}_${timeStr}-${formatTimestamp()}`;
+};
 
-const CHART_SIZE = 500;
-const CENTER = CHART_SIZE / 2;
-const OUTER_RADIUS = 230;
-const INNER_RADIUS = 180;
-const HOUSE_RADIUS = 150;
-const PLANET_RADIUS = 120;
+const {
+  CHART_SIZE,
+  CENTER,
+  OUTER_RADIUS,
+  INNER_RADIUS,
+  HOUSE_RADIUS,
+  PLANET_RADIUS,
+  ZODIAC_SEGMENT_DEGREES,
+  ZODIAC_OFFSET_DEGREES,
+  ZODIAC_MIDPOINT_OFFSET
+} = ASTROLOGY_CHART;
 
 function AstrologyChart() {
+  const { language, t } = useLanguage();
   const [birthData, setBirthData] = useState(null);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [chartData, setChartData] = useState(null);
@@ -34,6 +56,7 @@ function AstrologyChart() {
   const [aiInterpretation, setAiInterpretation] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const { showBackToTop, scrollToTop } = useBackToTop();
 
   const {
     aiCooldown,
@@ -66,7 +89,7 @@ function AstrologyChart() {
     setAiError(null);
 
     try {
-      const interpretation = await api.getAIAstrologyInterpretation(chartData);
+      const interpretation = await api.getAIAstrologyInterpretation(chartData, language);
       startCooldown();
       setAiInterpretation(interpretation);
     } catch (error) {
@@ -78,13 +101,12 @@ function AstrologyChart() {
     }
   };
 
-  // Generate SVG path for zodiac ring
   const zodiacRing = useMemo(() => {
     const signs = [];
     for (let i = 0; i < 12; i++) {
-      const startAngle = (i * 30 - 90) * Math.PI / 180;
-      const endAngle = ((i + 1) * 30 - 90) * Math.PI / 180;
-      const midAngle = ((i * 30 + 15) - 90) * Math.PI / 180;
+      const startAngle = (i * ZODIAC_SEGMENT_DEGREES - ZODIAC_OFFSET_DEGREES) * Math.PI / 180;
+      const endAngle = ((i + 1) * ZODIAC_SEGMENT_DEGREES - ZODIAC_OFFSET_DEGREES) * Math.PI / 180;
+      const midAngle = ((i * ZODIAC_SEGMENT_DEGREES + ZODIAC_MIDPOINT_OFFSET) - ZODIAC_OFFSET_DEGREES) * Math.PI / 180;
 
       const x1 = CENTER + OUTER_RADIUS * Math.cos(startAngle);
       const y1 = CENTER + OUTER_RADIUS * Math.sin(startAngle);
@@ -112,7 +134,6 @@ function AstrologyChart() {
     return signs;
   }, []);
 
-  // Generate house divisions
   const houseLines = useMemo(() => {
     if (!chartData) return [];
     return chartData.houses.map((house) => {
@@ -125,7 +146,6 @@ function AstrologyChart() {
     });
   }, [chartData]);
 
-  // Generate planet positions
   const planetPositions = useMemo(() => {
     if (!chartData) return [];
     return chartData.planets.map(planet => {
@@ -142,7 +162,6 @@ function AstrologyChart() {
         viewBox={`0 0 ${CHART_SIZE} ${CHART_SIZE}`}
         className="astrology-svg"
       >
-        {/* Background circle */}
         <circle
           cx={CENTER}
           cy={CENTER}
@@ -152,7 +171,6 @@ function AstrologyChart() {
           strokeWidth="2"
         />
 
-        {/* Zodiac ring */}
         {zodiacRing.map((sign, index) => (
           <g key={index}>
             <path
@@ -175,7 +193,6 @@ function AstrologyChart() {
           </g>
         ))}
 
-        {/* Inner ring */}
         <circle
           cx={CENTER}
           cy={CENTER}
@@ -185,7 +202,6 @@ function AstrologyChart() {
           strokeWidth="1"
         />
 
-        {/* House ring */}
         <circle
           cx={CENTER}
           cy={CENTER}
@@ -196,7 +212,6 @@ function AstrologyChart() {
           strokeDasharray="4,4"
         />
 
-        {/* House lines */}
         {houseLines.map((line, index) => (
           <g key={index}>
             <line
@@ -207,7 +222,6 @@ function AstrologyChart() {
               stroke="rgba(212, 175, 55, 0.4)"
               strokeWidth="1"
             />
-            {/* House number */}
             <text
               x={(line.x1 + CENTER) / 2 + 15}
               y={(line.y1 + CENTER) / 2 + 15}
@@ -220,10 +234,8 @@ function AstrologyChart() {
           </g>
         ))}
 
-        {/* Ascendant, MC markers */}
         {chartData && (
           <>
-            {/* Ascendant */}
             <text
               x={CENTER + 5}
               y={CENTER - 5}
@@ -231,9 +243,8 @@ function AstrologyChart() {
               fontSize="12"
               textAnchor="middle"
             >
-              ASC
+              {t('ASC', 'ASC')}
             </text>
-            {/* MC */}
             <text
               x={CENTER + 5}
               y={CENTER + 15}
@@ -241,12 +252,11 @@ function AstrologyChart() {
               fontSize="10"
               textAnchor="middle"
             >
-              MC
+              {t('MC', 'MC')}
             </text>
           </>
         )}
 
-        {/* Planet positions */}
         {planetPositions.map((planet, index) => (
           <g
             key={index}
@@ -297,33 +307,33 @@ function AstrologyChart() {
       {showCooldownToast && aiCooldown > 0 && (
         <div className="cooldown-toast">
           <span className="cooldown-icon">⏳</span>
-          <span className="cooldown-text">请等待 {aiCooldown}s 后再试</span>
+          <span className="cooldown-text">{language === 'zh' ? `请等待 ${aiCooldown}s 后再试` : `Please wait ${aiCooldown}s`}</span>
         </div>
       )}
 
-      <h1 className="page-title">西方星盘排盘</h1>
+      <h1 className="page-title">{t('西方星盘排盘', 'Western Astrology Chart')}</h1>
 
       <div className="astrology-layout">
         <div className="astrology-form-section">
           <div className="form-card">
-            <h2>出生信息</h2>
+            <h2>{t('出生信息', 'Birth Information')}</h2>
             <BirthInfoForm
               value={birthData}
               onChange={handleBirthDataChange}
               showGender={false}
             />
-            <button
+            <DelayedPoofButton
               className="btn btn-primary generate-btn"
               onClick={handleGenerateChart}
               disabled={!birthData}
             >
-              生成星盘
-            </button>
+              {t('生成星盘', 'Generate Chart')}
+            </DelayedPoofButton>
           </div>
 
           {chartData && (
             <div className="planet-list">
-              <h3>行星位置</h3>
+              <h3>{t('行星位置', 'Planet Positions')}</h3>
               {chartData.planets.map(planet => (
                 <div
                   key={planet.id}
@@ -339,9 +349,9 @@ function AstrologyChart() {
                   >
                     {planet.symbol}
                   </span>
-                  <span className="planet-name">{planet.name}</span>
+                  <span className="planet-name">{language === 'zh' ? planet.name : planet.nameEn}</span>
                   <span className="planet-sign">
-                    {planet.sign?.symbol} {planet.sign?.name} {Math.round(planet.degree)}°
+                    {planet.sign?.symbol} {language === 'zh' ? planet.sign?.name : planet.sign?.nameEn} {Math.round(planet.degree)}°
                   </span>
                 </div>
               ))}
@@ -350,8 +360,8 @@ function AstrologyChart() {
 
           {aiError && (
             <div className="ai-error">
-              <p>错误: {aiError}</p>
-              <button onClick={() => setAiError(null)}>关闭</button>
+              <p>{t('错误: ', 'Error: ')}{aiError}</p>
+              <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
             </div>
           )}
         </div>
@@ -359,8 +369,19 @@ function AstrologyChart() {
         <div className="astrology-chart-section">
           {chartData ? (
             <>
-              <div className="chart-container">
-                {renderChart()}
+              <div className="chartWrapper">
+                <div className="chartDecorations">
+                  <StarIcon size={18} className="chartStar star1" />
+                  <StarIcon size={14} className="chartStar star2" />
+                  <StarIcon size={16} className="chartStar star3" />
+                  <StarIcon size={12} className="chartStar star4" />
+                  <SparkleEffect size={40} intensity={0.5} className="chartSparkle sparkle1" />
+                  <SparkleEffect size={35} intensity={0.4} className="chartSparkle sparkle2" />
+                  <ConstellationPattern stars={4} size={45} className="chartConstellation" />
+                </div>
+                <div className="chart-container">
+                  {renderChart()}
+                </div>
               </div>
               {chartData && birthData && (
                 <div className="ai-action">
@@ -369,21 +390,32 @@ function AstrologyChart() {
                     onClick={handleAIInterpretation}
                     disabled={aiLoading || aiCooldown > 0}
                   >
-                    {aiLoading ? '分析中...' : aiCooldown > 0 ? `请等待 ${aiCooldown}s` : 'AI 星盘分析'}
+                    {aiLoading ? t('分析中...', 'Analyzing...') : aiCooldown > 0 ? `${t('请等待', 'Wait')} ${aiCooldown}s` : t('AI 星盘分析', 'AI Chart Analysis')}
                   </button>
                 </div>
               )}
               {aiInterpretation && (
-                <div className="ai-interpretation">
-                  <h3>AI 星盘分析</h3>
-                  {renderMarkdownContent(aiInterpretation)}
-                </div>
+                <>
+                  <div className="ai-interpretation" id="astrology-ai-result">
+                    <h3>{t('AI 星盘分析', 'AI Chart Analysis')}</h3>
+                    {renderMarkdownContent(aiInterpretation)}
+                  </div>
+                  <div className="ai-export-section">
+                    <button
+                      className="btn btn-secondary export-ai-btn"
+                      onClick={() => exportToPNG('astrology-ai-result', generateAstrologyFilename(birthData))}
+                      title={t('输出PNG图片', 'Export as PNG')}
+                    >
+                      📥 {t('导出分析结果', 'Export Analysis')}
+                    </button>
+                  </div>
+                </>
               )}
             </>
           ) : (
             <div className="chart-placeholder">
               <div className="placeholder-icon">⭐</div>
-              <p>请填写出生信息并点击&quot;生成星盘&quot;</p>
+              <p>{t('请填写出生信息并点击"生成星盘"', 'Please fill in birth info and click "Generate Chart"')}</p>
             </div>
           )}
         </div>
@@ -405,12 +437,12 @@ function AstrologyChart() {
               <span style={{ color: PLANET_COLORS[selectedPlanet.id] }}>
                 {selectedPlanet.symbol}
               </span>
-              {selectedPlanet.name}
+              {language === 'zh' ? selectedPlanet.name : selectedPlanet.nameEn}
             </h2>
             <div className="planet-detail-content">
-              <p><strong>所在星座：</strong>{selectedPlanet.sign?.name}</p>
-              <p><strong>精确度：</strong>{Math.round(selectedPlanet.degree)}°</p>
-              <p><strong>黄经：</strong>{Math.round(selectedPlanet.longitude)}°</p>
+              <p><strong>{t('所在星座：', 'Sign: ')}</strong>{language === 'zh' ? selectedPlanet.sign?.name : selectedPlanet.sign?.nameEn}</p>
+              <p><strong>{t('精确度：', 'Degree: ')}</strong>{Math.round(selectedPlanet.degree)}°</p>
+              <p><strong>{t('黄经：', 'Longitude: ')}</strong>{Math.round(selectedPlanet.longitude)}°</p>
             </div>
           </dialog>
         </div>
@@ -421,6 +453,11 @@ function AstrologyChart() {
         onClose={() => setShowDisclaimer(false)}
         type="astrology"
       />
+      {showBackToTop && (
+        <button className="back-to-top" onClick={scrollToTop} title={t('回到顶部', 'Back to Top')} data-tooltip={t('回到顶部', 'Back to Top')}>
+          <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10.5v10.5h14V10.5" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      )}
     </div>
   );
 }

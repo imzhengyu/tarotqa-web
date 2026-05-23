@@ -326,11 +326,11 @@ const api = {
   },
 
   buildTarotMessages(data) {
-    const { question, selectedSpread } = data;
+    const { question, selectedSpread, language = 'zh' } = data;
 
     // 获取合适的角色
     const persona = this.getRecommendedPersona(selectedSpread?.id, question);
-    const systemPrompt = persona.description;
+    const systemPrompt = language === 'zh' ? persona.description : persona.descriptionEn || persona.description;
 
     const userContent = this.buildTarotPrompt(data);
 
@@ -341,7 +341,27 @@ const api = {
   },
 
   buildTarotPrompt(data) {
-    const { question, selectedSpread, drawnCards } = data;
+    const { question, selectedSpread, drawnCards, language = 'zh' } = data;
+
+    if (language === 'en') {
+      // English prompt
+      let prompt = `Spread: ${selectedSpread.nameEn || selectedSpread.name}\n`;
+      prompt += `Question: ${question || 'General Fortune'}\n\n`;
+      prompt += `Cards drawn:`;
+
+      drawnCards.forEach((card, idx) => {
+        const positionName = selectedSpread.positions?.[idx]?.nameEn || selectedSpread.positions?.[idx]?.name || `Position ${idx + 1}`;
+        const pos = card.isReversed ? 'Reversed' : 'Upright';
+        const keywords = card.keywordsEn?.slice(0, 3).join(', ') || card.keywords?.slice(0, 3).join(', ') || '';
+        prompt += `\n${idx + 1}. ${positionName}: ${card.nameEn || card.name} (${pos}) ${keywords}`;
+        if (idx < drawnCards.length - 1) prompt += ' | ';
+      });
+
+      prompt += `\n\nPlease analyze the relationship between these cards and the question. Respond in English using Markdown format.`;
+      return prompt;
+    }
+
+    // Chinese prompt (default)
     let prompt = `牌阵：${selectedSpread.name}\n`;
     prompt += `问题：${question || '整体运势'}\n\n`;
     prompt += `抽牌：`;
@@ -444,24 +464,28 @@ const api = {
   // AI 紫微斗数命盘解读
   async getAIZiweiInterpretation(birthData) {
     const apiKey = _getApiKey();
+    const language = birthData.language || 'zh';
+
     if (!apiKey) {
-      throw new Error('请先在设置中配置 MiniMax API Key');
+      throw new Error(language === 'zh' ? '请先在设置中配置 MiniMax API Key' : 'Please configure MiniMax API Key in settings');
     }
 
     // 错误场景2: API Key 格式无效
     if (!apiKey.startsWith('sk-') && !apiKey.startsWith('eyJ')) {
       console.error('[AI紫微解读] 无效的 API Key 格式:', apiKey.substring(0, 10) + '...');
-      throw new Error('API Key 格式无效，请检查设置');
+      throw new Error(language === 'zh' ? 'API Key 格式无效，请检查设置' : 'Invalid API Key format');
     }
 
     const { birthday, birthTime, gender, birthdayType, ziweiData } = birthData;
 
-    const systemPrompt = `你是一位专业的紫微斗数命理师，精通紫微斗数各宫含义、星曜特性、四化飞星以及三方四正关系。你需要根据命盘数据给出专业、准确、有洞察力的分析。请用中文回答，以 Markdown 格式输出。`;
+    const systemPrompt = language === 'zh'
+      ? `你是一位专业的紫微斗数命理师，精通紫微斗数各宫含义、星曜特性、四化飞星以及三方四正关系。你需要根据命盘数据给出专业、准确、有洞察力的分析。请用中文回答，以 Markdown 格式输出。`
+      : `You are a professional Ziwei Dou Shu fortune teller, proficient in the meaning of each palace, star characteristics, Si Hua flying stars, and San Fang Si Zheng relationships. Provide professional, accurate, and insightful analysis based on the chart data. Respond in English using Markdown format.`;
 
-    // 如果有完整的命盘数据，使用详细数据；否则使用基本信息
     let userContent;
     if (ziweiData) {
-      userContent = `请分析以下详细的紫微斗数命盘数据：
+      userContent = language === 'zh'
+        ? `请分析以下详细的紫微斗数命盘数据：
 
 ${ziweiData}
 
@@ -472,9 +496,22 @@ ${ziweiData}
 4. 四化飞星详细分析（禄权科忌）
 5. 事业、财运、感情方面的发展建议
 
-请用专业但亲切的语气给出分析。请直接给出分析结果，不要包含思考过程。`;
+请用专业但亲切的语气给出分析。请直接给出分析结果，不要包含思考过程。`
+        : `Please analyze the following detailed Ziwei Dou Shu chart data:
+
+${ziweiData}
+
+Provide detailed chart analysis including:
+1. Ming Gong characteristics and personality analysis
+2. Shen Gong's influence on the person
+3. Main star distribution and combination analysis
+4. Detailed Si Hua flying star analysis (Lu, Quan, Ke, Ji)
+5. Development suggestions for career, wealth, and relationships
+
+Use professional yet friendly tone. Provide analysis directly without including thinking process.`;
     } else {
-      userContent = `请分析以下紫微斗数命盘：
+      userContent = language === 'zh'
+        ? `请分析以下紫微斗数命盘：
 
 出生信息：
 - 阳历生日：${birthday}
@@ -488,7 +525,22 @@ ${ziweiData}
 3. 四化飞星分析
 4. 事业、财运、感情方面的发展建议
 
-请用专业但亲切的语气给出分析。请直接给出分析结果，不要包含思考过程。`;
+请用专业但亲切的语气给出分析。请直接给出分析结果，不要包含思考过程。`
+        : `Please analyze the following Ziwei Dou Shu chart:
+
+Birth Information:
+- Solar Birthday: ${birthday}
+- Birth Hour: ${birthTime} o'clock
+- Gender: ${gender === 'male' ? 'Male' : 'Female'}
+- Chart Type: ${birthdayType === 'lunar' ? 'Lunar' : 'Solar'}
+
+Provide detailed chart analysis including:
+1. Ming Gong characteristics
+2. Main star distribution
+3. Si Hua flying star analysis
+4. Development suggestions for career, wealth, and relationships
+
+Use professional yet friendly tone. Provide analysis directly without including thinking process.`;
     }
 
     const requestBody = {
@@ -598,20 +650,23 @@ ${ziweiData}
   },
 
   // AI 西方星盘解读
-  async getAIAstrologyInterpretation(chartData) {
+  async getAIAstrologyInterpretation(chartData, language = 'zh') {
     const apiKey = _getApiKey();
     if (!apiKey) {
-      throw new Error('请先在设置中配置 MiniMax API Key');
+      throw new Error(language === 'zh' ? '请先在设置中配置 MiniMax API Key' : 'Please configure MiniMax API Key in settings');
     }
 
     const { planets, ascendant, midheaven, birthData } = chartData;
 
-    const systemPrompt = `你是一位专业的西方占星师，精通十二星座、行星相位、宫位含义以及星盘综合分析。你需要根据星盘数据给出专业、准确、有洞察力的分析。请用中文回答，以 Markdown 格式输出。`;
+    const systemPrompt = language === 'zh'
+      ? `你是一位专业的西方占星师，精通十二星座、行星相位、宫位含义以及星盘综合分析。你需要根据星盘数据给出专业、准确、有洞察力的分析。请用中文回答，以 Markdown 格式输出。`
+      : `You are a professional Western astrologer, proficient in the twelve zodiac signs, planetary aspects, house meanings, and comprehensive chart analysis. Provide professional, accurate, and insightful analysis based on the chart data. Respond in English using Markdown format.`;
 
     const sunPlanet = planets.find(p => p.id === 'sun');
     const moonPlanet = planets.find(p => p.id === 'moon');
 
-    const userContent = `请分析以下西方星盘：
+    const userContent = language === 'zh'
+      ? `请分析以下西方星盘：
 
 出生信息：
 - 出生日期：${birthData.year}年${birthData.month}月${birthData.day}日
@@ -633,7 +688,30 @@ ${planets.map(p => `- ${p.name}：${p.sign?.name} ${Math.round(p.degree)}°`).jo
 4. 主要行星相位分析
 5. 事业、感情、财运方面的发展建议
 
-请用专业但亲切的语气给出分析。`;
+请用专业但亲切的语气给出分析。`
+      : `Please analyze the following Western astrology chart:
+
+Birth Information:
+- Birth Date: ${birthData.year}/${birthData.month}/${birthData.day}
+- Birth Time: ${String(birthData.hour).padStart(2, '0')}:${String(birthData.minute).padStart(2, '0')}
+
+Chart Data:
+- Sun Sign: ${sunPlanet?.sign?.name || 'Unknown'} ${sunPlanet ? Math.round(sunPlanet.degree) + '°' : ''}
+- Moon Sign: ${moonPlanet?.sign?.name || 'Unknown'} ${moonPlanet ? Math.round(moonPlanet.degree) + '°' : ''}
+- Ascendant: ${ascendant?.sign?.name || 'Unknown'} ${ascendant ? Math.round(ascendant.degree) + '°' : ''}
+- Midheaven: ${midheaven?.sign?.name || 'Unknown'}
+
+Planet Distribution:
+${planets.map(p => `- ${p.name}: ${p.sign?.name} ${Math.round(p.degree)}°`).join('\n')}
+
+Provide detailed chart analysis including:
+1. Sun sign characteristics
+2. Moon sign characteristics
+3. Ascendant's external presentation
+4. Main planetary aspect analysis
+5. Development suggestions for career, relationships, and wealth
+
+Use professional yet friendly tone.`;
 
     const requestBody = {
       model: AI_CONFIG.MODEL,

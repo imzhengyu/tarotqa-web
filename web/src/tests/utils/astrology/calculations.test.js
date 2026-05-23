@@ -205,13 +205,15 @@ describe('Astrology Calculations', () => {
   });
 
   describe('calculateHouses', () => {
+    const { ascendant } = calculateAscendantMC(validBirthData);
+
     it('should return 12 houses', () => {
-      const houses = calculateHouses(validBirthData);
+      const houses = calculateHouses(ascendant);
       expect(houses).toHaveLength(12);
     });
 
     it('each house should have required fields', () => {
-      const houses = calculateHouses(validBirthData);
+      const houses = calculateHouses(ascendant);
       houses.forEach(house => {
         expect(house).toHaveProperty('id');
         expect(house).toHaveProperty('name');
@@ -222,20 +224,20 @@ describe('Astrology Calculations', () => {
     });
 
     it('house ids should be 1-12', () => {
-      const houses = calculateHouses(validBirthData);
+      const houses = calculateHouses(ascendant);
       const ids = houses.map(h => h.id);
       expect(ids).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     });
 
     it('house names should match HOUSES constant', () => {
-      const houses = calculateHouses(validBirthData);
+      const houses = calculateHouses(ascendant);
       houses.forEach((house, index) => {
         expect(house.name).toBe(HOUSES[index].name);
       });
     });
 
     it('each house longitude should be 0-360', () => {
-      const houses = calculateHouses(validBirthData);
+      const houses = calculateHouses(ascendant);
       houses.forEach(house => {
         expect(house.longitude).toBeGreaterThanOrEqual(0);
         expect(house.longitude).toBeLessThan(360);
@@ -243,7 +245,7 @@ describe('Astrology Calculations', () => {
     });
 
     it('each house degree should be 0-30', () => {
-      const houses = calculateHouses(validBirthData);
+      const houses = calculateHouses(ascendant);
       houses.forEach(house => {
         expect(house.degree).toBeGreaterThanOrEqual(0);
         expect(house.degree).toBeLessThan(30);
@@ -251,7 +253,7 @@ describe('Astrology Calculations', () => {
     });
 
     it('each house sign should be valid zodiac sign', () => {
-      const houses = calculateHouses(validBirthData);
+      const houses = calculateHouses(ascendant);
       houses.forEach(house => {
         const validSign = ZODIAC_SIGNS.find(s => s.id === house.sign.id);
         expect(validSign).toBeDefined();
@@ -259,7 +261,7 @@ describe('Astrology Calculations', () => {
     });
 
     it('houses should be approximately 30 degrees apart', () => {
-      const houses = calculateHouses(validBirthData);
+      const houses = calculateHouses(ascendant);
       for (let i = 1; i < houses.length; i++) {
         const diff = (houses[i].longitude - houses[i - 1].longitude + 360) % 360;
         expect(diff).toBeGreaterThan(25);

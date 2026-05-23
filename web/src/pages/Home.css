@@ -172,9 +172,138 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  opacity: 0.15;
+  opacity: 0.7;
   font-size: 48px;
   color: var(--color-secondary);
+  z-index: 0;
+}
+
+.service-decoration > * {
+  position: relative;
+}
+
+.decoStarSvg {
+  filter: drop-shadow(0 0 4px var(--color-secondary));
+}
+
+.decoStarSvg.star1 {
+  animation: starFloat 4s ease-in-out infinite;
+}
+
+.decoStarSvg.star2 {
+  animation: starFloat 5s ease-in-out infinite 0.5s;
+}
+
+.decoStarSvg.star3 {
+  animation: starFloat 6s ease-in-out infinite 1s;
+}
+
+.decoStarSvg.star4 {
+  animation: starFloat 4.5s ease-in-out infinite 0.3s;
+}
+
+.decoStarSvg.star5 {
+  animation: starFloat 5.5s ease-in-out infinite 0.8s;
+}
+
+.decoStarSvg.star6 {
+  animation: starFloat 4s ease-in-out infinite 0.2s;
+}
+
+.decoStarSvg.star7 {
+  animation: starFloat 5s ease-in-out infinite 0.7s;
+}
+
+.decoStarSvg.star8 {
+  animation: starFloat 6s ease-in-out infinite 1.2s;
+}
+
+@keyframes starFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(10deg);
+    opacity: 1;
+  }
+}
+
+.decoSparkle {
+  position: absolute;
+  right: 100px;
+  top: 20px;
+  animation: sparkleRotate 12s linear infinite;
+}
+
+.decoConstellation {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  opacity: 0.6;
+}
+
+.decoConstellation svg {
+  animation: constellationTwinkle 6s ease-in-out infinite;
+}
+
+@keyframes constellationTwinkle {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.decoOrb {
+  position: absolute;
+  right: 80px;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: orbPulse 4s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translateY(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: translateY(-50%) scale(1.05);
+  }
+}
+
+/* 紫微区块装饰 */
+.serviceDecorationZiwei {
+  right: 30px;
+}
+
+.serviceDecorationZiwei .ziweiSparkle {
+  right: 90px;
+  top: 10px;
+}
+
+/* 星盘区块装饰 */
+.serviceDecorationAstrology {
+  right: 30px;
+}
+
+.serviceDecorationAstrology .astroSparkle {
+  right: 100px;
+  top: 30px;
+}
+
+.serviceDecorationAstrology .astroConstellation {
+  right: 10px;
+  bottom: 30px;
 }
 
 .service-block .service-decoration {
@@ -266,4 +395,54 @@
     padding: 12px 24px;
     font-size: 14px;
   }
+}
+
+/* 回到顶部浮动按钮 */
+.back-to-top {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: rgba(45, 27, 78, 0.9);
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  color: var(--color-secondary);
+  cursor: pointer;
+  z-index: 999;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.back-to-top:hover {
+  background: rgba(45, 27, 78, 1);
+  transform: translateY(-3px);
+  border-color: var(--color-secondary);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+.back-to-top:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 56px;
+  right: 0;
+  background: rgba(45, 27, 78, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: var(--color-secondary);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.back-to-top svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentcolor;
+  stroke-width: 3;
+  fill: none;
 }

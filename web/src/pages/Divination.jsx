@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react';
 import MarkdownIt from 'markdown-it';
 import markdownitMark from 'markdown-it-mark';
+import markdownItMultimdTable from 'markdown-it-multimd-table';
 import DOMPurify from 'dompurify';
 import TarotCard from '../components/TarotCard';
 import DisclaimerModal from '../components/common/DisclaimerModal';
+import DelayedPoofButton from '../components/common/DelayedPoofButton';
+import { StarIcon, SparkleEffect, OrbGlow } from '../components/common/DecorativeElements';
+import { useLanguage } from '../context/LanguageContext';
+import { exportToPNG } from '../utils/export';
+import { formatTimestamp } from '../utils/date';
 import api from '../services/api';
 import { spreads } from '../data/spreads';
 import useVisitStats from '../hooks/useVisitStats';
 import { useAIRequestCooldown } from '../hooks/useAIRequestCooldown';
+import { useBackToTop } from '../hooks/useBackToTop';
 import { UI_LIMITS, TIMING } from '../constants';
 import './Divination.css';
 
@@ -18,19 +25,26 @@ const md = new MarkdownIt({
   typographer: true
 });
 
-// 添加扩展语法：==高亮==
 md.use(markdownitMark);
 
-// 启用表格支持
-md.enable('table');
+md.use(markdownItMultimdTable, {
+  multiline: true,
+  header: true
+});
 
-// 转换为 Divination 组件期望的格式
+const generateTarotFilename = (spreadName, cardCount) => {
+  const safeSpreadName = spreadName?.replace(/\s+/g, '-') || 'reading';
+  return `tarot-${safeSpreadName}-${cardCount}cards-${formatTimestamp()}`;
+};
+
 const spreadList = Object.values(spreads).map(s => ({
   id: s.id,
   name: s.name,
+  nameEn: s.nameEn,
   cards: s.cardCount,
   desc: s.description,
-  positions: s.positions.map(p => ({ name: p.name }))
+  descEn: s.descriptionEn,
+  positions: s.positions.map(p => ({ name: p.name, nameEn: p.nameEn }))
 }));
 
 function Divination() {
@@ -51,11 +65,15 @@ function Divination() {
   const [lastRequest, setLastRequest] = useState(null);
   const [isShuffling, setIsShuffling] = useState(false);
   const [dealingCard, setDealingCard] = useState(null);
+  const { showBackToTop, scrollToTop } = useBackToTop();
 
   // Visit stats tracking
   const { incrementQuestionCount } = useVisitStats();
 
   const { aiCooldown, showCooldownToast, canMakeAIRequest, startCooldownTimer, startCooldown } = useAIRequestCooldown('ai_cooldown_end');
+
+  // Language context
+  const { language, t } = useLanguage();
 
   useEffect(() => {
     loadCards();
@@ -85,7 +103,7 @@ function Divination() {
 
   const handleStartQuestion = () => {
     if (!question.trim()) {
-      alert('请描述您的问题');
+      alert(t('请描述您的问题', 'Please describe your question'));
       return;
     }
     shuffleDeck();
@@ -167,7 +185,8 @@ function Divination() {
       const interpretation = await api.getAIInterpretation({
         question,
         selectedSpread,
-        drawnCards
+        drawnCards,
+        language
       });
       startCooldown();
       const duration = Date.now() - requestStartTime;
@@ -210,11 +229,11 @@ function Divination() {
   // 解析 AI 回复为分节格式（简化为直接返回整个内容）
   const parseInterpretation = (text) => {
     if (!text || typeof text !== 'string') {
-      return [{ title: '综合解读', icon: '📖', content: String(text || '') }];
+      return [{ title: t('综合解读', 'Comprehensive Analysis'), icon: '📖', content: String(text || '') }];
     }
 
     // 直接将整个文本作为一个 section 返回，由 Markdown 渲染处理格式
-    return [{ title: '综合解读', icon: '📖', content: text }];
+    return [{ title: t('综合解读', 'Comprehensive Analysis'), icon: '📖', content: text }];
   };
 
   if (loading) {
@@ -231,15 +250,22 @@ function Divination() {
       {showCooldownToast && aiCooldown > 0 && (
         <div className="cooldown-toast">
           <span className="cooldown-icon">⏳</span>
-          <span className="cooldown-text">请等待 {aiCooldown}s 后再试</span>
+          <span className="cooldown-text">{t(`请等待 ${aiCooldown}s 后再试`, `Please wait ${aiCooldown}s`)}</span>
         </div>
       )}
 
-      <h1 className="page-title">占卜</h1>
+      {/* 回到顶部浮动按钮 */}
+      {showBackToTop && (
+        <button className="back-to-top" onClick={scrollToTop} title={t('回到顶部', 'Back to Top')} data-tooltip={t('回到顶部', 'Back to Top')}>
+          <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10.5v10.5h14V10.5" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      )}
+
+      <h1 className="page-title">{t('占卜', 'Divination')}</h1>
 
       {step === 'select' && (
         <section className="spread-select">
-          <h2>选择牌阵</h2>
+          <h2>{t('选择牌阵', 'Select a Spread')}</h2>
           <div className="spreads-list">
             {spreadList.map(spread => (
               <div
@@ -255,31 +281,31 @@ function Divination() {
                 role="button"
                 tabIndex={0}
               >
-                <h3>{spread.name}</h3>
-                <p>{spread.desc}</p>
-                <span className="spread-count">{spread.cards}张牌</span>
+                <h3>{language === 'zh' ? spread.name : spread.nameEn}</h3>
+                <p>{language === 'zh' ? spread.desc : spread.descEn}</p>
+                <span className="spread-count">{spread.cards} {t('张牌', 'cards')}</span>
               </div>
             ))}
           </div>
           <div className="action-bar">
-            <button
+            <DelayedPoofButton
               className="btn btn-primary"
               onClick={() => setStep('question')}
               disabled={!selectedSpread}
             >
-              {selectedSpread ? '选择此牌阵 →' : '请先选择牌阵'}
-            </button>
+              {selectedSpread ? t('选择此牌阵 →', 'Select This Spread →') : t('请先选择牌阵', 'Please Select a Spread First')}
+            </DelayedPoofButton>
           </div>
         </section>
       )}
 
       {step === 'question' && (
         <section className="question-input">
-          <h2>描述您的问题</h2>
+          <h2>{t('描述您的问题', 'Describe Your Question')}</h2>
           <div className="textarea-wrapper">
             <textarea
               className="question-textarea"
-              placeholder="请描述您想要咨询的问题..."
+              placeholder={t('请描述您想要咨询的问题...', 'Please describe the question you want to ask...')}
               value={question}
               onChange={(e) => setQuestion(e.target.value.slice(0, UI_LIMITS.MAX_QUESTION_LENGTH))}
               rows={4}
@@ -297,24 +323,24 @@ function Divination() {
             >
               <TarotCard faceUp={false} shuffling={isShuffling} />
             </div>
-            <p className="draw-hint">{isShuffling ? '洗牌中...' : '准备开始抽牌'}</p>
+            <p className="draw-hint">{isShuffling ? t('洗牌中...', 'Shuffling...') : t('准备开始抽牌', 'Ready to Draw')}</p>
           </div>
           <div className="action-bar">
-            <button className="btn btn-secondary" onClick={() => setStep('select')}>
-              返回
-            </button>
-            <button className="btn btn-primary" onClick={handleStartQuestion} disabled={isShuffling}>
-              {isShuffling ? '洗牌中...' : '开始抽牌'}
-            </button>
+            <DelayedPoofButton className="btn btn-secondary" onClick={() => setStep('select')}>
+              {t('返回', 'Back')}
+            </DelayedPoofButton>
+            <DelayedPoofButton className="btn btn-primary" onClick={handleStartQuestion} disabled={isShuffling}>
+              {isShuffling ? t('洗牌中...', 'Shuffling...') : t('开始抽牌', 'Start Drawing')}
+            </DelayedPoofButton>
           </div>
         </section>
       )}
 
       {step === 'draw' && (
         <section className="draw-cards">
-          <h2>请选择 {selectedSpread.name}</h2>
+          <h2>{t(`请选择 ${selectedSpread.name}`, `Please Select ${selectedSpread.name}`)}</h2>
           <p className="draw-progress">
-            第 {drawnCards.length + 1} / {selectedSpread.cards} 张
+            {t(`第 ${drawnCards.length + 1} / ${selectedSpread.cards} 张`, `Card ${drawnCards.length + 1} of ${selectedSpread.cards}`)}
           </p>
 
           <div className="deck-area">
@@ -332,12 +358,12 @@ function Divination() {
             >
               <TarotCard faceUp={false} shuffling={isShuffling} />
             </div>
-            <p className="draw-hint">{isShuffling ? '洗牌中...' : '点击卡牌抽取'}</p>
+            <p className="draw-hint">{isShuffling ? t('洗牌中...', 'Shuffling...') : t('点击卡牌抽取', 'Click to Draw')}</p>
           </div>
 
           {drawnCards.length > 0 && (
             <div className="drawn-cards">
-              <h3>已抽取的牌</h3>
+              <h3>{t('已抽取的牌', 'Drawn Cards')}</h3>
               <div className="drawn-list">
                 {drawnCards.map((card, idx) => (
                   <div key={idx} className="drawn-item">
@@ -357,25 +383,25 @@ function Divination() {
           )}
 
           <div className="action-bar">
-            <button className="btn btn-secondary" onClick={handleReset}>
-              重新开始
-            </button>
+            <DelayedPoofButton className="btn btn-secondary" onClick={handleReset}>
+              {t('重新开始', 'Start Over')}
+            </DelayedPoofButton>
           </div>
         </section>
       )}
 
       {step === 'reveal' && (
         <section className="result">
-          <h2>占卜结果</h2>
+          <h2>{t('占卜结果', 'Divination Result')}</h2>
 
           <div className="result-cards">
             {drawnCards.map((card, idx) => (
               <div key={idx} className="result-card">
                 <TarotCard card={card} faceUp={true} />
                 <div className="result-card-info">
-                  <h4>{selectedSpread.positions?.[idx]?.name || `位置 ${idx + 1}`}</h4>
+                  <h4>{language === 'zh' ? selectedSpread.positions?.[idx]?.name : selectedSpread.positions?.[idx]?.nameEn || `${language === 'zh' ? '位置' : 'Position'} ${idx + 1}`}</h4>
                   <span className={`card-position-type ${card.isReversed ? 'reversed' : 'upright'}`}>
-                    {card.isReversed ? '逆位' : '正位'}
+                    {card.isReversed ? t('逆位', 'Reversed') : t('正位', 'Upright')}
                   </span>
                   <p className="card-meaning">
                     {card.isReversed ? card.reversedDescription : card.description}
@@ -386,42 +412,57 @@ function Divination() {
           </div>
 
           <div className="result-actions">
-            <button className="btn btn-secondary" onClick={() => setStep('question')}>
-              重新问题
-            </button>
+            <DelayedPoofButton className="btn btn-secondary" onClick={() => setStep('question')}>
+              {t('重新问题', 'New Question')}
+            </DelayedPoofButton>
             <button
               className="btn btn-primary"
               onClick={handleAIInterpretation}
               disabled={aiLoading || aiCooldown > 0}
             >
-              {aiLoading ? '解读中...' : aiCooldown > 0 ? `请等待 ${aiCooldown}s` : 'AI深度解读'}
+              {aiCooldown > 0
+                ? `${t('请等待', 'Wait')} ${aiCooldown}s`
+                : aiLoading
+                  ? t('解读中...', 'Analyzing...')
+                  : t('AI深度解读', 'AI Deep Analysis')}
             </button>
           </div>
 
           {aiError && (
             <div className="ai-error">
-              <p>错误: {aiError}</p>
-              <button onClick={() => setAiError(null)}>关闭</button>
+              <p>{t('错误: ', 'Error: ')}{aiError}</p>
+              <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
             </div>
           )}
 
           {aiInterpretation && (
-            <div className="ai-interpretation">
-              <h3>
-                AI 深度解读
-                {aiRequestDuration !== null && (
-                  <span className="ai-duration">⏱️ {Math.floor(aiRequestDuration / TIMING.DURATION_HOUR_MS).toString().padStart(2, '0')}:{Math.floor((aiRequestDuration % TIMING.DURATION_HOUR_MS) / TIMING.DURATION_MINUTE_MS).toString().padStart(2, '0')}:{(aiRequestDuration % TIMING.DURATION_MINUTE_MS / 1000).toFixed(0).padStart(2, '0')}</span>
-                )}
-              </h3>
-
-              <div className="interpretation-question">
-                <div className="question-label">
-                  <span>❓</span>
-                  <span>您的提问</span>
+            <>
+              <div className="ai-interpretation" id="divination-ai-result">
+                <div className="interpretationDecorations">
+                  <OrbGlow size={100} className="interpOrb orbLeft" />
+                  <OrbGlow size={80} className="interpOrb orbRight" />
+                  <StarIcon size={20} className="interpStar starLeft1" />
+                  <StarIcon size={16} className="interpStar starLeft2" />
+                  <StarIcon size={18} className="interpStar starRight1" />
+                  <StarIcon size={14} className="interpStar starRight2" />
+                  <SparkleEffect size={50} intensity={0.6} className="interpSparkle sparkleLeft" />
+                  <SparkleEffect size={40} intensity={0.4} className="interpSparkle sparkleRight" />
                 </div>
-                <p className="question-text">&ldquo;{question || '无特定问题，希望了解整体运势'}&rdquo;</p>
+                <h3>
+                  {t('AI 深度解读', 'AI Deep Analysis')}
+                  {aiRequestDuration !== null && (
+                    <span className="ai-duration">⏱️ {Math.floor(aiRequestDuration / TIMING.DURATION_HOUR_MS).toString().padStart(2, '0')}:{Math.floor((aiRequestDuration % TIMING.DURATION_HOUR_MS) / TIMING.DURATION_MINUTE_MS).toString().padStart(2, '0')}:{(aiRequestDuration % TIMING.DURATION_MINUTE_MS / 1000).toFixed(0).padStart(2, '0')}</span>
+                  )}
+                </h3>
+
+                <div className="interpretation-question">
+                  <div className="question-label">
+                    <span>❓</span>
+                    <span>{t('您的提问', 'Your Question')}</span>
+                </div>
+                <p className="question-text">&ldquo;{question || t('无特定问题，希望了解整体运势', 'No specific question, hoping to learn about overall fortune')}&rdquo;</p>
                 <p className="question-meta">
-                  牌阵：{selectedSpread?.name} | 抽牌：{drawnCards.length}张
+                  {t(`牌阵：${selectedSpread?.name} | 抽牌：${drawnCards.length}张`, `Spread: ${selectedSpread?.name} | Cards: ${drawnCards.length}`)}
                 </p>
               </div>
 
@@ -430,7 +471,7 @@ function Divination() {
                   <div key={idx} className="interpretation-section">
                     <div className="interpretation-section-title">
                       <span>{section.icon || '📖'}</span>
-                      <span>{section.title || '综合解读'}</span>
+                      <span>{section.title || t('综合解读', 'Comprehensive Analysis')}</span>
                     </div>
                     <div className="interpretation-section-content">
                       {renderMarkdownContent(section.content || '')}
@@ -439,23 +480,33 @@ function Divination() {
                 ))}
               </div>
             </div>
+              <div className="ai-export-section">
+                <button
+                  className="btn btn-secondary export-ai-btn"
+                  onClick={() => exportToPNG('divination-ai-result', generateTarotFilename(selectedSpread?.name, drawnCards.length))}
+                  title={t('输出PNG图片', 'Export as PNG')}
+                >
+                  📥 {t('导出分析结果', 'Export Analysis')}
+                </button>
+              </div>
+            </>
           )}
 
           {/* Debug 信息面板 */}
           {(debugMode && lastRequest) && (
             <div className="debug-panel">
-              <h4>调试信息</h4>
-              <p><strong>请求时间:</strong> {lastRequest.timestamp}</p>
-              <p><strong>牌阵:</strong> {lastRequest.spread}</p>
-              <p><strong>角色:</strong> {lastRequest.persona}</p>
-              <p><strong>卡牌数:</strong> {lastRequest.cardCount}</p>
-              <p><strong>问题:</strong> {lastRequest.question}</p>
+              <h4>{t('调试信息', 'Debug Info')}</h4>
+              <p><strong>{t('请求时间:', 'Request Time:')}</strong> {lastRequest.timestamp}</p>
+              <p><strong>{t('牌阵:', 'Spread:')}</strong> {lastRequest.spread}</p>
+              <p><strong>{t('角色:', 'Persona:')}</strong> {lastRequest.persona}</p>
+              <p><strong>{t('卡牌数:', 'Card Count:')}</strong> {lastRequest.cardCount}</p>
+              <p><strong>{t('问题:', 'Question:')}</strong> {lastRequest.question}</p>
               <details>
-                <summary style={{ cursor: 'pointer', color: 'var(--color-secondary)' }}>完整请求数据</summary>
+                <summary style={{ cursor: 'pointer', color: 'var(--color-secondary)' }}>{t('完整请求数据', 'Full Request Data')}</summary>
                 <pre>{JSON.stringify(lastRequest, null, 2)}</pre>
               </details>
               <details>
-                <summary style={{ cursor: 'pointer', color: 'var(--color-secondary)' }}>抽卡详情</summary>
+                <summary style={{ cursor: 'pointer', color: 'var(--color-secondary)' }}>{t('抽卡详情', 'Card Details')}</summary>
                 <pre>{JSON.stringify(drawnCards.map(c => ({
                   id: c.id,
                   name: c.name,
@@ -465,7 +516,7 @@ function Divination() {
               </details>
               {lastRequest.aiRawResponse && (
                 <details>
-                  <summary style={{ cursor: 'pointer', color: 'var(--color-secondary)' }}>AI 原始回复</summary>
+                  <summary style={{ cursor: 'pointer', color: 'var(--color-secondary)' }}>{t('AI 原始回复', 'AI Raw Response')}</summary>
                   <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
                     {lastRequest.aiRawResponse}
                   </pre>
@@ -480,13 +531,13 @@ function Divination() {
               checked={debugMode}
               onChange={(e) => setDebugMode(e.target.checked)}
             />
-            显示调试信息
+            {t('显示调试信息', 'Show Debug Info')}
           </label>
 
           <div className="action-bar" style={{ marginTop: '20px' }}>
-            <button className="btn btn-secondary" onClick={handleReset}>
-              重新占卜
-            </button>
+            <DelayedPoofButton className="btn btn-secondary" onClick={handleReset}>
+              {t('重新占卜', 'Divine Again')}
+            </DelayedPoofButton>
           </div>
         </section>
       )}

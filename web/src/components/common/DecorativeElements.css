@@ -1,0 +1,156 @@
+.decoStar {
+  animation: starTwinkle 3s ease-in-out infinite;
+}
+
+@keyframes starTwinkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+}
+
+.decoSparkle {
+  position: relative;
+}
+
+.sparkleGlow {
+  animation: sparklePulse 2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes sparklePulse {
+  0%,
+  100% {
+    opacity: calc(0.3 * var(--intensity, 1));
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: calc(0.7 * var(--intensity, 1));
+    transform: scale(1.1);
+  }
+}
+
+.tarotSuitSymbol {
+  display: inline-block;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+.tarotSuitSymbol:hover {
+  opacity: 0.6;
+}
+
+.tarotSuitSymbol.major {
+  color: var(--color-secondary);
+}
+
+.tarotSuitSymbol.wands,
+.tarotSuitSymbol.cups,
+.tarotSuitSymbol.swords,
+.tarotSuitSymbol.pentacles {
+  color: var(--color-text-secondary);
+}
+
+.zodiacSymbol {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.zodiacSymbol:hover {
+  transform: rotate(15deg) scale(1.1);
+}
+
+.constellationPattern {
+  opacity: 0.6;
+}
+
+.constellationStar {
+  animation: constellationShimmer 4s ease-in-out infinite;
+}
+
+.constellationStar:nth-child(odd) {
+  animation-delay: 0.5s;
+}
+
+@keyframes constellationShimmer {
+  0%,
+  100% {
+    opacity: 0.6;
+    r: 2;
+  }
+
+  50% {
+    opacity: 1;
+    r: 3;
+  }
+}
+
+.orbGlow {
+  position: relative;
+}
+
+.orbCore {
+  animation: orbPulse 3s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.orbRing {
+  animation: ringRotate 8s linear infinite;
+  transform-origin: center;
+}
+
+.orbRingOuter {
+  animation-direction: reverse;
+  animation-duration: 12s;
+}
+
+@keyframes ringRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.moonPhase {
+  display: inline-block;
+  filter: drop-shadow(0 0 4px var(--color-secondary));
+}
+
+.floatingParticle {
+  animation: particleFloat 6s ease-in-out infinite;
+}
+
+@keyframes particleFloat {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: translateY(-10px);
+  }
+}

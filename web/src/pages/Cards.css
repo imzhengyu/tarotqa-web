@@ -439,3 +439,53 @@
     transform: none;
   }
 }
+
+/* 回到顶部浮动按钮 */
+.back-to-top {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: rgba(45, 27, 78, 0.9);
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  color: var(--color-secondary);
+  cursor: pointer;
+  z-index: 999;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.back-to-top:hover {
+  background: rgba(45, 27, 78, 1);
+  transform: translateY(-3px);
+  border-color: var(--color-secondary);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+.back-to-top:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 56px;
+  right: 0;
+  background: rgba(45, 27, 78, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: var(--color-secondary);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.back-to-top svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentcolor;
+  stroke-width: 3;
+  fill: none;
+}

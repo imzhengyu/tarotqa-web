@@ -166,9 +166,7 @@ export function calculateAscendantMC(birthData) {
 /**
  * Calculate house positions using Placidus system (simplified)
  */
-export function calculateHouses(birthData) {
-  const { ascendant } = calculateAscendantMC(birthData);
-
+export function calculateHouses(ascendant) {
   // Simplified house calculation
   // Each house is approximately 30 degrees, starting from Ascendant
   const houses = HOUSES.map((house, index) => {
@@ -238,7 +236,7 @@ export function calculateAspects(planets) {
 export function calculateAstrologyChart(birthData) {
   const planets = calculatePlanets(birthData);
   const { ascendant, midheaven } = calculateAscendantMC(birthData);
-  const houses = calculateHouses(birthData);
+  const houses = calculateHouses(ascendant);
   const aspects = calculateAspects(planets);
 
   return {
