@@ -39,6 +39,9 @@ test_output.txt
 # Playwright
 .playwright-mcp/
 
+# Claude
+.claude/
+
 # Temporary files
 tmp/
 temp/
