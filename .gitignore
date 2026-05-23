@@ -33,6 +33,8 @@ build/
 coverage/
 web/coverage/
 web/scripts/coverage/
+testresult*.md
+test_output.txt
 
 # Playwright
 .playwright-mcp/
