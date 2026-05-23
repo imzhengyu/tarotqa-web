@@ -8,6 +8,7 @@ import DelayedPoofButton from '../../components/common/DelayedPoofButton';
 import { StarIcon, SparkleEffect, ConstellationPattern } from '../../components/common/DecorativeElements';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
+import { useDevice } from '../../hooks/useDevice';
 import { calculateAstrologyChart } from '../../utils/astrology/calculations';
 import { ZODIAC_SIGNS, PLANET_COLORS } from '../../utils/astrology/constants';
 import { useLanguage } from '../../context/LanguageContext';
@@ -49,6 +50,7 @@ const {
 
 function AstrologyChart() {
   const { language, t } = useLanguage();
+  const { deviceType } = useDevice();
   const [birthData, setBirthData] = useState(null);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [chartData, setChartData] = useState(null);
@@ -306,7 +308,7 @@ function AstrologyChart() {
   };
 
   return (
-    <div className="astrology-chart-page">
+    <div className={`astrology-chart-page layout-${deviceType}`}>
       {showCooldownToast && aiCooldown > 0 && (
         <div className="cooldown-toast">
           <span className="cooldown-icon">⏳</span>

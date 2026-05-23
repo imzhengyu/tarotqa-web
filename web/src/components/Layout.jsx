@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import './Layout.css';
 
 function Layout() {
-  const { isMobile } = useDevice();
+  const { isMobile, deviceType } = useDevice();
   const { language } = useLanguage();
 
   const navLabels = {
@@ -23,7 +23,7 @@ function Layout() {
   };
 
   return (
-    <div className="layout">
+    <div className={`layout layout-${deviceType}`}>
       <MysticEffects />
       {!isMobile && <FloatingDecorations position="all" />}
       {!isMobile && (

@@ -387,40 +387,6 @@
   background: rgba(45, 27, 78, 0.6);
 }
 
-/* Mobile responsive */
-@media (max-width: 1024px) {
-  .ziwei-layout {
-    flex-direction: column;
-  }
-
-  .ziwei-form-section {
-    width: 100%;
-  }
-
-  .chart-container {
-    min-height: 400px;
-  }
-}
-
-@media (max-width: 768px) {
-  .ziwei-chart-page {
-    padding: 12px;
-  }
-
-  .form-card {
-    padding: 16px;
-  }
-
-  .chart-container {
-    min-height: 320px;
-    padding: 8px;
-  }
-
-  .chart-placeholder {
-    min-height: 320px;
-  }
-}
-
 /* 回到顶部浮动按钮 */
 .back-to-top {
   position: fixed;
@@ -471,64 +437,68 @@
   fill: none;
 }
 
-/* Mobile not supported message */
-.mobile-not-supported {
-  display: flex;
+/* Device type: Mobile (phone) */
+.ziwei-chart-page.layout-mobile .ziwei-layout {
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 60px 24px;
-  background: rgba(45, 27, 78, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 16px;
-  margin-top: 24px;
+  gap: 12px;
 }
 
-.not-supported-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
-  opacity: 0.8;
+.ziwei-chart-page.layout-mobile .ziwei-form-section {
+  width: 100%;
 }
 
-/* Mobile responsive: chart scales to viewport */
-@media (max-width: 768px) {
-  .ziwei-layout {
-    gap: 12px;
-  }
-
-  .chart-container {
-    min-height: auto;
-    height: calc(100vw - 40px);
-    max-height: calc(100vh - 280px);
-    padding: 8px;
-  }
-
-  .chartDecorations {
-    display: none;
-  }
-
-  /* Scale down iztro chart fonts on mobile */
-  .iztro-astrolabe {
-    font-size: 10px;
-  }
-
-  .iztro-palace {
-    padding: 2px;
-  }
-
-  .iztro-palace-fate .stars {
-    gap: 1px;
-  }
-
-  .chart-placeholder {
-    min-height: calc(100vw - 40px);
-  }
+.ziwei-chart-page.layout-mobile .chart-container {
+  overflow: auto;
+  min-height: 300px;
 }
 
-/* Tablet responsive */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .chart-container {
-    min-height: 450px;
-  }
+.ziwei-chart-page.layout-mobile .iztro-astrolabe.iztro-astrolabe-theme-default {
+  --iztro-star-font-size-big: 8px !important;
+  --iztro-star-font-size-small: 7px !important;
+
+  min-width: 600px;
+  min-height: 600px;
+}
+
+.ziwei-chart-page.layout-mobile .chart-placeholder {
+  min-height: 300px;
+}
+
+/* Device type: Pad */
+.ziwei-chart-page.layout-pad .chart-container {
+  min-height: 450px;
+}
+
+.ziwei-chart-page.layout-pad .iztro-astrolabe.iztro-astrolabe-theme-default {
+  --iztro-star-font-size-big: 11px !important;
+  --iztro-star-font-size-small: 10px !important;
+}
+
+/* Device type: Desktop */
+.ziwei-chart-page.layout-desktop .chart-container {
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 8px;
+  display: block;
+}
+
+.ziwei-chart-page.layout-desktop .chart-container > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.ziwei-chart-page.layout-desktop .chartWrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.ziwei-chart-page.layout-desktop .iztro-astrolabe.iztro-astrolabe-theme-default {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+
+  --iztro-star-font-size-big: 13px !important;
+  --iztro-star-font-size-small: 12px !important;
 }

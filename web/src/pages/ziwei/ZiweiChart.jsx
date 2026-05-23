@@ -9,6 +9,7 @@ import DelayedPoofButton from '../../components/common/DelayedPoofButton';
 import { StarIcon, SparkleEffect, OrbGlow } from '../../components/common/DecorativeElements';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
+import { useDevice } from '../../hooks/useDevice';
 import { generateZiweiData, formatZiweiPrompt } from '../../utils/ziwei/ziweiData';
 import { useLanguage } from '../../context/LanguageContext';
 import { exportToPNG } from '../../utils/export';
@@ -36,6 +37,7 @@ const generateZiweiFilename = (birthData) => {
 
 function ZiweiChart() {
   const { language, t } = useLanguage();
+  const { deviceType } = useDevice();
   const [birthData, setBirthData] = useState(null);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [chartGenerated, setChartGenerated] = useState(false);
@@ -112,7 +114,7 @@ function ZiweiChart() {
   };
 
   return (
-    <div className="ziwei-chart-page">
+    <div className={`ziwei-chart-page layout-${deviceType}`}>
       {showCooldownToast && aiCooldown > 0 && (
         <div className="cooldown-toast">
           <span className="cooldown-icon">⏳</span>
@@ -177,7 +179,6 @@ function ZiweiChart() {
                   birthTime={Math.floor(birthData.hour / 2) % 12}
                   birthdayType="solar"
                   gender={birthData.gender}
-                  width="100%"
                   horoscopeDate={new Date()}
                 />
               </div>

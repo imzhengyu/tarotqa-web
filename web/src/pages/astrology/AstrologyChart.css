@@ -469,40 +469,6 @@
   background: rgba(45, 27, 78, 0.6);
 }
 
-/* Mobile responsive */
-@media (max-width: 1024px) {
-  .astrology-layout {
-    flex-direction: column;
-  }
-
-  .astrology-form-section {
-    width: 100%;
-  }
-
-  .chart-container {
-    min-height: 400px;
-  }
-}
-
-@media (max-width: 768px) {
-  .astrology-chart-page {
-    padding: 12px;
-  }
-
-  .form-card {
-    padding: 16px;
-  }
-
-  .chart-container {
-    min-height: 320px;
-    padding: 8px;
-  }
-
-  .chart-placeholder {
-    min-height: 320px;
-  }
-}
-
 /* 回到顶部浮动按钮 */
 .back-to-top {
   position: fixed;
@@ -553,44 +519,34 @@
   fill: none;
 }
 
-/* Mobile responsive: chart scales to viewport */
-@media (max-width: 768px) {
-  .astrology-layout {
-    gap: 12px;
-  }
-
-  .chart-container {
-    min-height: auto;
-    height: calc(100vw - 40px);
-    max-height: calc(100vh - 250px);
-    padding: 8px;
-  }
-
-  .chartDecorations {
-    display: none;
-  }
-
-  .chart-placeholder {
-    min-height: calc(100vw - 40px);
-  }
-
-  /* Scale down SVG text on mobile */
-  .astrology-svg text {
-    font-size: 10px;
-  }
-
-  .planet-list {
-    padding: 12px;
-  }
-
-  .planet-item {
-    padding: 6px 8px;
-  }
+/* Device type: Mobile (phone) */
+.astrology-chart-page.layout-mobile .astrology-layout {
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* Tablet responsive */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .chart-container {
-    min-height: 450px;
-  }
+.astrology-chart-page.layout-mobile .astrology-form-section {
+  width: 100%;
+}
+
+.astrology-chart-page.layout-mobile .chart-container {
+  min-height: 320px;
+}
+
+.astrology-chart-page.layout-mobile .chart-placeholder {
+  min-height: 320px;
+}
+
+/* Device type: Pad */
+.astrology-chart-page.layout-pad .chart-container {
+  min-height: 450px;
+}
+
+/* Device type: Desktop */
+.astrology-chart-page.layout-desktop .chart-container {
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 8px;
+  display: block;
 }
