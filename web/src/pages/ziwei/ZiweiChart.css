@@ -4,20 +4,14 @@
   padding: 20px;
 }
 
-.ziwei-layout {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-}
-
 .ziwei-form-section {
-  width: 360px;
-  flex-shrink: 0;
+  margin-bottom: 24px;
 }
 
 .ziwei-chart-section {
-  flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .form-card {
@@ -168,7 +162,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 500px;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 600px;
   background: rgba(45, 27, 78, 0.6);
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 16px;
@@ -187,10 +183,12 @@
 
 .ai-action {
   margin-top: 16px;
+  display: flex;
+  justify-content: center;
 }
 
 .ai-action .btn {
-  width: 100%;
+  min-width: 200px;
 }
 
 .ai-error {
@@ -438,13 +436,8 @@
 }
 
 /* Device type: Mobile (phone) */
-.ziwei-chart-page.layout-mobile .ziwei-layout {
-  flex-direction: column;
-  gap: 12px;
-}
-
 .ziwei-chart-page.layout-mobile .ziwei-form-section {
-  width: 100%;
+  margin-bottom: 12px;
 }
 
 .ziwei-chart-page.layout-mobile .chart-container {
@@ -461,7 +454,8 @@
 }
 
 .ziwei-chart-page.layout-mobile .chart-placeholder {
-  min-height: 300px;
+  aspect-ratio: 1;
+  max-width: calc(100vw - 40px);
 }
 
 /* Device type: Pad */

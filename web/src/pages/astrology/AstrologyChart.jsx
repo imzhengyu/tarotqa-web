@@ -10,7 +10,7 @@ import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
 import { useDevice } from '../../hooks/useDevice';
 import { calculateAstrologyChart } from '../../utils/astrology/calculations';
-import { ZODIAC_SIGNS, PLANET_COLORS } from '../../utils/astrology/constants';
+import { ZODIAC_SIGNS, PLANETS, PLANET_COLORS } from '../../utils/astrology/constants';
 import { useLanguage } from '../../context/LanguageContext';
 import { ASTROLOGY_CHART } from '../../constants';
 import { exportToPNG } from '../../utils/export';
@@ -57,7 +57,6 @@ function AstrologyChart() {
   const [selectedPlanet, setSelectedPlanet] = useState(null);
   const [aiInterpretation, setAiInterpretation] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState(null);
   const [chartError, setChartError] = useState(null);
   const { showBackToTop, scrollToTop } = useBackToTop();
 
@@ -91,7 +90,6 @@ function AstrologyChart() {
 
     setAiInterpretation(null);
     setAiLoading(true);
-    setAiError(null);
 
     try {
       const interpretation = await api.getAIAstrologyInterpretation(chartData, language);
@@ -100,7 +98,6 @@ function AstrologyChart() {
     } catch (error) {
       console.error('[AI星盘解读] 捕获错误:', error.message);
       startCooldown();
-      setAiError(error.message);
     } finally {
       setAiLoading(false);
     }
@@ -318,35 +315,37 @@ function AstrologyChart() {
 
       <h1 className="page-title">{t('西方星盘排盘', 'Western Astrology Chart')}</h1>
 
-      <div className="astrology-layout">
-        <div className="astrology-form-section">
-          <div className="form-card">
-            <h2>{t('出生信息', 'Birth Information')}</h2>
-            <BirthInfoForm
-              value={birthData}
-              onChange={handleBirthDataChange}
-              showGender={false}
-            />
-            <DelayedPoofButton
-              className="btn btn-primary generate-btn"
-              onClick={handleGenerateChart}
-              disabled={!birthData}
-            >
-              {t('生成星盘', 'Generate Chart')}
-            </DelayedPoofButton>
-          </div>
+      {/* 第一行：出生信息 + 行星位置 */}
+      <div className="astrology-input-row">
+        <div className="form-card">
+          <h2>{t('出生信息', 'Birth Information')}</h2>
+          <BirthInfoForm
+            value={birthData}
+            onChange={handleBirthDataChange}
+            showGender={false}
+          />
+          <DelayedPoofButton
+            className="btn btn-primary generate-btn"
+            onClick={handleGenerateChart}
+            disabled={!birthData}
+          >
+            {t('生成星盘', 'Generate Chart')}
+          </DelayedPoofButton>
+        </div>
 
-          {chartData && (
-            <div className="planet-list">
-              <h3>{t('行星位置', 'Planet Positions')}</h3>
-              {chartData.planets.map(planet => (
+        <div className="planet-list-card">
+          <div className="planet-list">
+            <h3>{t('行星位置', 'Planet Positions')}</h3>
+            <div className="planet-grid">
+              {(chartData?.planets || PLANETS.map(p => ({ ...p, sign: ZODIAC_SIGNS[0], degree: 0 }))).map(planet => (
                 <div
                   key={planet.id}
                   className="planet-item"
-                  onClick={() => setSelectedPlanet(planet)}
-                  onKeyDown={(e) => e.key === 'Enter' && setSelectedPlanet(planet)}
+                  onClick={() => chartData && setSelectedPlanet(planet)}
+                  onKeyDown={(e) => e.key === 'Enter' && chartData && setSelectedPlanet(planet)}
                   role="button"
                   tabIndex={0}
+                  style={{ opacity: chartData ? 1 : 0.5 }}
                 >
                   <span
                     className="planet-symbol"
@@ -361,77 +360,71 @@ function AstrologyChart() {
                 </div>
               ))}
             </div>
-          )}
-
-          {aiError && (
-            <div className="ai-error">
-              <p>{t('错误: ', 'Error: ')}{aiError}</p>
-              <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
-            </div>
-          )}
+          </div>
         </div>
+      </div>
 
-        <div className="astrology-chart-section">
-          {chartData ? (
-            <>
-              <div className="chartWrapper">
-                <div className="chartDecorations">
-                  <StarIcon size={18} className="chartStar star1" />
-                  <StarIcon size={14} className="chartStar star2" />
-                  <StarIcon size={16} className="chartStar star3" />
-                  <StarIcon size={12} className="chartStar star4" />
-                  <SparkleEffect size={40} intensity={0.5} className="chartSparkle sparkle1" />
-                  <SparkleEffect size={35} intensity={0.4} className="chartSparkle sparkle2" />
-                  <ConstellationPattern stars={4} size={45} className="chartConstellation" />
-                </div>
-                <div className="chart-container">
-                  {renderChart()}
-                </div>
+      {/* 第二行：星盘 + AI分析 */}
+      <div className="astrology-chart-section">
+        {chartData ? (
+          <>
+            <div className="chartWrapper">
+              <div className="chartDecorations">
+                <StarIcon size={18} className="chartStar star1" />
+                <StarIcon size={14} className="chartStar star2" />
+                <StarIcon size={16} className="chartStar star3" />
+                <StarIcon size={12} className="chartStar star4" />
+                <SparkleEffect size={40} intensity={0.5} className="chartSparkle sparkle1" />
+                <SparkleEffect size={35} intensity={0.4} className="chartSparkle sparkle2" />
+                <ConstellationPattern stars={4} size={45} className="chartConstellation" />
               </div>
-              {chartData && birthData && (
-                <div className="ai-action">
+              <div className="chart-container">
+                {renderChart()}
+              </div>
+            </div>
+            {chartData && birthData && (
+              <div className="ai-action">
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleAIInterpretation}
+                  disabled={aiLoading || aiCooldown > 0}
+                >
+                  {aiLoading ? t('分析中...', 'Analyzing...') : aiCooldown > 0 ? `${t('请等待', 'Wait')} ${aiCooldown}s` : t('AI 星盘分析', 'AI Chart Analysis')}
+                </button>
+              </div>
+            )}
+            {aiInterpretation && (
+              <>
+                <div className="ai-interpretation" id="astrology-ai-result">
+                  <h3>{t('AI 星盘分析', 'AI Chart Analysis')}</h3>
+                  {renderMarkdownContent(aiInterpretation)}
+                </div>
+                <div className="ai-export-section">
                   <button
-                    className="btn btn-secondary"
-                    onClick={handleAIInterpretation}
-                    disabled={aiLoading || aiCooldown > 0}
+                    className="btn btn-secondary export-ai-btn"
+                    onClick={() => exportToPNG('astrology-ai-result', generateAstrologyFilename(birthData))}
+                    title={t('输出PNG图片', 'Export as PNG')}
                   >
-                    {aiLoading ? t('分析中...', 'Analyzing...') : aiCooldown > 0 ? `${t('请等待', 'Wait')} ${aiCooldown}s` : t('AI 星盘分析', 'AI Chart Analysis')}
+                    📥 {t('导出分析结果', 'Export Analysis')}
                   </button>
                 </div>
-              )}
-              {aiInterpretation && (
-                <>
-                  <div className="ai-interpretation" id="astrology-ai-result">
-                    <h3>{t('AI 星盘分析', 'AI Chart Analysis')}</h3>
-                    {renderMarkdownContent(aiInterpretation)}
-                  </div>
-                  <div className="ai-export-section">
-                    <button
-                      className="btn btn-secondary export-ai-btn"
-                      onClick={() => exportToPNG('astrology-ai-result', generateAstrologyFilename(birthData))}
-                      title={t('输出PNG图片', 'Export as PNG')}
-                    >
-                      📥 {t('导出分析结果', 'Export Analysis')}
-                    </button>
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              {chartError && (
-                <div className="ai-error">
-                  <p>{t('星盘生成失败: ', 'Chart generation failed: ')}{chartError}</p>
-                  <button onClick={() => setChartError(null)}>{t('关闭', 'Close')}</button>
-                </div>
-              )}
-              <div className="chart-placeholder">
-                <div className="placeholder-icon">⭐</div>
-                <p>{t('请填写出生信息并点击"生成星盘"', 'Please fill in birth info and click "Generate Chart"')}</p>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            {chartError && (
+              <div className="ai-error">
+                <p>{t('星盘生成失败: ', 'Chart generation failed: ')}{chartError}</p>
+                <button onClick={() => setChartError(null)}>{t('关闭', 'Close')}</button>
               </div>
-            </>
-          )}
-        </div>
+            )}
+            <div className="chart-placeholder">
+              <div className="placeholder-icon">⭐</div>
+              <p>{t('点击生成星盘', 'Click Generate Chart')}</p>
+            </div>
+          </>
+        )}
       </div>
 
       {selectedPlanet && (

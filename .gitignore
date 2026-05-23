@@ -29,6 +29,10 @@ web/dist/
 build/
 *.min.js
 
+# Package files (auto-generated)
+web/package.json
+web/pnpm-lock.yaml
+
 # Test
 coverage/
 web/coverage/

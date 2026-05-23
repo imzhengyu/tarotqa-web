@@ -124,46 +124,29 @@ function ZiweiChart() {
 
       <h1 className="page-title">{t('紫微斗数排盘', 'Ziwei Dou Shu Chart')}</h1>
 
-      <div className="ziwei-layout">
-        <div className="ziwei-form-section">
-          <div className="form-card">
-            <h2>{t('出生信息', 'Birth Information')}</h2>
-            <BirthInfoForm
-              value={birthData}
-              onChange={handleBirthDataChange}
-              showGender={true}
-            />
-            <DelayedPoofButton
-              className="btn btn-primary generate-btn"
-              onClick={handleGenerateChart}
-              disabled={!birthData}
-            >
-              {t('生成命盘', 'Generate Chart')}
-            </DelayedPoofButton>
-          </div>
-
-          {chartGenerated && birthData && (
-            <div className="ai-action">
-              <button
-                className="btn btn-secondary"
-                onClick={handleAIInterpretation}
-                disabled={aiLoading || aiCooldown > 0}
-              >
-                {aiLoading ? t('分析中...', 'Analyzing...') : aiCooldown > 0 ? `${t('请等待', 'Wait')} ${aiCooldown}s` : t('AI 命盘分析', 'AI Chart Analysis')}
-              </button>
-            </div>
-          )}
-
-          {aiError && (
-            <div className="ai-error">
-              <p>{t('错误: ', 'Error: ')}{aiError}</p>
-              <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
-            </div>
-          )}
+      {/* 第一行：出生信息 */}
+      <div className="ziwei-form-section">
+        <div className="form-card">
+          <h2>{t('出生信息', 'Birth Information')}</h2>
+          <BirthInfoForm
+            value={birthData}
+            onChange={handleBirthDataChange}
+            showGender={true}
+          />
+          <DelayedPoofButton
+            className="btn btn-primary generate-btn"
+            onClick={handleGenerateChart}
+            disabled={!birthData}
+          >
+            {t('生成命盘', 'Generate Chart')}
+          </DelayedPoofButton>
         </div>
+      </div>
 
-        <div className="ziwei-chart-section">
-          {chartGenerated && birthData ? (
+      {/* 第二行：命盘输出 */}
+      <div className="ziwei-chart-section">
+        {chartGenerated && birthData ? (
+          <>
             <div className="chartWrapper">
               <div className="chartDecorations">
                 <OrbGlow size={80} className="chartOrb orbLeft" />
@@ -183,13 +166,31 @@ function ZiweiChart() {
                 />
               </div>
             </div>
-          ) : (
-            <div className="chart-placeholder">
-              <div className="placeholder-icon">🀄</div>
-              <p>{t('请填写出生信息并点击"生成命盘"', 'Please fill in birth info and click "Generate Chart"')}</p>
-            </div>
-          )}
-        </div>
+            {birthData && (
+              <div className="ai-action">
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleAIInterpretation}
+                  disabled={aiLoading || aiCooldown > 0}
+                >
+                  {aiLoading ? t('分析中...', 'Analyzing...') : aiCooldown > 0 ? `${t('请等待', 'Wait')} ${aiCooldown}s` : t('AI 命盘分析', 'AI Chart Analysis')}
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="chart-placeholder">
+            <div className="placeholder-icon">🀄</div>
+            <p>{t('点击生成命盘', 'Click Generate Chart')}</p>
+          </div>
+        )}
+
+        {aiError && !chartGenerated && (
+          <div className="ai-error">
+            <p>{t('错误: ', 'Error: ')}{aiError}</p>
+            <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
+          </div>
+        )}
       </div>
 
       {(aiInterpretation || aiError) && (

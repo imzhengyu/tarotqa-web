@@ -4,20 +4,35 @@
   padding: 20px;
 }
 
-.astrology-layout {
+.astrology-input-row {
   display: flex;
   gap: 24px;
-  align-items: flex-start;
+  margin-bottom: 24px;
 }
 
-.astrology-form-section {
-  width: 360px;
-  flex-shrink: 0;
+.astrology-input-row .form-card,
+.astrology-input-row .planet-list-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.planet-list-card {
+  background: rgba(45, 27, 78, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.planet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 8px;
 }
 
 .astrology-chart-section {
-  flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .form-card {
@@ -170,7 +185,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 500px;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 600px;
   background: rgba(45, 27, 78, 0.6);
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 16px;
@@ -185,14 +202,6 @@
 
 .chart-placeholder p {
   font-size: 16px;
-}
-
-.planet-list {
-  background: rgba(45, 27, 78, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 16px;
-  padding: 16px;
-  margin-top: 16px;
 }
 
 .planet-list h3 {
@@ -234,10 +243,12 @@
 
 .ai-action {
   margin-top: 16px;
+  display: flex;
+  justify-content: center;
 }
 
 .ai-action .btn {
-  width: 100%;
+  min-width: 200px;
 }
 
 .ai-error {
@@ -520,13 +531,9 @@
 }
 
 /* Device type: Mobile (phone) */
-.astrology-chart-page.layout-mobile .astrology-layout {
+.astrology-chart-page.layout-mobile .astrology-input-row {
   flex-direction: column;
   gap: 12px;
-}
-
-.astrology-chart-page.layout-mobile .astrology-form-section {
-  width: 100%;
 }
 
 .astrology-chart-page.layout-mobile .chart-container {
@@ -534,7 +541,12 @@
 }
 
 .astrology-chart-page.layout-mobile .chart-placeholder {
-  min-height: 320px;
+  aspect-ratio: 1;
+  max-width: calc(100vw - 40px);
+}
+
+.astrology-chart-page.layout-mobile .planet-grid {
+  grid-template-columns: 1fr;
 }
 
 /* Device type: Pad */
