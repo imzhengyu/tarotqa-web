@@ -8,6 +8,7 @@ import DelayedPoofButton from '../../components/common/DelayedPoofButton';
 import { StarIcon, SparkleEffect, ConstellationPattern } from '../../components/common/DecorativeElements';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
+import { useDevice } from '../../hooks/useDevice';
 import { calculateAstrologyChart } from '../../utils/astrology/calculations';
 import { ZODIAC_SIGNS, PLANET_COLORS } from '../../utils/astrology/constants';
 import { useLanguage } from '../../context/LanguageContext';
@@ -56,7 +57,9 @@ function AstrologyChart() {
   const [aiInterpretation, setAiInterpretation] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [chartError, setChartError] = useState(null);
   const { showBackToTop, scrollToTop } = useBackToTop();
+  const { isPhone } = useDevice();
 
   const {
     aiCooldown,
@@ -71,6 +74,7 @@ function AstrologyChart() {
 
   const handleGenerateChart = useCallback(() => {
     if (!birthData) return;
+    setChartError(null);
     try {
       const data = calculateAstrologyChart(birthData);
       setChartData(data);
@@ -78,6 +82,7 @@ function AstrologyChart() {
       startCooldownTimer();
     } catch (error) {
       console.error('Error generating chart:', error);
+      setChartError(error.message || '生成星盘失败');
     }
   }, [birthData, startCooldownTimer]);
 
@@ -313,6 +318,15 @@ function AstrologyChart() {
 
       <h1 className="page-title">{t('西方星盘排盘', 'Western Astrology Chart')}</h1>
 
+      {isPhone && (
+        <div className="mobile-not-supported">
+          <div className="not-supported-icon">📱</div>
+          <h2>{t('暂不支持手机访问', 'Not Supported on Mobile')}</h2>
+          <p>{t('西方星盘内容较多，建议使用桌面端或平板设备访问', 'Western astrology chart has complex layout. Please use desktop or tablet device.')}</p>
+        </div>
+      )}
+
+      {!isPhone && (
       <div className="astrology-layout">
         <div className="astrology-form-section">
           <div className="form-card">
@@ -413,13 +427,22 @@ function AstrologyChart() {
               )}
             </>
           ) : (
-            <div className="chart-placeholder">
-              <div className="placeholder-icon">⭐</div>
-              <p>{t('请填写出生信息并点击"生成星盘"', 'Please fill in birth info and click "Generate Chart"')}</p>
-            </div>
+            <>
+              {chartError && (
+                <div className="ai-error">
+                  <p>{t('星盘生成失败: ', 'Chart generation failed: ')}{chartError}</p>
+                  <button onClick={() => setChartError(null)}>{t('关闭', 'Close')}</button>
+                </div>
+              )}
+              <div className="chart-placeholder">
+                <div className="placeholder-icon">⭐</div>
+                <p>{t('请填写出生信息并点击"生成星盘"', 'Please fill in birth info and click "Generate Chart"')}</p>
+              </div>
+            </>
           )}
         </div>
       </div>
+      )}
 
       {selectedPlanet && (
         <div

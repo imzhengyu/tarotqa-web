@@ -6,8 +6,13 @@ import { AI_CONFIG } from '../constants';
 
 // 辅助函数：获取 API Key
 const _getApiKey = () => {
-  const key = localStorage.getItem('minimax_api_key');
-  return key || import.meta.env.VITE_DEFAULT_API_KEY;
+  try {
+    const key = localStorage.getItem('minimax_api_key');
+    if (key) return key;
+  } catch (e) {
+    console.warn('[API] localStorage 读取失败:', e.message);
+  }
+  return import.meta.env.VITE_DEFAULT_API_KEY;
 };
 
 // 辅助函数：从 HTTP 状态码获取错误消息
@@ -23,23 +28,51 @@ const _getErrorMessageFromStatus = (response, errorData) => {
 
 // 辅助函数：从 AI 响应中提取内容
 const _extractAIContent = (choice) => {
-  console.log('[DEBUG] _extractAIContent 收到的 choice keys:', Object.keys(choice));
-  console.log('[DEBUG] choice.message.content:', choice?.message?.content);
-  console.log('[DEBUG] choice.message.reasoning_content:', choice?.message?.reasoning_content?.substring(0, 200));
-
-  if (choice.messages && Array.isArray(choice.messages)) {
-    return choice.messages.map(m => m.role === 'assistant' ? m.content : '').join('');
+  // 检查 choice 结构
+  if (!choice || typeof choice !== 'object') {
+    throw new Error('AI 响应内容解析失败: 无效的响应结构');
   }
-  if (choice.delta?.content) return choice.delta.content;
+
+  console.log('[DEBUG] _extractAIContent 收到的 choice keys:', Object.keys(choice));
+
+  // 尝试从 messages 数组提取
+  if (choice.messages && Array.isArray(choice.messages)) {
+    const content = choice.messages.map(m => m.role === 'assistant' ? m.content : '').join('');
+    console.log('[DEBUG] 从 messages 提取内容:', content ? `${content.substring(0, 100)}...` : '(空)');
+    return content;
+  }
+
+  // 尝试从 delta.content 提取（流式响应）
+  if (choice.delta?.content) {
+    console.log('[DEBUG] 从 delta.content 提取内容');
+    return choice.delta.content;
+  }
+
   // 优先使用 content 字段（最终结果）
   if (choice.message?.content) {
+    console.log('[DEBUG] 从 message.content 提取内容:', choice.message.content.substring(0, 100));
     return choice.message.content;
   }
+
   // 如果 content 为空，使用 reasoning_content（思考过程）
-  if (choice.message?.reasoning_content) return choice.message.reasoning_content;
+  if (choice.message?.reasoning_content) {
+    console.log('[DEBUG] 从 message.reasoning_content 提取内容:', choice.message.reasoning_content.substring(0, 100));
+    return choice.message.reasoning_content;
+  }
+
   // 尝试其他可能的格式
-  if (choice.message?.reply) return choice.message.reply;
-  if (choice.content) return choice.content;
+  if (choice.message?.reply) {
+    console.log('[DEBUG] 从 message.reply 提取内容');
+    return choice.message.reply;
+  }
+
+  if (choice.content) {
+    console.log('[DEBUG] 从 choice.content 提取内容');
+    return choice.content;
+  }
+
+  // 如果仍然没有内容，抛出详细错误
+  console.error('[DEBUG] AI 响应内容解析失败，choice 完整结构:', JSON.stringify(choice).substring(0, 500));
   throw new Error('AI 响应内容解析失败');
 };
 
@@ -760,11 +793,15 @@ Use professional yet friendly tone.`;
     let aiContent;
     try {
       aiContent = _extractAIContent(choice);
-    } catch {
-      throw new Error('AI 暂时无法提供解读，请稍后重试');
+    } catch (err) {
+      console.error('[AI星盘解读] 内容提取失败:', err.message, 'choice:', JSON.stringify(choice).substring(0, 300));
+      const error = new Error('AI 暂时无法提供解读，请稍后重试');
+      error.cause = err;
+      throw error;
     }
 
     if (!aiContent || aiContent.trim() === '') {
+      console.error('[AI星盘解读] AI 返回空内容，原始提取结果:', aiContent);
       throw new Error('AI 暂时无法提供解读，请稍后重试');
     }
 
