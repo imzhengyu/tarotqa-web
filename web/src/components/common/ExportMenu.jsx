@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useLanguage } from '../../context/LanguageContext';
-import { exportToPNG, exportToPDF } from '../../utils/export';
+import { exportToPNG } from '../../utils/export';
 import './ExportMenu.css';
 
-function ExportMenu({ elementId, filename }) {
+function ExportMenu({ elementId, filename = 'export' }) {
   const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -22,14 +22,10 @@ function ExportMenu({ elementId, filename }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  const handleExport = async (type) => {
+  const handleExport = async () => {
     setExporting(true);
     try {
-      if (type === 'png') {
-        await exportToPNG(elementId, filename);
-      } else {
-        await exportToPDF(elementId, filename, filename);
-      }
+      await exportToPNG(elementId, filename);
     } catch (error) {
       console.error('Export failed:', error);
       alert(language === 'zh' ? `导出失败: ${error.message}` : `Export failed: ${error.message}`);
@@ -53,17 +49,10 @@ function ExportMenu({ elementId, filename }) {
         <div className="export-menu-dropdown">
           <button
             className="export-menu-item"
-            onClick={() => handleExport('png')}
+            onClick={handleExport}
           >
             <span className="export-icon">🖼️</span>
             <span>{language === 'zh' ? '导出为 PNG' : 'Export as PNG'}</span>
-          </button>
-          <button
-            className="export-menu-item"
-            onClick={() => handleExport('pdf')}
-          >
-            <span className="export-icon">📄</span>
-            <span>{language === 'zh' ? '导出为 PDF' : 'Export as PDF'}</span>
           </button>
         </div>
       )}
@@ -74,10 +63,6 @@ function ExportMenu({ elementId, filename }) {
 ExportMenu.propTypes = {
   elementId: PropTypes.string.isRequired,
   filename: PropTypes.string
-};
-
-ExportMenu.defaultProps = {
-  filename: 'export'
 };
 
 export default ExportMenu;

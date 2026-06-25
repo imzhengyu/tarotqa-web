@@ -79,6 +79,7 @@ const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small
                     alt={card.name}
                     className={`card-image ${imageState === 'loading' ? 'loading' : 'loaded'}`}
                     loading="lazy"
+                    decoding="async"
                     onLoad={handleImageLoad}
                     onError={handleImageError}
                   />

@@ -1,13 +1,20 @@
 // TarotQA constants
 // 所有硬编码的配置值集中管理
 
-export const AI_CONFIG = {
-  MODEL: 'MiniMax-M2.7-highspeed',
-  API_URL: 'https://api.minimaxi.com/v1/text/chatcompletion_v2',
-  TEMPERATURE: 1,
-  TOP_P: 0.95,
-  MAX_COMPLETION_TOKENS: 8192
+export const AI_PROVIDERS = {
+  minimax: {
+    id: 'minimax',
+    name: 'MiniMax',
+    apiUrl: 'https://api.minimaxi.com/v1/text/chatcompletion_v2',
+    model: 'MiniMax-M2.7-highspeed',
+    requestFormat: 'openai',
+    temperature: 1,
+    topP: 0.95,
+    maxCompletionTokens: 8192
+  }
 };
+
+export const DEFAULT_AI_PROVIDER = 'minimax';
 
 export const UI_LIMITS = {
   MAX_QUESTION_LENGTH: 500,

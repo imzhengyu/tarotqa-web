@@ -1,10 +1,32 @@
 // 本地数据加载服务 - 纯前端无需后端
-import tarotData from '../../../resources/tarot-data.json';
 import { spreads, getRecommendedPersona as getSpreadPersona } from '../data/spreads';
 import { personas, getPersona } from '../data/personas';
-import { AI_CONFIG } from '../constants';
+import { AI_PROVIDERS, DEFAULT_AI_PROVIDER } from '../constants';
 
-// 辅助函数：获取 API Key
+let tarotDataPromise;
+const loadTarotData = () => {
+  if (!tarotDataPromise) {
+    tarotDataPromise = fetch('./tarot-data.json')
+      .then((r) => {
+        if (!r.ok) throw new Error('tarot-data load failed');
+        return r.json();
+      });
+  }
+  return tarotDataPromise;
+};
+
+// 辅助函数：获取当前 AI 提供商
+const _getProvider = () => {
+  try {
+    const provider = localStorage.getItem('ai_provider');
+    if (provider && AI_PROVIDERS[provider]) return provider;
+  } catch (e) {
+    console.warn('[API] localStorage 读取失败:', e.message);
+  }
+  return DEFAULT_AI_PROVIDER;
+};
+
+// 辅助函数：获取 MiniMax API Key
 const _getApiKey = () => {
   try {
     const key = localStorage.getItem('minimax_api_key');
@@ -12,71 +34,169 @@ const _getApiKey = () => {
   } catch (e) {
     console.warn('[API] localStorage 读取失败:', e.message);
   }
-  return import.meta.env.VITE_DEFAULT_API_KEY;
+  return import.meta.env.VITE_DEFAULT_API_KEY || '';
 };
 
 // 辅助函数：从 HTTP 状态码获取错误消息
-const _getErrorMessageFromStatus = (response, errorData) => {
-  if (response.status === 401) return 'API Key 无效或已过期，请检查设置';
-  if (response.status === 403) return 'API Key 权限不足';
-  if (response.status === 429) return '请求过于频繁，请稍后重试';
-  if (response.status >= 500) return 'MiniMax 服务器繁忙，请稍后重试';
+const _getErrorMessageFromStatus = (response, errorData, providerName, language = 'zh') => {
+  const providerLabel = providerName || 'AI';
+  if (response.status === 401) {
+    return language === 'zh'
+      ? `${providerLabel} API Key 无效或已过期，请检查设置`
+      : `${providerLabel} API Key is invalid or expired, please check settings`;
+  }
+  if (response.status === 403) {
+    return language === 'zh'
+      ? `${providerLabel} API Key 权限不足`
+      : `${providerLabel} API Key permission denied`;
+  }
+  if (response.status === 429) {
+    return language === 'zh'
+      ? '请求过于频繁，请稍后重试'
+      : 'Too many requests, please retry later';
+  }
+  if (response.status >= 500) {
+    return language === 'zh'
+      ? `${providerLabel} 服务器繁忙，请稍后重试`
+      : `${providerLabel} server is busy, please retry later`;
+  }
   if (errorData.base_resp?.status_msg) return errorData.base_resp.status_msg;
   if (errorData.error?.message) return errorData.error.message;
-  return 'API 请求失败';
+  return language === 'zh' ? 'API 请求失败' : 'API request failed';
 };
 
 // 辅助函数：从 AI 响应中提取内容
-const _extractAIContent = (choice) => {
-  // 检查 choice 结构
-  if (!choice || typeof choice !== 'object') {
+const _extractAIContent = (result) => {
+  if (!result || typeof result !== 'object') {
     throw new Error('AI 响应内容解析失败: 无效的响应结构');
   }
 
-  console.log('[DEBUG] _extractAIContent 收到的 choice keys:', Object.keys(choice));
-
-  // 尝试从 messages 数组提取
-  if (choice.messages && Array.isArray(choice.messages)) {
-    const content = choice.messages.map(m => m.role === 'assistant' ? m.content : '').join('');
-    console.log('[DEBUG] 从 messages 提取内容:', content ? `${content.substring(0, 100)}...` : '(空)');
-    return content;
+  const choice = result.choices?.[0];
+  if (!choice || typeof choice !== 'object') {
+    throw new Error('AI 响应内容解析失败');
   }
 
-  // 尝试从 delta.content 提取（流式响应）
+  if (choice.messages && Array.isArray(choice.messages)) {
+    return choice.messages.map(m => m.role === 'assistant' ? m.content : '').join('');
+  }
+
   if (choice.delta?.content) {
-    console.log('[DEBUG] 从 delta.content 提取内容');
     return choice.delta.content;
   }
 
-  // 优先使用 content 字段（最终结果）
   if (choice.message?.content) {
-    console.log('[DEBUG] 从 message.content 提取内容:', choice.message.content.substring(0, 100));
     return choice.message.content;
   }
 
-  // 如果 content 为空，使用 reasoning_content（思考过程）
   if (choice.message?.reasoning_content) {
-    console.log('[DEBUG] 从 message.reasoning_content 提取内容:', choice.message.reasoning_content.substring(0, 100));
     return choice.message.reasoning_content;
   }
 
-  // 尝试其他可能的格式
   if (choice.message?.reply) {
-    console.log('[DEBUG] 从 message.reply 提取内容');
     return choice.message.reply;
   }
 
   if (choice.content) {
-    console.log('[DEBUG] 从 choice.content 提取内容');
     return choice.content;
   }
 
-  // 如果仍然没有内容，抛出详细错误
-  console.error('[DEBUG] AI 响应内容解析失败，choice 完整结构:', JSON.stringify(choice).substring(0, 500));
   throw new Error('AI 响应内容解析失败');
 };
 
+// 通用 AI 调用管道（仅 MiniMax）
+const _callAI = async ({ messages, language = 'zh' }) => {
+  const apiKey = _getApiKey();
+
+  if (!apiKey) {
+    throw new Error(language === 'zh'
+      ? '请先在设置中配置 MiniMax API Key'
+      : 'Please configure MiniMax API Key in settings');
+  }
+
+  if (!apiKey.startsWith('sk-') && !apiKey.startsWith('eyJ')) {
+    throw new Error(language === 'zh'
+      ? 'API Key 格式无效，请检查设置'
+      : 'Invalid API Key format');
+  }
+
+  const provider = AI_PROVIDERS.minimax;
+  const requestBody = {
+    model: provider.model,
+    messages,
+    stream: false,
+    temperature: provider.temperature,
+    top_p: provider.topP,
+    max_completion_tokens: provider.maxCompletionTokens
+  };
+
+  let response;
+  try {
+    response = await fetch(provider.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+  } catch (networkError) {
+    throw new Error(language === 'zh'
+      ? '网络连接失败，请检查网络后重试'
+      : 'Network error, please check your connection and retry', { cause: networkError });
+  }
+
+  if (!response.ok) {
+    let errorMsg = language === 'zh' ? 'API 请求失败' : 'API request failed';
+    try {
+      const errorData = await response.json();
+      errorMsg = _getErrorMessageFromStatus(response, errorData, provider.name, language);
+    } catch {
+      // ignore parse error
+    }
+    throw new Error(errorMsg);
+  }
+
+  let result;
+  try {
+    result = await response.json();
+  } catch (parseError) {
+    throw new Error(language === 'zh'
+      ? '服务器响应格式错误，请稍后重试'
+      : 'Server response format error, please retry later', { cause: parseError });
+  }
+
+  if (result.base_resp && result.base_resp.status_code !== 0) {
+    throw new Error(result.base_resp.status_msg || (language === 'zh' ? 'API 请求失败' : 'API request failed'));
+  }
+
+  if (!result.choices || !Array.isArray(result.choices) || result.choices.length === 0) {
+    throw new Error(language === 'zh'
+      ? 'AI 响应格式错误，请稍后重试'
+      : 'AI response format error, please retry later');
+  }
+
+  const choice = result.choices[0];
+  if (!choice.finish_reason && !choice.messages) {
+    throw new Error(language === 'zh'
+      ? 'AI 响应格式错误，请稍后重试'
+      : 'AI response format error, please retry later');
+  }
+
+  const aiContent = _extractAIContent(result);
+
+  if (!aiContent || aiContent.trim() === '') {
+    throw new Error(language === 'zh'
+      ? 'AI 暂时无法提供解读，请稍后重试'
+      : 'AI temporarily cannot provide interpretation, please retry later');
+  }
+
+  return aiContent.trim();
+};
+
 const api = {
+  // 导出当前 AI 提供商（用于测试和调试）
+  getProvider: _getProvider,
+
   // 导出 personas 以保持向后兼容
   personas,
 
@@ -85,17 +205,20 @@ const api = {
 
   // 获取所有塔罗牌
   async getCards() {
-    return tarotData.cards;
+    const { cards } = await loadTarotData();
+    return cards;
   },
 
   // 根据ID获取单张牌
   async getCard(id) {
-    return tarotData.cards.find(card => card.id === id);
+    const { cards } = await loadTarotData();
+    return cards.find(card => card.id === id);
   },
 
   // 搜索塔罗牌
   async searchCards(params) {
-    let cards = tarotData.cards;
+    const { cards: allCards } = await loadTarotData();
+    let cards = allCards;
 
     if (params.arcana) {
       cards = cards.filter(c => c.arcana === params.arcana);
@@ -254,102 +377,8 @@ const api = {
 
   // AI 解读相关
   async getAIInterpretation(data) {
-    // 错误场景1: API Key 未配置
-    const apiKey = _getApiKey();
-    if (!apiKey) {
-      throw new Error('请先在设置中配置 MiniMax API Key');
-    }
-
-    // 错误场景2: API Key 格式无效
-    if (!apiKey.startsWith('sk-') && !apiKey.startsWith('eyJ')) {
-      console.error('[AI解读] 无效的 API Key 格式:', apiKey.substring(0, 10) + '...');
-      throw new Error('API Key 格式无效，请检查设置');
-    }
-
-    const requestBody = {
-      model: AI_CONFIG.MODEL,
-      messages: this.buildTarotMessages(data),
-      stream: false,
-      temperature: AI_CONFIG.TEMPERATURE,
-      top_p: AI_CONFIG.TOP_P,
-      max_completion_tokens: AI_CONFIG.MAX_COMPLETION_TOKENS
-    };
-
-    console.log('[AI解读] 发送请求:', {
-      url: AI_CONFIG.API_URL,
-      model: requestBody.model,
-      messagesCount: requestBody.messages.length,
-      cardsCount: data.drawnCards.length
-    });
-
-    let response;
-    try {
-      response = await fetch(AI_CONFIG.API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-    } catch (networkError) {
-      // 错误场景3: 网络连接失败
-      console.error('[AI解读] 网络错误:', networkError);
-      throw new Error('网络连接失败，请检查网络后重试', { cause: networkError });
-    }
-
-    // 错误场景4: HTTP 状态码错误
-    if (!response.ok) {
-      let errorMsg = 'API 请求失败';
-      try {
-        const errorData = await response.json();
-        console.error('[AI解读] API 错误响应:', errorData);
-        errorMsg = _getErrorMessageFromStatus(response, errorData);
-      } catch {
-        // 忽略解析错误
-      }
-      throw new Error(errorMsg);
-    }
-
-    // 错误场景5: 响应格式解析失败
-    let result;
-    try {
-      result = await response.json();
-    } catch (parseError) {
-      console.error('[AI解读] 解析响应 JSON 失败:', parseError);
-      throw new Error('服务器响应格式错误，请稍后重试', { cause: parseError });
-    }
-
-    console.log('[AI解读] 响应结构:', Object.keys(result));
-
-    // 错误场景6: 响应中缺少必要字段
-    if (!result.choices || !Array.isArray(result.choices) || result.choices.length === 0) {
-      console.error('[AI解读] 无效的响应结构:', result);
-      throw new Error('AI 响应格式错误，请稍后重试');
-    }
-
-    const choice = result.choices[0];
-    if (!choice.finish_reason && !choice.messages) {
-      console.error('[AI解读] 无效的 choice 结构:', choice);
-      throw new Error('AI 响应格式错误，请稍后重试');
-    }
-
-    // 提取 AI 回复内容
-    let aiContent;
-    try {
-      aiContent = _extractAIContent(choice);
-    } catch (err) {
-      console.error('[AI解读] 无法提取内容:', choice);
-      throw err;
-    }
-
-    if (!aiContent || aiContent.trim() === '') {
-      console.warn('[AI解读] AI 返回空内容');
-      throw new Error('AI 暂时无法提供解读，请稍后重试');
-    }
-
-    console.log('[AI解读] 成功获取回复, 长度:', aiContent.length);
-    return aiContent.trim();
+    const messages = this.buildTarotMessages(data);
+    return _callAI({ messages, language: data.language });
   },
 
   // 获取推荐角色
@@ -413,11 +442,6 @@ const api = {
 
   // AI 星座运势分析
   async getAIHoroscope(zodiacId, zodiacName, date = null) {
-    const apiKey = _getApiKey();
-    if (!apiKey) {
-      throw new Error('请先在设置中配置 MiniMax API Key');
-    }
-
     // 使用传入的日期或当前日期
     const currentDate = date || {
       year: new Date().getFullYear(),
@@ -436,79 +460,18 @@ const api = {
 
 请用专业但亲切的语气给出分析。`;
 
-    const requestBody = {
-      model: AI_CONFIG.MODEL,
+    return _callAI({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userContent }
       ],
-      stream: false,
-      temperature: AI_CONFIG.TEMPERATURE,
-      top_p: AI_CONFIG.TOP_P,
-      max_completion_tokens: AI_CONFIG.MAX_COMPLETION_TOKENS
-    };
-
-    let response;
-    try {
-      response = await fetch(AI_CONFIG.API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-    } catch {
-      throw new Error('网络连接失败，请检查网络后重试');
-    }
-
-    if (!response.ok) {
-      let errorMsg = 'API 请求失败';
-      try {
-        const errorData = await response.json();
-        errorMsg = _getErrorMessageFromStatus(response, errorData);
-      } catch {
-        // ignore parse error
-      }
-      throw new Error(errorMsg);
-    }
-
-    const result = await response.json();
-
-    if (!result.choices || !Array.isArray(result.choices) || result.choices.length === 0) {
-      throw new Error('AI 响应格式错误，请稍后重试');
-    }
-
-    const choice = result.choices[0];
-    let aiContent;
-    try {
-      aiContent = _extractAIContent(choice);
-    } catch {
-      throw new Error('AI 暂时无法提供解读，请稍后重试');
-    }
-
-    if (!aiContent || aiContent.trim() === '') {
-      throw new Error('AI 暂时无法提供解读，请稍后重试');
-    }
-
-    return aiContent.trim();
+      language: 'zh'
+    });
   },
 
   // AI 紫微斗数命盘解读
   async getAIZiweiInterpretation(birthData) {
-    const apiKey = _getApiKey();
     const language = birthData.language || 'zh';
-
-    if (!apiKey) {
-      throw new Error(language === 'zh' ? '请先在设置中配置 MiniMax API Key' : 'Please configure MiniMax API Key in settings');
-    }
-
-    // 错误场景2: API Key 格式无效
-    if (!apiKey.startsWith('sk-') && !apiKey.startsWith('eyJ')) {
-      console.error('[AI紫微解读] 无效的 API Key 格式:', apiKey.substring(0, 10) + '...');
-      throw new Error(language === 'zh' ? 'API Key 格式无效，请检查设置' : 'Invalid API Key format');
-    }
-
     const { birthday, birthTime, gender, birthdayType, ziweiData } = birthData;
 
     const systemPrompt = language === 'zh'
@@ -576,119 +539,17 @@ Provide detailed chart analysis including:
 Use professional yet friendly tone. Provide analysis directly without including thinking process.`;
     }
 
-    const requestBody = {
-      model: AI_CONFIG.MODEL,
+    return _callAI({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userContent }
       ],
-      stream: false,
-      temperature: AI_CONFIG.TEMPERATURE,
-      top_p: AI_CONFIG.TOP_P,
-      max_completion_tokens: AI_CONFIG.MAX_COMPLETION_TOKENS
-    };
-
-    console.log('[AI紫微解读] 发送请求:', {
-      url: AI_CONFIG.API_URL,
-      model: requestBody.model,
-      birthday,
-      birthTime,
-      gender,
-      birthdayType
+      language
     });
-
-    let response;
-    try {
-      response = await fetch(AI_CONFIG.API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-    } catch (networkError) {
-      console.error('[AI紫微解读] 网络错误:', networkError);
-      throw new Error('网络连接失败，请检查网络后重试', { cause: networkError });
-    }
-
-    // 错误场景4: HTTP 状态码错误
-    if (!response.ok) {
-      let errorMsg = 'API 请求失败';
-      try {
-        const errorData = await response.json();
-        console.error('[AI紫微解读] API 错误响应:', errorData);
-        errorMsg = _getErrorMessageFromStatus(response, errorData);
-      } catch {
-        // ignore parse error
-      }
-      throw new Error(errorMsg);
-    }
-
-    // 错误场景5: 响应格式解析失败
-    let result;
-    try {
-      result = await response.json();
-    } catch (parseError) {
-      console.error('[AI紫微解读] 解析响应 JSON 失败:', parseError);
-      throw new Error('服务器响应格式错误，请稍后重试', { cause: parseError });
-    }
-
-    console.log('[AI紫微解读] 响应结构:', Object.keys(result));
-    console.log('[AI紫微解读] 完整响应:', JSON.stringify(result, null, 2).substring(0, 2000));
-
-    // 检查是否有 API 错误
-    if (result.base_resp && result.base_resp.status_code !== 0) {
-      console.error('[AI紫微解读] API 错误:', result.base_resp);
-      throw new Error(result.base_resp.status_msg || 'API 请求失败');
-    }
-
-    // 错误场景6: 响应中缺少必要字段
-    if (!result.choices || !Array.isArray(result.choices) || result.choices.length === 0) {
-      console.error('[AI紫微解读] 无效的响应结构:', result);
-      throw new Error('AI 响应格式错误，请稍后重试');
-    }
-
-    const choice = result.choices[0];
-    console.log('[AI紫微解读] choice:', choice);
-    console.log('[AI紫微解读] choice 结构:', JSON.stringify(choice, null, 2).substring(0, 2000));
-    console.log('[AI紫微解读] choice.keys:', Object.keys(choice));
-    console.log('[AI紫微解读] choice.message keys:', Object.keys(choice.message || {}));
-    console.log('[AI紫微解读] choice.message.content 长度:', choice.message?.content?.length);
-    console.log('[AI紫微解读] choice.message.reasoning_content 长度:', choice.message?.reasoning_content?.length);
-    console.log('[AI紫微解读] choice.messages:', choice.messages);
-    console.log('[AI紫微解读] choice.delta:', choice.delta);
-
-    if (!choice.finish_reason && !choice.messages) {
-      console.error('[AI紫微解读] 无效的 choice 结构:', choice);
-      throw new Error('AI 响应格式错误，请稍后重试');
-    }
-
-    // 提取 AI 回复内容
-    let aiContent;
-    try {
-      aiContent = _extractAIContent(choice);
-    } catch (err) {
-      console.error('[AI紫微解读] 无法提取内容, choice:', choice, '错误:', err);
-      throw err;
-    }
-
-    if (!aiContent || aiContent.trim() === '') {
-      console.warn('[AI紫微解读] AI 返回空内容');
-      throw new Error('AI 暂时无法提供解读，请稍后重试');
-    }
-
-    console.log('[AI紫微解读] 成功获取回复, 长度:', aiContent.length);
-    return aiContent.trim();
   },
 
   // AI 西方星盘解读
   async getAIAstrologyInterpretation(chartData, language = 'zh') {
-    const apiKey = _getApiKey();
-    if (!apiKey) {
-      throw new Error(language === 'zh' ? '请先在设置中配置 MiniMax API Key' : 'Please configure MiniMax API Key in settings');
-    }
-
     const { planets, ascendant, midheaven, birthData } = chartData;
 
     const systemPrompt = language === 'zh'
@@ -746,66 +607,13 @@ Provide detailed chart analysis including:
 
 Use professional yet friendly tone.`;
 
-    const requestBody = {
-      model: AI_CONFIG.MODEL,
+    return _callAI({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userContent }
       ],
-      stream: false,
-      temperature: AI_CONFIG.TEMPERATURE,
-      top_p: AI_CONFIG.TOP_P,
-      max_completion_tokens: AI_CONFIG.MAX_COMPLETION_TOKENS
-    };
-
-    let response;
-    try {
-      response = await fetch(AI_CONFIG.API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-    } catch {
-      throw new Error('网络连接失败，请检查网络后重试');
-    }
-
-    if (!response.ok) {
-      let errorMsg = 'API 请求失败';
-      try {
-        const errorData = await response.json();
-        errorMsg = _getErrorMessageFromStatus(response, errorData);
-      } catch {
-        // ignore parse error
-      }
-      throw new Error(errorMsg);
-    }
-
-    const result = await response.json();
-
-    if (!result.choices || !Array.isArray(result.choices) || result.choices.length === 0) {
-      throw new Error('AI 响应格式错误，请稍后重试');
-    }
-
-    const choice = result.choices[0];
-    let aiContent;
-    try {
-      aiContent = _extractAIContent(choice);
-    } catch (err) {
-      console.error('[AI星盘解读] 内容提取失败:', err.message, 'choice:', JSON.stringify(choice).substring(0, 300));
-      const error = new Error('AI 暂时无法提供解读，请稍后重试');
-      error.cause = err;
-      throw error;
-    }
-
-    if (!aiContent || aiContent.trim() === '') {
-      console.error('[AI星盘解读] AI 返回空内容，原始提取结果:', aiContent);
-      throw new Error('AI 暂时无法提供解读，请稍后重试');
-    }
-
-    return aiContent.trim();
+      language
+    });
   }
 };
 

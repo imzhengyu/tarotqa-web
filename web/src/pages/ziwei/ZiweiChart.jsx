@@ -1,38 +1,28 @@
-import { useState, useCallback } from 'react';
-import MarkdownIt from 'markdown-it';
-import markdownItMultimdTable from 'markdown-it-multimd-table';
-import DOMPurify from 'dompurify';
-import { Iztrolabe } from 'react-iztro';
-import BirthInfoForm from '../../components/common/BirthInfoForm';
+import { useState, useCallback, useMemo } from 'react';
 import DisclaimerModal from '../../components/common/DisclaimerModal';
-import DelayedPoofButton from '../../components/common/DelayedPoofButton';
-import { StarIcon, SparkleEffect, OrbGlow } from '../../components/common/DecorativeElements';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
 import { useDevice } from '../../hooks/useDevice';
 import { generateZiweiData, formatZiweiPrompt } from '../../utils/ziwei/ziweiData';
 import { useLanguage } from '../../context/LanguageContext';
-import { exportToPNG } from '../../utils/export';
 import { formatTimestamp } from '../../utils/date';
 import api from '../../services/api';
+import ZiweiChartForm from './ZiweiChartForm';
+import ZiweiChartDisplay from './ZiweiChartDisplay';
 import './ZiweiChart.css';
 
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true
-}).use(markdownItMultimdTable, {
-  multiline: true,
-  header: true
-});
-
-const generateZiweiFilename = (birthData) => {
+export const generateZiweiFilename = (birthData) => {
   if (!birthData) return `ziwei-${formatTimestamp()}`;
   const { year, month, day, hour, minute } = birthData;
   const pad = (n) => String(n).padStart(2, '0');
   const dateStr = `${year}${pad(month)}${pad(day)}`;
   const timeStr = `${pad(hour)}${pad(minute)}`;
   return `ziwei-${dateStr}_${timeStr}-${formatTimestamp()}`;
+};
+
+export const formatBirthday = (birthData) => {
+  if (!birthData) return '';
+  return `${birthData.year}-${String(birthData.month).padStart(2, '0')}-${String(birthData.day).padStart(2, '0')}`;
 };
 
 function ZiweiChart() {
@@ -64,7 +54,7 @@ function ZiweiChart() {
     startCooldownTimer();
   }, [birthData, startCooldownTimer]);
 
-  const handleAIInterpretation = async () => {
+  const handleAIInterpretation = useCallback(async () => {
     if (aiLoading || aiCooldown > 0 || !birthData) return;
 
     setAiInterpretation(null);
@@ -72,7 +62,7 @@ function ZiweiChart() {
     setAiError(null);
 
     try {
-      const birthdayStr = `${birthData.year}-${String(birthData.month).padStart(2, '0')}-${String(birthData.day).padStart(2, '0')}`;
+      const birthdayStr = formatBirthday(birthData);
 
       const ziweiData = generateZiweiData(birthdayStr, birthData.hour, birthData.gender, 'solar');
       const ziweiPrompt = formatZiweiPrompt(ziweiData);
@@ -94,24 +84,11 @@ function ZiweiChart() {
     } finally {
       setAiLoading(false);
     }
-  };
+  }, [aiCooldown, aiLoading, birthData, language, startCooldown]);
 
-  const renderMarkdownContent = (content) => {
-    if (!content) return '';
-    try {
-      const html = md.render(content);
-      const clean = DOMPurify.sanitize(html);
-      return <div className="markdown-body" dangerouslySetInnerHTML={{ __html: clean }} />;
-    } catch (error) {
-      console.error('[Markdown渲染] 解析失败:', error);
-      return <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{content}</pre>;
-    }
-  };
-
-  const formatBirthday = () => {
-    if (!birthData) return '';
-    return `${birthData.year}-${String(birthData.month).padStart(2, '0')}-${String(birthData.day).padStart(2, '0')}`;
-  };
+  const birthdayStr = useMemo(() => formatBirthday(birthData), [birthData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const horoscopeDate = useMemo(() => new Date(), [chartGenerated]);
 
   return (
     <div className={`ziwei-chart-page layout-${deviceType}`}>
@@ -124,102 +101,26 @@ function ZiweiChart() {
 
       <h1 className="page-title">{t('紫微斗数排盘', 'Ziwei Dou Shu Chart')}</h1>
 
-      {/* 第一行：出生信息 */}
-      <div className="ziwei-form-section">
-        <div className="form-card">
-          <h2>{t('出生信息', 'Birth Information')}</h2>
-          <BirthInfoForm
-            value={birthData}
-            onChange={handleBirthDataChange}
-            showGender={true}
-          />
-          <DelayedPoofButton
-            className="btn btn-primary generate-btn"
-            onClick={handleGenerateChart}
-            disabled={!birthData}
-          >
-            {t('生成命盘', 'Generate Chart')}
-          </DelayedPoofButton>
-        </div>
-      </div>
+      <ZiweiChartForm
+        birthData={birthData}
+        onChange={handleBirthDataChange}
+        onGenerate={handleGenerateChart}
+        t={t}
+      />
 
-      {/* 第二行：命盘输出 */}
-      <div className="ziwei-chart-section">
-        {chartGenerated && birthData ? (
-          <>
-            <div className="chartWrapper">
-              <div className="chartDecorations">
-                <OrbGlow size={80} className="chartOrb orbLeft" />
-                <OrbGlow size={60} className="chartOrb orbRight" />
-                <StarIcon size={18} className="chartStar star1" />
-                <StarIcon size={14} className="chartStar star2" />
-                <StarIcon size={16} className="chartStar star3" />
-                <SparkleEffect size={45} intensity={0.5} className="chartSparkle" />
-              </div>
-              <div className="chart-container">
-                <Iztrolabe
-                  birthday={formatBirthday()}
-                  birthTime={Math.floor(birthData.hour / 2) % 12}
-                  birthdayType="solar"
-                  gender={birthData.gender}
-                  horoscopeDate={new Date()}
-                />
-              </div>
-            </div>
-            {birthData && (
-              <div className="ai-action">
-                <button
-                  className="btn btn-secondary"
-                  onClick={handleAIInterpretation}
-                  disabled={aiLoading || aiCooldown > 0}
-                >
-                  {aiLoading ? t('分析中...', 'Analyzing...') : aiCooldown > 0 ? `${t('请等待', 'Wait')} ${aiCooldown}s` : t('AI 命盘分析', 'AI Chart Analysis')}
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="chart-placeholder">
-            <div className="placeholder-icon">🀄</div>
-            <p>{t('点击生成命盘', 'Click Generate Chart')}</p>
-          </div>
-        )}
-
-        {aiError && !chartGenerated && (
-          <div className="ai-error">
-            <p>{t('错误: ', 'Error: ')}{aiError}</p>
-            <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
-          </div>
-        )}
-      </div>
-
-      {(aiInterpretation || aiError) && (
-        <div className="ziwei-ai-section">
-          {aiError && (
-            <div className="ai-error">
-              <p>{t('错误: ', 'Error: ')}{aiError}</p>
-              <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
-            </div>
-          )}
-          {aiInterpretation && (
-            <>
-              <div className="ai-interpretation" id="ziwei-ai-result">
-                <h3>{t('AI 命盘分析', 'AI Chart Analysis')}</h3>
-                {renderMarkdownContent(aiInterpretation)}
-              </div>
-              <div className="ai-export-section">
-                <button
-                  className="btn btn-secondary export-ai-btn"
-                  onClick={() => exportToPNG('ziwei-ai-result', generateZiweiFilename(birthData))}
-                  title={t('输出PNG图片', 'Export as PNG')}
-                >
-                  📥 {t('导出分析结果', 'Export Analysis')}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      <ZiweiChartDisplay
+        birthData={birthData}
+        birthdayStr={birthdayStr}
+        horoscopeDate={horoscopeDate}
+        aiInterpretation={aiInterpretation}
+        aiError={aiError}
+        aiLoading={aiLoading}
+        aiCooldown={aiCooldown}
+        onAnalyze={handleAIInterpretation}
+        onClearError={() => setAiError(null)}
+        generateFilename={generateZiweiFilename}
+        t={t}
+      />
 
       <DisclaimerModal
         isOpen={showDisclaimer}

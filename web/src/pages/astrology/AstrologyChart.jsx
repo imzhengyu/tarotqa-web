@@ -1,10 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
-import MarkdownIt from 'markdown-it';
-import markdownItMultimdTable from 'markdown-it-multimd-table';
-import DOMPurify from 'dompurify';
 import BirthInfoForm from '../../components/common/BirthInfoForm';
 import DisclaimerModal from '../../components/common/DisclaimerModal';
 import DelayedPoofButton from '../../components/common/DelayedPoofButton';
+import MarkdownSection from '../../components/common/MarkdownSection';
 import { StarIcon, SparkleEffect, ConstellationPattern } from '../../components/common/DecorativeElements';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
@@ -18,16 +16,11 @@ import { formatTimestamp } from '../../utils/date';
 import api from '../../services/api';
 import './AstrologyChart.css';
 
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true
-}).use(markdownItMultimdTable, {
-  multiline: true,
-  header: true
-});
+const markdownPlugins = [
+  { loader: () => import('markdown-it-multimd-table'), options: { multiline: true, header: true } }
+];
 
-const generateAstrologyFilename = (birthData) => {
+export const generateAstrologyFilename = (birthData) => {
   if (!birthData) return `astrology-${formatTimestamp()}`;
   const { year, month, day, hour, minute } = birthData;
   const pad = (n) => String(n).padStart(2, '0');
@@ -48,6 +41,8 @@ const {
   ZODIAC_MIDPOINT_OFFSET
 } = ASTROLOGY_CHART;
 
+const INITIAL_PLANETS = PLANETS.map(p => ({ ...p, sign: ZODIAC_SIGNS[0], degree: 0 }));
+
 function AstrologyChart() {
   const { language, t } = useLanguage();
   const { deviceType } = useDevice();
@@ -57,6 +52,7 @@ function AstrologyChart() {
   const [selectedPlanet, setSelectedPlanet] = useState(null);
   const [aiInterpretation, setAiInterpretation] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
   const [chartError, setChartError] = useState(null);
   const { showBackToTop, scrollToTop } = useBackToTop();
 
@@ -89,6 +85,7 @@ function AstrologyChart() {
     if (aiLoading || aiCooldown > 0 || !chartData) return;
 
     setAiInterpretation(null);
+    setAiError(null);
     setAiLoading(true);
 
     try {
@@ -98,6 +95,7 @@ function AstrologyChart() {
     } catch (error) {
       console.error('[AI星盘解读] 捕获错误:', error.message);
       startCooldown();
+      setAiError(error.message);
     } finally {
       setAiLoading(false);
     }
@@ -292,17 +290,7 @@ function AstrologyChart() {
     );
   };
 
-  const renderMarkdownContent = (content) => {
-    if (!content) return '';
-    try {
-      const html = md.render(content);
-      const clean = DOMPurify.sanitize(html);
-      return <div className="markdown-body" dangerouslySetInnerHTML={{ __html: clean }} />;
-    } catch (error) {
-      console.error('[Markdown渲染] 解析失败:', error);
-      return <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{content}</pre>;
-    }
-  };
+  // Markdown 渲染通过 <MarkdownSection> 异步完成（首次使用时动态加载 markdown-it + DOMPurify）
 
   return (
     <div className={`astrology-chart-page layout-${deviceType}`}>
@@ -315,7 +303,6 @@ function AstrologyChart() {
 
       <h1 className="page-title">{t('西方星盘排盘', 'Western Astrology Chart')}</h1>
 
-      {/* 第一行：出生信息 + 行星位置 */}
       <div className="astrology-input-row">
         <div className="form-card">
           <h2>{t('出生信息', 'Birth Information')}</h2>
@@ -337,15 +324,13 @@ function AstrologyChart() {
           <div className="planet-list">
             <h3>{t('行星位置', 'Planet Positions')}</h3>
             <div className="planet-grid">
-              {(chartData?.planets || PLANETS.map(p => ({ ...p, sign: ZODIAC_SIGNS[0], degree: 0 }))).map(planet => (
-                <div
+              {(chartData?.planets || INITIAL_PLANETS).map(planet => (
+                <button
                   key={planet.id}
+                  type="button"
                   className="planet-item"
                   onClick={() => chartData && setSelectedPlanet(planet)}
-                  onKeyDown={(e) => e.key === 'Enter' && chartData && setSelectedPlanet(planet)}
-                  role="button"
-                  tabIndex={0}
-                  style={{ opacity: chartData ? 1 : 0.5 }}
+                  disabled={!chartData}
                 >
                   <span
                     className="planet-symbol"
@@ -357,14 +342,13 @@ function AstrologyChart() {
                   <span className="planet-sign">
                     {planet.sign?.symbol} {language === 'zh' ? planet.sign?.name : planet.sign?.nameEn} {Math.round(planet.degree)}°
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* 第二行：星盘 + AI分析 */}
       <div className="astrology-chart-section">
         {chartData ? (
           <>
@@ -382,7 +366,7 @@ function AstrologyChart() {
                 {renderChart()}
               </div>
             </div>
-            {chartData && birthData && (
+            {birthData && (
               <div className="ai-action">
                 <button
                   className="btn btn-secondary"
@@ -393,11 +377,17 @@ function AstrologyChart() {
                 </button>
               </div>
             )}
+            {aiError && (
+              <div className="ai-error">
+                <p>{t('错误: ', 'Error: ')}{aiError}</p>
+                <button onClick={() => setAiError(null)}>{t('关闭', 'Close')}</button>
+              </div>
+            )}
             {aiInterpretation && (
               <>
                 <div className="ai-interpretation" id="astrology-ai-result">
                   <h3>{t('AI 星盘分析', 'AI Chart Analysis')}</h3>
-                  {renderMarkdownContent(aiInterpretation)}
+                  <MarkdownSection content={aiInterpretation} plugins={markdownPlugins} />
                 </div>
                 <div className="ai-export-section">
                   <button

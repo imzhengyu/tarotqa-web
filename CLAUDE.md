@@ -1,4 +1,6 @@
-# CLAUDE.md
+默认用中文输出所有回复。
+
+# TarotQA Web 开发指南
 
 本文件为 Claude Code 提供开发指导。
 
@@ -31,6 +33,10 @@ pnpm run lint:css:fix # Stylelint 自动修复
 - API 调用必须 try-catch
 - CSS: 组件级 CSS 文件 + global.css
 - 提交前必须 lint 全部通过
+
+## 协作规范
+
+- 复杂工程任务必须采用 Agentic Model + Harness Engineering：将任务拆分为可独立验证的子任务，使用 subagent 并行或串行执行，主 agent 负责任务编排与最终验收。
 
 ## 架构要点
 

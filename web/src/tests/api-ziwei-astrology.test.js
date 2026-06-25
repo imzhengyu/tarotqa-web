@@ -8,6 +8,7 @@ global.fetch = mockFetch;
 describe('getAIZiweiInterpretation branches', () => {
   beforeEach(() => {
     localStorage.removeItem('minimax_api_key');
+    localStorage.setItem('ai_provider', 'minimax');
     mockFetch.mockReset();
   });
 
@@ -70,7 +71,7 @@ describe('getAIZiweiInterpretation branches', () => {
         birthdayType: 'solar',
         language: 'zh'
       };
-      await expect(getAIZiweiInterpretation(birthData)).rejects.toThrow('API Key 无效或已过期，请检查设置');
+      await expect(getAIZiweiInterpretation(birthData)).rejects.toThrow('MiniMax API Key 无效或已过期，请检查设置');
     });
 
     it('should handle 403 error', async () => {
@@ -354,6 +355,7 @@ describe('getAIZiweiInterpretation branches', () => {
 describe('getAIAstrologyInterpretation branches', () => {
   beforeEach(() => {
     localStorage.removeItem('minimax_api_key');
+    localStorage.setItem('ai_provider', 'minimax');
     mockFetch.mockReset();
   });
 
@@ -400,7 +402,7 @@ describe('getAIAstrologyInterpretation branches', () => {
         midheaven: { sign: { name: 'Capricorn' } },
         birthData: { year: 1990, month: 1, day: 1, hour: 12, minute: 0 }
       };
-      await expect(getAIAstrologyInterpretation(chartData)).rejects.toThrow('API Key 无效或已过期，请检查设置');
+      await expect(getAIAstrologyInterpretation(chartData)).rejects.toThrow('MiniMax API Key 无效或已过期，请检查设置');
     });
 
     it('should handle 500 error', async () => {

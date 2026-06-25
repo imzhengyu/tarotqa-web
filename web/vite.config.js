@@ -21,6 +21,21 @@ export default defineConfig({
   base: './',
   build: {
     outDir: '../dist',
-    sourcemap: false
+    emptyOutDir: true,
+    sourcemap: false,
+    target: 'es2020',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-iztro': ['react-iztro', 'iztro'],
+          'vendor-astro': ['astronomy-engine'],
+          'vendor-md': ['markdown-it', 'markdown-it-multimd-table', 'markdown-it-mark', 'dompurify'],
+          'vendor-dayjs': ['dayjs']
+        }
+      }
+    }
   }
 });

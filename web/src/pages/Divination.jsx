@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
-import MarkdownIt from 'markdown-it';
-import markdownitMark from 'markdown-it-mark';
-import markdownItMultimdTable from 'markdown-it-multimd-table';
-import DOMPurify from 'dompurify';
 import TarotCard from '../components/TarotCard';
 import DisclaimerModal from '../components/common/DisclaimerModal';
 import DelayedPoofButton from '../components/common/DelayedPoofButton';
+import MarkdownSection from '../components/common/MarkdownSection';
 import { StarIcon, SparkleEffect, OrbGlow } from '../components/common/DecorativeElements';
 import { useLanguage } from '../context/LanguageContext';
 import { exportToPNG } from '../utils/export';
@@ -18,26 +15,17 @@ import { useBackToTop } from '../hooks/useBackToTop';
 import { UI_LIMITS, TIMING } from '../constants';
 import './Divination.css';
 
-// 创建 markdown-it 实例
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true
-});
+const markdownPlugins = [
+  { loader: () => import('markdown-it-mark'), options: undefined },
+  { loader: () => import('markdown-it-multimd-table'), options: { multiline: true, header: true } }
+];
 
-md.use(markdownitMark);
-
-md.use(markdownItMultimdTable, {
-  multiline: true,
-  header: true
-});
-
-const generateTarotFilename = (spreadName, cardCount) => {
+export const generateTarotFilename = (spreadName, cardCount) => {
   const safeSpreadName = spreadName?.replace(/\s+/g, '-') || 'reading';
   return `tarot-${safeSpreadName}-${cardCount}cards-${formatTimestamp()}`;
 };
 
-const spreadList = Object.values(spreads).map(s => ({
+export const spreadList = Object.values(spreads).map(s => ({
   id: s.id,
   name: s.name,
   nameEn: s.nameEn,
@@ -207,24 +195,7 @@ function Divination() {
     }
   };
 
-  // 渲染 Markdown 内容（使用 markdown-it + DOMPurify 净化）
-  const renderMarkdownContent = (content) => {
-    if (!content) return '';
-
-    try {
-      const html = md.render(content);
-      // 使用 DOMPurify 净化 HTML，防止 XSS 注入
-      const clean = DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'strong', 'em', 'del', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div', 'mark'],
-        ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'target', 'rel', 'style']
-      });
-      return <div className="markdown-body" dangerouslySetInnerHTML={{ __html: clean }} />;
-    } catch (error) {
-      console.error('[Markdown渲染] 解析失败:', error);
-      // 降级渲染：直接显示原始内容
-      return <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{content}</pre>;
-    }
-  };
+  // Markdown 渲染通过 <MarkdownSection> 异步完成（首次使用时动态加载 markdown-it + DOMPurify）
 
   // 解析 AI 回复为分节格式（简化为直接返回整个内容）
   const parseInterpretation = (text) => {
@@ -474,7 +445,7 @@ function Divination() {
                       <span>{section.title || t('综合解读', 'Comprehensive Analysis')}</span>
                     </div>
                     <div className="interpretation-section-content">
-                      {renderMarkdownContent(section.content || '')}
+                      <MarkdownSection content={section.content || ''} plugins={markdownPlugins} />
                     </div>
                   </div>
                 ))}

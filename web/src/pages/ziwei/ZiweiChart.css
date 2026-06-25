@@ -454,7 +454,6 @@
 }
 
 .ziwei-chart-page.layout-mobile .chart-placeholder {
-  aspect-ratio: 1;
   max-width: calc(100vw - 40px);
 }
 

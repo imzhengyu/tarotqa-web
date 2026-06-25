@@ -214,13 +214,23 @@
 .planet-item {
   display: flex;
   align-items: center;
+  width: 100%;
   padding: 8px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
   border-radius: 8px;
   cursor: pointer;
+  color: inherit;
   transition: background 0.2s;
 }
 
-.planet-item:hover {
+.planet-item:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.planet-item:not(:disabled):hover {
   background: rgba(212, 175, 55, 0.1);
 }
 
@@ -541,7 +551,6 @@
 }
 
 .astrology-chart-page.layout-mobile .chart-placeholder {
-  aspect-ratio: 1;
   max-width: calc(100vw - 40px);
 }
 

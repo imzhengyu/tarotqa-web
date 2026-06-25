@@ -49,6 +49,11 @@ jobs:
           pnpm run lint
           pnpm run lint:css
 
+      - name: Test
+        run: |
+          cd web
+          pnpm run test:ci
+
       - name: Build
         run: |
           cd web

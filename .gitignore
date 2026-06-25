@@ -33,10 +33,13 @@ build/
 web/package.json
 web/pnpm-lock.yaml
 
-# Test
+web/scripts/.regression-output.json
 coverage/
 web/coverage/
 web/scripts/coverage/
+web/coverage-output.txt
+web/coverage_output.txt
+web/coverage_run.txt
 testresult*.md
 test_output.txt
 
@@ -53,15 +56,32 @@ server/
 
 # Project specific
 regression_report.md
+plan.md
+
+# Local debug / dev helpers
+deploy.py
+debug-page.mjs
+debug-ziwei.mjs
+debug-screenshot.png
+
+# Lighthouse
+.lighthouse-baseline/
+.lighthouse-test/
+web/scripts/lighthouse-run.mjs
+
+# Playwright
+playwright-report/
+test-results/
+web/playwright.config.js
+web/src/tests-e2e/
 
 # WeChat Mini Program (legacy)
 miniprogram/app.js
 miniprogram/app.json
 
-# Tarot card images (large files - only ignore actual image files, keep the directory)
-web/public/tarot-images/*.jpg
-web/public/tarot-images/*.png
-web/public/tarot-images/*.webp
+# Tarot card images (keep webp in repo, ignore jpg/png sources)
+web/public/tarot-images/**/*.jpg
+web/public/tarot-images/**/*.png
 
 # Documentation dependencies
 doc/node_modules/

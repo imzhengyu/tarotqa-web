@@ -28,6 +28,15 @@ const mockCards = [
 describe('API Service', () => {
   beforeEach(() => {
     localStorage.removeItem('minimax_api_key');
+    // 测试默认按 minimax 跑，需要验证默认 provider 的用例会单独覆盖。
+    localStorage.setItem('ai_provider', 'minimax');
+  });
+
+  describe('默认 AI provider', () => {
+    it('未设置时应回退到 DEFAULT_AI_PROVIDER', () => {
+      localStorage.removeItem('ai_provider');
+      expect(api.getProvider()).toBe('minimax');
+    });
   });
 
   describe('getCards', () => {
@@ -597,7 +606,7 @@ describe('API Service', () => {
         await api.getAIInterpretation(mockData);
         expect.fail('应该抛出错误');
       } catch (error) {
-        expect(error.message).toBe('API Key 无效或已过期，请检查设置');
+        expect(error.message).toBe('MiniMax API Key 无效或已过期，请检查设置');
       }
     });
 
@@ -613,7 +622,7 @@ describe('API Service', () => {
         await api.getAIInterpretation(mockData);
         expect.fail('应该抛出错误');
       } catch (error) {
-        expect(error.message).toBe('API Key 权限不足');
+        expect(error.message).toBe('MiniMax API Key 权限不足');
       }
     });
 
@@ -1124,7 +1133,7 @@ describe('getAIHoroscope', () => {
       await api.getAIHoroscope('aries', '白羊座');
       expect.fail('应该抛出错误');
     } catch (error) {
-      expect(error.message).toBe('API Key 无效或已过期，请检查设置');
+      expect(error.message).toBe('MiniMax API Key 无效或已过期，请检查设置');
     }
   });
 

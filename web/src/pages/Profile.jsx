@@ -21,11 +21,11 @@ function Profile() {
 
   useEffect(() => {
     checkLogin();
-    const savedKey = localStorage.getItem('minimax_api_key');
-    if (savedKey) {
-      setMinimaxKey(savedKey);
-      setUsingDefaultKey(false);
-    } else if (import.meta.env.VITE_DEFAULT_API_KEY) {
+    const savedMinimaxKey = localStorage.getItem('minimax_api_key');
+    if (savedMinimaxKey) {
+      setMinimaxKey(savedMinimaxKey);
+    }
+    if (!savedMinimaxKey && import.meta.env.VITE_DEFAULT_API_KEY) {
       setUsingDefaultKey(true);
     }
   }, []);
@@ -85,7 +85,7 @@ function Profile() {
     setCodeSent(false);
   };
 
-  const saveMinimaxKey = () => {
+  const saveApiKey = () => {
     if (minimaxKey.trim()) {
       localStorage.setItem('minimax_api_key', minimaxKey.trim());
       setMessage(t('API Key 保存成功', 'API Key saved successfully'));
@@ -93,9 +93,10 @@ function Profile() {
     }
   };
 
-  const clearMinimaxKey = () => {
+  const clearApiKey = () => {
     localStorage.removeItem('minimax_api_key');
     setMinimaxKey('');
+
     if (import.meta.env.VITE_DEFAULT_API_KEY) {
       setUsingDefaultKey(true);
       setMessage(t('已切换到默认 API', 'Switched to default API'));
@@ -200,7 +201,7 @@ function Profile() {
         {usingDefaultKey && (
           <div className="default-key-indicator">
             <span className="default-key-icon">✨</span>
-            <span>{t('正在使用默认 API Key，可直接使用 AI 深度解读功能', 'Using default API Key, AI features available')}</span>
+            <span>{t('正在使用默认 MiniMax API Key，可直接使用 AI 深度解读功能', 'Using default MiniMax API Key, AI features available')}</span>
           </div>
         )}
 
@@ -222,20 +223,20 @@ function Profile() {
         <div className="api-key-actions">
           <button
             className="btn btn-primary"
-            onClick={saveMinimaxKey}
+            onClick={saveApiKey}
           >
             {t('保存', 'Save')}
           </button>
           <button
             className="btn btn-secondary"
-            onClick={clearMinimaxKey}
+            onClick={clearApiKey}
           >
             {t('清除', 'Clear')}
           </button>
         </div>
 
         <p className="api-key-hint">
-          {t('API Key 获取地址：', 'Get API Key: ')}<a href="https://platform.minimaxi.com" target="_blank" rel="noopener noreferrer">platform.minimaxi.com</a>
+          <>{t('API Key 获取地址：', 'Get API Key: ')}<a href="https://platform.minimaxi.com" target="_blank" rel="noopener noreferrer">platform.minimaxi.com</a></>
         </p>
 
         <div className="stats-link">

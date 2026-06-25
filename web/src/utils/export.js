@@ -1,6 +1,4 @@
 // 导出工具函数 - PNG 图片导出
-import html2canvas from 'html2canvas';
-
 export async function exportToPNG(elementId, filename = 'export') {
   const element = document.getElementById(elementId);
   if (!element) {
@@ -10,6 +8,7 @@ export async function exportToPNG(elementId, filename = 'export') {
   // 等待字体加载完成
   await document.fonts.ready;
 
+  const { default: html2canvas } = await import('html2canvas');
   const canvas = await html2canvas(element, {
     backgroundColor: '#1a1a2e',
     scale: 2,

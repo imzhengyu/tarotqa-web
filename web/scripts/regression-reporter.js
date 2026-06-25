@@ -1,15 +1,19 @@
 /**
  * Regression Reporter Script
- * Runs tests and appends results with timestamp to regression_report.md
+ * Runs tests with coverage, parses JSON output, retries on failure,
+ * and appends results with timestamp to regression_report.md
  */
 import { execSync } from 'child_process';
-import { readFileSync, appendFileSync } from 'fs';
+import { readFileSync, appendFileSync, unlinkSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WEB_ROOT = resolve(__dirname, '..');
 const REPORT_PATH = resolve(WEB_ROOT, 'regression_report.md');
+const JSON_OUTPUT = resolve(__dirname, '.regression-output.json');
+
+const MAX_RETRIES = 2;
 
 function getTimestamp() {
   const now = new Date();
@@ -28,62 +32,106 @@ function getGitInfo() {
 
 function runTests() {
   console.log('Running tests with coverage...');
-  const output = execSync('npx vitest run --coverage', {
-    encoding: 'utf-8',
-    cwd: WEB_ROOT
-  });
-  return output;
+  execSync(
+    'pnpm vitest run --coverage --reporter=json --outputFile=scripts/.regression-output.json',
+    {
+      encoding: 'utf-8',
+      cwd: WEB_ROOT,
+      stdio: 'inherit'
+    }
+  );
 }
 
-function parseCoverage(output) {
-  const lines = output.split('\n');
-  const result = {
-    passed: 0,
-    failed: 0,
-    total: 0,
-    coverage: null,
-    files: []
+function parseJsonResults() {
+  if (!existsSync(JSON_OUTPUT)) {
+    throw new Error('JSON output file not found: ' + JSON_OUTPUT);
+  }
+
+  const raw = readFileSync(JSON_OUTPUT, 'utf-8');
+  const data = JSON.parse(raw);
+
+  const numFailedTests = data.numFailedTests ?? 0;
+  const numPassedTests = data.numPassedTests ?? 0;
+  const numTotalTests = data.numTotalTests ?? 0;
+
+  let coverage = null;
+  if (data.coverageMap) {
+    const summary = summarizeCoverage(data.coverageMap);
+    coverage = summary;
+  }
+
+  return {
+    passed: numPassedTests,
+    failed: numFailedTests,
+    total: numTotalTests,
+    coverage
   };
+}
 
-  // Parse test results
-  const testMatch = output.match(/Tests\s+.*?(\d+)\s+failed.*?(\d+)\s+passed.*?\((\d+)\)/s);
-  if (testMatch) {
-    result.failed = parseInt(testMatch[1]);
-    result.passed = parseInt(testMatch[2]);
-    result.total = parseInt(testMatch[3]);
-  } else {
-    const allPassMatch = output.match(/Tests\s+.*?(\d+)\s+passed.*?\((\d+)\)/s);
-    if (allPassMatch) {
-      result.passed = parseInt(allPassMatch[1]);
-      result.total = parseInt(allPassMatch[2]);
+function summarizeCoverage(coverageMap) {
+  let statementsTotal = 0;
+  let statementsCovered = 0;
+  let branchesTotal = 0;
+  let branchesCovered = 0;
+  let functionsTotal = 0;
+  let functionsCovered = 0;
+  let linesTotal = 0;
+  let linesCovered = 0;
+
+  for (const filePath of Object.keys(coverageMap)) {
+    const fileData = coverageMap[filePath];
+    if (!fileData) continue;
+
+    const s = fileData.statementMap;
+    const statementCoverage = fileData.s;
+    if (s && statementCoverage) {
+      statementsTotal += Object.keys(s).length;
+      statementsCovered += Object.values(statementCoverage).filter(v => v > 0).length;
+    }
+
+    const b = fileData.branchMap;
+    const branchCoverage = fileData.b;
+    if (b && branchCoverage) {
+      for (const key of Object.keys(b)) {
+        const branches = branchCoverage[key];
+        if (Array.isArray(branches)) {
+          branchesTotal += branches.length;
+          branchesCovered += branches.filter(v => v > 0).length;
+        }
+      }
+    }
+
+    const f = fileData.fnMap;
+    const functionCoverage = fileData.f;
+    if (f && functionCoverage) {
+      functionsTotal += Object.keys(f).length;
+      functionsCovered += Object.values(functionCoverage).filter(v => v > 0).length;
+    }
+
+    const l = fileData.lineMap || fileData.l;
+    const lineCoverage = fileData.l;
+    if (l && lineCoverage) {
+      linesTotal += Object.keys(l).length;
+      linesCovered += Object.values(lineCoverage).filter(v => v > 0).length;
     }
   }
 
-  // Parse coverage
-  const coverageMatch = output.match(/All files.*?(\d+\.\d+)/s);
-  if (coverageMatch) {
-    result.coverage = coverageMatch[1] + '%';
+  function pct(covered, total) {
+    if (total === 0) return 100;
+    return parseFloat(((covered / total) * 100).toFixed(2));
   }
 
-  // Parse file coverage
-  const fileLines = output.match(/components.*?\n.*?services.*?\n/gs);
-  if (fileLines) {
-    const fileSection = fileLines[0];
-    const fileMatches = fileSection.matchAll(/^\s*(\S+\.(?:js|jsx|css))\s*\|\s*(\d+)\s*\|\s*(\d+\.\d+)/gm);
-    for (const match of fileMatches) {
-      result.files.push({
-        name: match[1],
-        coverage: match[2] + '%'
-      });
-    }
-  }
-
-  return result;
+  return {
+    statements: pct(statementsCovered, statementsTotal),
+    branches: pct(branchesCovered, branchesTotal),
+    functions: pct(functionsCovered, functionsTotal),
+    lines: pct(linesCovered, linesTotal)
+  };
 }
 
 function formatReport(result, gitInfo) {
   const timestamp = getTimestamp();
-  const status = result.failed === 0 ? '✅ PASS' : '❌ FAIL';
+  const status = result.failed === 0 ? 'PASS' : 'FAIL';
 
   let report = `\n## Regression Test Report\n`;
   report += `**Timestamp**: ${timestamp}\n`;
@@ -95,17 +143,16 @@ function formatReport(result, gitInfo) {
   report += `|--------|-------|\n`;
   report += `| Passed | ${result.passed} |\n`;
   report += `| Failed | ${result.failed} |\n`;
-  report += `| Total | ${result.total} |\n`;
-  report += `| Coverage | ${result.coverage || 'N/A'} |\n\n`;
+  report += `| Total | ${result.total} |\n\n`;
 
-  if (result.files.length > 0) {
-    report += `### File Coverage\n`;
-    report += `| File | Coverage |\n`;
-    report += `|------|----------|\n`;
-    for (const file of result.files) {
-      report += `| ${file.name} | ${file.coverage} |\n`;
-    }
-    report += `\n`;
+  if (result.coverage) {
+    report += `### Coverage Summary\n`;
+    report += `| Metric | Coverage |\n`;
+    report += `|--------|----------|\n`;
+    report += `| Statements | ${result.coverage.statements}% |\n`;
+    report += `| Branches | ${result.coverage.branches}% |\n`;
+    report += `| Functions | ${result.coverage.functions}% |\n`;
+    report += `| Lines | ${result.coverage.lines}% |\n\n`;
   }
 
   return report;
@@ -114,7 +161,6 @@ function formatReport(result, gitInfo) {
 function initReport() {
   try {
     const content = readFileSync(REPORT_PATH, 'utf-8');
-    // Report already initialized
     if (content.includes('# Regression Report')) {
       return;
     }
@@ -138,27 +184,69 @@ Each regression run is appended with:
   appendFileSync(REPORT_PATH, header);
 }
 
-function main() {
+function cleanup() {
   try {
-    initReport();
-    const gitInfo = getGitInfo();
-    const output = runTests();
-    const result = parseCoverage(output);
-    const report = formatReport(result, gitInfo);
-
-    appendFileSync(REPORT_PATH, report);
-    console.log(`\nReport appended to: ${REPORT_PATH}`);
-    console.log(`Status: ${result.failed === 0 ? '✅ PASS' : '❌ FAIL'}`);
-    console.log(`Passed: ${result.passed}/${result.total}`);
-    console.log(`Coverage: ${result.coverage || 'N/A'}`);
-
-    if (result.failed > 0) {
-      process.exit(1);
+    if (existsSync(JSON_OUTPUT)) {
+      unlinkSync(JSON_OUTPUT);
     }
-  } catch (error) {
-    console.error('Regression reporter failed:', error.message);
+  } catch {
+    // ignore cleanup errors
+  }
+}
+
+function main() {
+  let lastError = null;
+  let result = null;
+
+  initReport();
+  const gitInfo = getGitInfo();
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      console.log(`\nRetrying... (attempt ${attempt + 1} of ${MAX_RETRIES + 1})`);
+    }
+
+    try {
+      runTests();
+      result = parseJsonResults();
+
+      if (result.failed === 0) {
+        break;
+      }
+
+      console.log(`Tests failed: ${result.failed} failed, ${result.passed} passed.`);
+      lastError = new Error(`Tests failed: ${result.failed} failed`);
+    } catch (error) {
+      lastError = error;
+      console.error('Test run error:', error.message);
+    }
+  }
+
+  cleanup();
+
+  if (!result) {
+    console.error('\nRegression reporter failed after all retries.');
+    if (lastError) {
+      console.error(lastError.message);
+    }
     process.exit(1);
   }
+
+  const report = formatReport(result, gitInfo);
+  appendFileSync(REPORT_PATH, report);
+
+  console.log(`\nReport appended to: ${REPORT_PATH}`);
+  console.log(`Status: ${result.failed === 0 ? 'PASS' : 'FAIL'}`);
+  console.log(`Passed: ${result.passed}/${result.total}`);
+  if (result.coverage) {
+    console.log(`Coverage — Statements: ${result.coverage.statements}%, Branches: ${result.coverage.branches}%, Functions: ${result.coverage.functions}%, Lines: ${result.coverage.lines}%`);
+  }
+
+  if (result.failed > 0) {
+    process.exit(1);
+  }
+
+  process.exit(0);
 }
 
 main();

@@ -1,24 +1,39 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-import Divination from './pages/Divination';
-import Cards from './pages/Cards';
 import Profile from './pages/Profile';
 import Statistics from './pages/Statistics';
-import ZiweiChart from './pages/ziwei/ZiweiChart';
-import AstrologyChart from './pages/astrology/AstrologyChart';
 import Layout from './components/Layout';
+import RouteFallback from './components/RouteFallback';
+
+const Divination = lazy(() => import('./pages/Divination'));
+const Cards = lazy(() => import('./pages/Cards'));
+const ZiweiChart = lazy(() => import('./pages/ziwei/ZiweiChart'));
+const AstrologyChart = lazy(() => import('./pages/astrology/AstrologyChart'));
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
-        <Route path="divination" element={<Divination />} />
-        <Route path="cards" element={<Cards />} />
         <Route path="profile" element={<Profile />} />
         <Route path="statistics" element={<Statistics />} />
-        <Route path="ziwei/chart" element={<ZiweiChart />} />
-        <Route path="astrology/chart" element={<AstrologyChart />} />
+        <Route
+          path="divination"
+          element={<Suspense fallback={<RouteFallback />}><Divination /></Suspense>}
+        />
+        <Route
+          path="cards"
+          element={<Suspense fallback={<RouteFallback />}><Cards /></Suspense>}
+        />
+        <Route
+          path="ziwei/chart"
+          element={<Suspense fallback={<RouteFallback />}><ZiweiChart /></Suspense>}
+        />
+        <Route
+          path="astrology/chart"
+          element={<Suspense fallback={<RouteFallback />}><AstrologyChart /></Suspense>}
+        />
       </Route>
     </Routes>
   );
