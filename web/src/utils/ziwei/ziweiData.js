@@ -1,13 +1,27 @@
 import { astro } from 'iztro';
 
 /**
+ * 出生小时 → iztro 的时辰序号【0~12】。
+ *
+ * iztro 的 TIME_RANGE 为：
+ *   0: 00:00~01:00 早子时 · 1: 01:00~03:00 丑时 · … · 11: 21:00~23:00 亥时 · 12: 23:00~00:00 晚子时
+ * 所以 23 点属于晚子时（12），而不是亥时（11）——旧实现用 `Math.floor(hour / 2) % 12`
+ * 会把 23:00 算成亥时，且 0 点与 1 点的归属也与 iztro 的区间不一致。
+ */
+export function hourToTimeIndex(hour) {
+  const value = Number(hour);
+  if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0 || value > 23) {
+    throw new Error(`出生小时必须是 0-23 的整数：${hour}`);
+  }
+  return value === 23 ? 12 : Math.ceil(value / 2);
+}
+
+/**
  * 生成紫微斗数命盘完整数据用于 AI 分析
  */
 export function generateZiweiData(birthday, birthTime, gender, birthdayType = 'solar') {
-  // iztro expects time period index (0-11), not hour (0-23)
-  // 子时=0, 丑时=1, ... 亥时=11
-  // hour 0-1 -> 子时(0), hour 2-3 -> 丑时(1), etc.
-  const timePeriod = typeof birthTime === 'number' ? Math.floor(birthTime / 2) % 12 : birthTime;
+  // 数字按小时换算成 iztro 的时辰序号；字符串视为调用方已换算好的序号/名称
+  const timePeriod = typeof birthTime === 'number' ? hourToTimeIndex(birthTime) : birthTime;
 
   // 使用 iztro 生成命盘数据
   const astrolabe = astro.bySolar(birthday, timePeriod, gender, true, 'zh-CN');

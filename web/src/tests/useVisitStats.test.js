@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   generateUUID,
-  anonymizeIp,
   detectDeviceType,
   detectOSType,
   detectBrowser,
   calculateDeviceStats,
   calculateOsStats,
-  getSessionIP,
+  getDeviceFingerprint,
   loadStats,
   saveStats,
   createInitialStats
@@ -51,7 +50,7 @@ Object.defineProperty(window.console, 'error', {
 // Helper to create mock record
 const createMockRecord = (overrides = {}) => ({
   sessionId: 'test-session-1',
-  anonymizedIp: '192.168.*.*',
+  deviceFingerprint: '192.168',
   questionCount: 0,
   firstVisit: new Date().toISOString(),
   lastVisit: new Date().toISOString(),
@@ -85,62 +84,44 @@ describe('useVisitStats Utility Functions', () => {
     });
   });
 
-  describe('anonymizeIp', () => {
-    it('应该正确匿名化有效的 IP 地址', () => {
-      const result = anonymizeIp('192.168.1.100');
-      expect(result).toBe('192.168.*.*');
-    });
-
-    it('应该处理 null 输入', () => {
-      const result = anonymizeIp(null);
-      expect(result).toBe('unknown');
-    });
-
-    it('应该处理空字符串输入', () => {
-      const result = anonymizeIp('');
-      expect(result).toBe('unknown');
-    });
-
-    it('应该处理只有一个段的 IP', () => {
-      const result = anonymizeIp('192');
-      expect(result).toBe('unknown');
-    });
-
-    it('应该处理有两个段的 IP', () => {
-      const result = anonymizeIp('192.168');
-      expect(result).toBe('192.168.*.*');
+  describe('getDeviceFingerprint', () => {
+    it('应该返回稳定的两段哈希（不是真实 IP）', () => {
+      const first = getDeviceFingerprint();
+      const second = getDeviceFingerprint();
+      expect(first).toMatch(/^\d{1,3}\.\d{1,3}$/);
+      expect(first).toBe(second);
     });
   });
 
-  describe('detectDeviceType', () => {
-    it('应该检测桌面设备 (width >= 1024)', () => {
-      Object.defineProperty(window, 'innerWidth', { get: () => 1024, configurable: true });
+  // 回归：统计曾经用 window.innerWidth 判定设备，而布局用 UA，
+  // 同一个用户可能在布局里是桌面、在统计里是手机。现在两者共用 useDevice 的 UA 判定。
+  describe('detectDeviceType（与布局共用 UA 判定）', () => {
+    const setUserAgent = (ua) =>
+      Object.defineProperty(window, 'navigator', { value: { userAgent: ua }, configurable: true });
+
+    it('Windows 桌面 UA → desktop', () => {
+      setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0');
       expect(detectDeviceType()).toBe('desktop');
     });
 
-    it('应该检测平板设备 (768 <= width < 1024)', () => {
-      Object.defineProperty(window, 'innerWidth', { get: () => 800, configurable: true });
-      expect(detectDeviceType()).toBe('tablet');
-    });
-
-    it('应该检测移动设备 (width < 768)', () => {
-      Object.defineProperty(window, 'innerWidth', { get: () => 375, configurable: true });
+    it('iPhone UA → mobile', () => {
+      setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148');
       expect(detectDeviceType()).toBe('mobile');
     });
 
-    it('应该处理边界值 768', () => {
-      Object.defineProperty(window, 'innerWidth', { get: () => 768, configurable: true });
+    it('Android 手机 UA → mobile', () => {
+      setUserAgent('Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36');
+      expect(detectDeviceType()).toBe('mobile');
+    });
+
+    it('iPad UA → tablet', () => {
+      setUserAgent('Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148');
       expect(detectDeviceType()).toBe('tablet');
     });
 
-    it('应该处理边界值 1024', () => {
-      Object.defineProperty(window, 'innerWidth', { get: () => 1024, configurable: true });
-      expect(detectDeviceType()).toBe('desktop');
-    });
-
-    it('应该处理边界值 767', () => {
-      Object.defineProperty(window, 'innerWidth', { get: () => 767, configurable: true });
-      expect(detectDeviceType()).toBe('mobile');
+    it('Android 平板 UA（无 Mobile 标记）→ tablet，而不是 pad', () => {
+      setUserAgent('Mozilla/5.0 (Linux; Android 12; SM-X200) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36');
+      expect(detectDeviceType()).toBe('tablet');
     });
   });
 
@@ -290,19 +271,6 @@ describe('useVisitStats Utility Functions', () => {
     });
   });
 
-  describe('getSessionIP', () => {
-    it('应该返回有效格式的 IP', () => {
-      const ip = getSessionIP();
-      expect(ip).toMatch(/^\d{1,3}\.\d{1,3}$/);
-    });
-
-    it('每次调用应该返回相同的 IP (基于相同的 seed)', () => {
-      const ip1 = getSessionIP();
-      const ip2 = getSessionIP();
-      expect(ip1).toBe(ip2);
-    });
-  });
-
   describe('loadStats', () => {
     it('应该从 localStorage 加载统计', () => {
       const testData = {
@@ -378,10 +346,17 @@ describe('useVisitStats Utility Functions', () => {
       });
     });
 
-    it('应该包含时间戳字段', () => {
+    it('时间戳字段应为当前时刻的 ISO 字符串', () => {
+      const before = Date.now();
       const stats = createInitialStats();
-      expect(stats.stats.lastUpdated).toBeDefined();
-      expect(stats.stats.lastDeviceStatsUpdate).toBeDefined();
+      const after = Date.now();
+
+      for (const key of ['lastUpdated', 'lastDeviceStatsUpdate']) {
+        const parsed = Date.parse(stats.stats[key]);
+        expect(Number.isNaN(parsed)).toBe(false);
+        expect(parsed).toBeGreaterThanOrEqual(before);
+        expect(parsed).toBeLessThanOrEqual(after);
+      }
     });
   });
 
@@ -533,6 +508,47 @@ describe('useVisitStats Hook', () => {
     const weekQuestions = hookResult.current.getWeekQuestions();
     expect(typeof weekQuestions).toBe('number');
     expect(weekQuestions).toBeGreaterThanOrEqual(0);
+  });
+
+  // 回归：会话可能昨天开始、今天才提问。旧实现只看 firstVisit，
+  // 跨天的提问会被算到「昨天/上周」里去。
+  it('今日/本周提问数应按 lastVisit 统计（回归）', async () => {
+    const { renderHook, waitFor } = await import('@testing-library/react');
+    const { useVisitStats } = await import('../hooks/useVisitStats');
+
+    // 前面的用例把 window.localStorage 换成了会抛错的 mock，这里换回来
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true });
+
+    const now = new Date();
+    const todayVisit = new Date(now);
+    todayVisit.setHours(0, 30, 0, 0);
+    const eightDaysAgo = new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString();
+
+    localStorage.setItem('tarotqa_visit_stats', JSON.stringify({
+      version: '1.1',
+      records: [
+        // 8 天前开始、今天还在提问：应计入今日/本周
+        createMockRecord({ questionCount: 4, firstVisit: eightDaysAgo, lastVisit: todayVisit.toISOString() }),
+        // 8 天前就结束的会话：两窗口都不该计入
+        createMockRecord({ questionCount: 5, firstVisit: eightDaysAgo, lastVisit: eightDaysAgo })
+      ],
+      stats: {
+        totalSessions: 2,
+        totalQuestions: 9,
+        deviceStats: { desktop: 2, tablet: 0, mobile: 0 },
+        osStats: { Windows: 2, macOS: 0, Linux: 0, Android: 0, iOS: 0, Other: 0 },
+        lastUpdated: now.toISOString(),
+        lastDeviceStatsUpdate: now.toISOString()
+      }
+    }));
+
+    const { result } = renderHook(() => useVisitStats());
+    await waitFor(() => {
+      expect(result.current.isInitialized).toBe(true);
+    });
+
+    expect(result.current.getTodayQuestions()).toBe(4);
+    expect(result.current.getWeekQuestions()).toBe(4);
   });
 
   it('should return recent records via getRecentRecords', async () => {

@@ -10,7 +10,8 @@ export async function exportToPNG(elementId, filename = 'export') {
 
   const { default: html2canvas } = await import('html2canvas');
   const canvas = await html2canvas(element, {
-    backgroundColor: '#1a1a2e',
+    // 浅色主题下导出用白底，避免导出图里出现深色块
+    backgroundColor: '#FFFFFF',
     scale: 2,
     useCORS: true,
     logging: false

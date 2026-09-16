@@ -23,7 +23,9 @@ const mockCard = {
 };
 
 const TestWrapper = ({ children }) => (
-  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>{children}</BrowserRouter>
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <LanguageProvider>{children}</LanguageProvider>
+  </BrowserRouter>
 );
 
 const LayoutTestWrapper = ({ children }) => (
@@ -35,39 +37,39 @@ const LayoutTestWrapper = ({ children }) => (
 describe('TarotCard', () => {
   describe('Rendering States', () => {
     it('should render card element', () => {
-      render(<TarotCard card={mockCard} />);
+      render(<TarotCard card={mockCard} />, { wrapper: TestWrapper });
       const cardElement = document.querySelector('.tarot-card');
       expect(cardElement).toBeInTheDocument();
     });
 
     it('should include face-up class when faceUp is true', () => {
-      render(<TarotCard card={mockCard} faceUp={true} />);
+      render(<TarotCard card={mockCard} faceUp={true} />, { wrapper: TestWrapper });
       const cardElement = document.querySelector('.tarot-card.face-up');
       expect(cardElement).toBeInTheDocument();
     });
 
     it('should include selected class when selected is true', () => {
-      render(<TarotCard card={mockCard} selected={true} />);
+      render(<TarotCard card={mockCard} selected={true} />, { wrapper: TestWrapper });
       const cardElement = document.querySelector('.tarot-card.selected');
       expect(cardElement).toBeInTheDocument();
     });
 
     it('should include small class when small is true', () => {
-      render(<TarotCard card={mockCard} small={true} />);
+      render(<TarotCard card={mockCard} small={true} />, { wrapper: TestWrapper });
       const cardElement = document.querySelector('.tarot-card.small');
       expect(cardElement).toBeInTheDocument();
     });
 
     it('should handle card with isReversed true', () => {
       const reversedCard = { ...mockCard, isReversed: true };
-      render(<TarotCard card={reversedCard} faceUp={true} />);
+      render(<TarotCard card={reversedCard} faceUp={true} />, { wrapper: TestWrapper });
       const cardElement = document.querySelector('.tarot-card.reversed');
       expect(cardElement).toBeInTheDocument();
     });
 
     it('should handle null card without error', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      render(<TarotCard card={null} faceUp={true} />);
+      render(<TarotCard card={null} faceUp={true} />, { wrapper: TestWrapper });
       expect(consoleSpy).not.toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -76,7 +78,7 @@ describe('TarotCard', () => {
   describe('Click Handler', () => {
     it('should call onClick when card is clicked', () => {
       const handleClick = vi.fn();
-      render(<TarotCard card={mockCard} onClick={handleClick} />);
+      render(<TarotCard card={mockCard} onClick={handleClick} />, { wrapper: TestWrapper });
       const cardElement = document.querySelector('.tarot-card');
       fireEvent.click(cardElement);
       expect(handleClick).toHaveBeenCalledTimes(1);
@@ -284,7 +286,7 @@ describe('Layout', () => {
       expect(mobileNav).toBeVisible();
     });
 
-    it('should not render mobile-nav on desktop screens', () => {
+    it('桌面 UA 下仍渲染 7 项 mobile-nav（由 CSS 隐藏）并渲染页脚', () => {
       Object.defineProperty(window, 'innerWidth', { get: () => 1024, configurable: true });
       Object.defineProperty(window.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
@@ -300,37 +302,10 @@ describe('Layout', () => {
       // On desktop, mobile-nav is rendered (always rendered, hidden via CSS on desktop)
       // Note: jsdom doesn't evaluate CSS media queries, so we just verify the element exists
       const mobileNav = document.querySelector('.mobile-nav');
-      expect(mobileNav).not.toBeNull();
-    });
-
-    it('should render desktop footer on desktop screens', () => {
-      Object.defineProperty(window, 'innerWidth', { get: () => 1024, configurable: true });
-      Object.defineProperty(window.navigator, 'userAgent', {
-        value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-        configurable: true
-      });
-
-      render(
-        <LayoutTestWrapper>
-          <Layout />
-        </LayoutTestWrapper>
-      );
-
+      expect(mobileNav.querySelectorAll('.mobile-nav-item')).toHaveLength(7);
       const footer = document.querySelector('.footer');
       expect(footer).toBeInTheDocument();
       expect(footer).toBeVisible();
-    });
-  });
-
-  // CR6 & CR7: Mobile navigation CSS verification
-  describe('Mobile Navigation CSS (CR6, CR7)', () => {
-    it('should use position:fixed for mobile-nav to ensure visibility', () => {
-      // Get computed styles for mobile-nav
-      const testElement = document.querySelector('.mobile-nav') || document.createElement('div');
-      const mobileNavStyles = getComputedStyle(testElement);
-      // This test verifies the CSS class exists and has proper positioning styles
-      // The actual position:fixed is verified via CSS source inspection
-      expect(mobileNavStyles).toBeDefined();
     });
   });
 

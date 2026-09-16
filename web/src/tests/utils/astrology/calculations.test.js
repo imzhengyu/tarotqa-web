@@ -1,10 +1,15 @@
 import { describe, it, expect } from 'vitest';
+import { AstroTime, Body, GeoVector, Ecliptic, SiderealTime } from 'astronomy-engine';
 import {
   calculateAstrologyChart,
   calculatePlanets,
   calculateAscendantMC,
   calculateHouses,
-  formatBirthTime
+  formatBirthTime,
+  createAstroTime,
+  DEFAULT_OBSERVER,
+  HOUSE_SYSTEM,
+  OBLIQUITY_DEGREES
 } from '../../../utils/astrology/calculations';
 import { ZODIAC_SIGNS, HOUSES } from '../../../utils/astrology/constants';
 
@@ -19,11 +24,6 @@ const validBirthData = {
 
 describe('Astrology Calculations', () => {
   describe('calculatePlanets', () => {
-    it('should return 10 planets', () => {
-      const planets = calculatePlanets(validBirthData);
-      expect(planets).toHaveLength(10);
-    });
-
     it('should return all planet ids', () => {
       const planets = calculatePlanets(validBirthData);
       const planetIds = planets.map(p => p.id);
@@ -133,22 +133,20 @@ describe('Astrology Calculations', () => {
       expect(moon1.longitude).not.toBe(moon2.longitude);
     });
 
-    it('should handle different timezones', () => {
-      const dataShanghai = { year: 2000, month: 8, day: 16, hour: 14, minute: 30, timezone: 'Asia/Shanghai' };
-      const dataUTC = { year: 2000, month: 8, day: 16, hour: 6, minute: 30, timezone: 'UTC' };
-      const dataNY = { year: 2000, month: 8, day: 16, hour: 2, minute: 30, timezone: 'America/New_York' };
+    it('同一时刻的不同时区写法应给出完全相同的行星位置', () => {
+      const shanghai = { year: 2000, month: 8, day: 16, hour: 14, minute: 30, timezone: 'Asia/Shanghai' };
+      const utc = { year: 2000, month: 8, day: 16, hour: 6, minute: 30, timezone: 'UTC' };
+      const newYork = { year: 2000, month: 8, day: 16, hour: 2, minute: 30, timezone: 'America/New_York' };
 
-      const planets1 = calculatePlanets(dataShanghai);
-      const planets2 = calculatePlanets(dataUTC);
-      const planets3 = calculatePlanets(dataNY);
+      const [cst, gmt, ny] = [shanghai, utc, newYork].map(data =>
+        calculatePlanets(data).map(planet => planet.longitude)
+      );
 
-      const sun1 = planets1.find(p => p.id === 'sun');
-      const sun2 = planets2.find(p => p.id === 'sun');
-      const sun3 = planets3.find(p => p.id === 'sun');
-
-      expect(sun1.longitude).toBeGreaterThan(0);
-      expect(sun2.longitude).toBeGreaterThan(0);
-      expect(sun3.longitude).toBeGreaterThan(0);
+      expect(cst).toHaveLength(10);
+      cst.forEach((longitude, index) => {
+        expect(gmt[index]).toBeCloseTo(longitude, 6);
+        expect(ny[index]).toBeCloseTo(longitude, 6);
+      });
     });
   });
 
@@ -159,20 +157,16 @@ describe('Astrology Calculations', () => {
       expect(result).toHaveProperty('midheaven');
     });
 
-    it('ascendant should have valid zodiac sign', () => {
-      const result = calculateAscendantMC(validBirthData);
-      expect(result.ascendant.sign).toBeDefined();
-      expect(result.ascendant.sign.id).toBeDefined();
-      const validSign = ZODIAC_SIGNS.find(s => s.id === result.ascendant.sign.id);
-      expect(validSign).toBeDefined();
-    });
+    it('上升点与中天的星座都应来自 ZODIAC_SIGNS 且度数合法', () => {
+      const { ascendant, midheaven } = calculateAscendantMC(validBirthData);
 
-    it('midheaven should have valid zodiac sign', () => {
-      const result = calculateAscendantMC(validBirthData);
-      expect(result.midheaven.sign).toBeDefined();
-      expect(result.midheaven.sign.id).toBeDefined();
-      const validSign = ZODIAC_SIGNS.find(s => s.id === result.midheaven.sign.id);
-      expect(validSign).toBeDefined();
+      [ascendant, midheaven].forEach(point => {
+        const validSign = ZODIAC_SIGNS.find(s => s.id === point.sign.id);
+        expect(validSign).toBeDefined();
+        expect(point.sign.name).toBe(validSign.name);
+        expect(point.degree).toBeGreaterThanOrEqual(0);
+        expect(point.degree).toBeLessThan(30);
+      });
     });
 
     it('ascendant longitude should be 0-360', () => {
@@ -236,27 +230,16 @@ describe('Astrology Calculations', () => {
       });
     });
 
-    it('each house longitude should be 0-360', () => {
+    it('每宫的黄经、度数与星座都应合法', () => {
       const houses = calculateHouses(ascendant);
+      const signIds = ZODIAC_SIGNS.map(sign => sign.id);
+
       houses.forEach(house => {
         expect(house.longitude).toBeGreaterThanOrEqual(0);
         expect(house.longitude).toBeLessThan(360);
-      });
-    });
-
-    it('each house degree should be 0-30', () => {
-      const houses = calculateHouses(ascendant);
-      houses.forEach(house => {
         expect(house.degree).toBeGreaterThanOrEqual(0);
         expect(house.degree).toBeLessThan(30);
-      });
-    });
-
-    it('each house sign should be valid zodiac sign', () => {
-      const houses = calculateHouses(ascendant);
-      houses.forEach(house => {
-        const validSign = ZODIAC_SIGNS.find(s => s.id === house.sign.id);
-        expect(validSign).toBeDefined();
+        expect(signIds).toContain(house.sign.id);
       });
     });
 
@@ -296,17 +279,13 @@ describe('Astrology Calculations', () => {
       });
     });
 
-    it('exact should be boolean', () => {
+    it('orb 非负，且 exact 与 orb <= 2 的判定一致', () => {
       const chart = calculateAstrologyChart(validBirthData);
-      chart.aspects.forEach(aspect => {
-        expect(typeof aspect.exact).toBe('boolean');
-      });
-    });
+      expect(chart.aspects.length).toBeGreaterThan(0);
 
-    it('orb should be non-negative', () => {
-      const chart = calculateAstrologyChart(validBirthData);
       chart.aspects.forEach(aspect => {
         expect(aspect.orb).toBeGreaterThanOrEqual(0);
+        expect(aspect.exact).toBe(aspect.orb <= 2);
       });
     });
 
@@ -342,7 +321,7 @@ describe('Astrology Calculations', () => {
   });
 
   describe('calculateAstrologyChart - full chart generation', () => {
-    it('should return complete chart structure', () => {
+    it('完整星盘结构：10 颗行星 / 12 宫 / 上升中天 / 相位 / 出生数据', () => {
       const chart = calculateAstrologyChart(validBirthData);
 
       expect(chart).toHaveProperty('planets');
@@ -351,27 +330,13 @@ describe('Astrology Calculations', () => {
       expect(chart).toHaveProperty('houses');
       expect(chart).toHaveProperty('aspects');
       expect(chart).toHaveProperty('birthData');
-    });
-
-    it('should return 10 planets', () => {
-      const chart = calculateAstrologyChart(validBirthData);
       expect(chart.planets).toHaveLength(10);
-    });
-
-    it('should return 12 houses', () => {
-      const chart = calculateAstrologyChart(validBirthData);
       expect(chart.houses).toHaveLength(12);
-    });
-
-    it('should include sun, moon, and outer planets', () => {
-      const chart = calculateAstrologyChart(validBirthData);
-      const planetIds = chart.planets.map(p => p.id);
-
-      expect(planetIds).toContain('sun');
-      expect(planetIds).toContain('moon');
-      expect(planetIds).toContain('jupiter');
-      expect(planetIds).toContain('saturn');
-      expect(planetIds).toContain('pluto');
+      expect(chart.houseSystem).toBe('equal');
+      expect(chart.birthData).toEqual(validBirthData);
+      expect(chart.planets.map(p => p.id)).toEqual(
+        expect.arrayContaining(['sun', 'moon', 'jupiter', 'saturn', 'pluto'])
+      );
     });
 
     it('each planet should have required fields', () => {
@@ -406,11 +371,6 @@ describe('Astrology Calculations', () => {
       expect(house).toHaveProperty('name');
       expect(house).toHaveProperty('longitude');
       expect(house).toHaveProperty('sign');
-    });
-
-    it('should return birthData in result', () => {
-      const chart = calculateAstrologyChart(validBirthData);
-      expect(chart.birthData).toEqual(validBirthData);
     });
 
     it('different dates should produce different charts', () => {
@@ -455,38 +415,36 @@ describe('Astrology Calculations', () => {
     });
   });
 
-  describe('normalizeAngle edge cases', () => {
-    it('angle of exactly 0 should return 0', () => {
-      calculateAstrologyChart({ ...validBirthData, day: 10 });
-      const ascendant = calculateAscendantMC({ ...validBirthData, day: 10 });
-      expect(ascendant.ascendant.longitude).toBeGreaterThanOrEqual(0);
-    });
-
-    it('angle of exactly 360 should return 0', () => {
+  describe('角度归一化', () => {
+    it('所有黄经都应是 [0,360) 内的有限数', () => {
       const chart = calculateAstrologyChart(validBirthData);
-      expect(chart.ascendant.longitude).toBeLessThan(360);
-    });
+      const longitudes = [
+        ...chart.planets.map(planet => planet.longitude),
+        chart.ascendant.longitude,
+        chart.midheaven.longitude,
+        ...chart.houses.map(house => house.longitude)
+      ];
 
-    it('negative angle should be normalized', () => {
-      const chart = calculateAstrologyChart(validBirthData);
-      chart.houses.forEach(house => {
-        expect(house.longitude).toBeGreaterThanOrEqual(0);
+      expect(longitudes).toHaveLength(24);
+      longitudes.forEach(longitude => {
+        expect(Number.isFinite(longitude)).toBe(true);
+        expect(longitude).toBeGreaterThanOrEqual(0);
+        expect(longitude).toBeLessThan(360);
       });
     });
   });
 
   describe('zodiac boundary conditions', () => {
-    it('longitude of 0 should be Aries 0°', () => {
+    it('星座与度数必须与黄经一致，且行星分布在多个星座', () => {
       const planets = calculatePlanets(validBirthData);
-      const planet = planets[0];
-      expect(planet.longitude).toBeGreaterThanOrEqual(0);
-      expect(planet.longitude).toBeLessThan(360);
-    });
 
-    it('all 12 zodiac signs should be represented across planets', () => {
-      const planets = calculatePlanets(validBirthData);
-      const signIds = [...new Set(planets.map(p => p.sign.id))];
-      expect(signIds.length).toBeGreaterThan(1);
+      planets.forEach(planet => {
+        expect(planet.sign.id).toBe(ZODIAC_SIGNS[Math.floor(planet.longitude / 30)].id);
+        expect(planet.degree).toBeCloseTo(planet.longitude % 30, 6);
+      });
+
+      const signIds = new Set(planets.map(planet => planet.sign.id));
+      expect(signIds.size).toBeGreaterThan(1);
     });
   });
 
@@ -531,11 +489,137 @@ describe('Astrology Calculations', () => {
     });
   });
 
-  describe('error handling', () => {
-    it('should handle when planet body is not found (null body)', () => {
-      const planets = calculatePlanets(validBirthData);
-      const sun = planets.find(p => p.id === 'sun');
-      expect(sun.longitude).toBeGreaterThan(0);
+  // 回归用例：修复「时区被重复计入」和「上升点公式错误」时补的断言。
+  // 之前的实现把目标时区偏移算了两遍，而且上升点几乎不随时间变化，老测试只断言
+  // “有值、大于 0”，所以一直没暴露。
+  describe('时间换算正确性（回归）', () => {
+    const observer = { latitude: 31.2304, longitude: 121.4737 };
+    // 同一时刻的三种写法：2000-08-16 14:30 CST = 06:30 UTC = 02:30 EDT
+    const shanghai = { year: 2000, month: 8, day: 16, hour: 14, minute: 30, timezone: 'Asia/Shanghai', ...observer };
+    const utc = { year: 2000, month: 8, day: 16, hour: 6, minute: 30, timezone: 'UTC', ...observer };
+    const newYork = { year: 2000, month: 8, day: 16, hour: 2, minute: 30, timezone: 'America/New_York', ...observer };
+
+    const sunLongitude = (data) =>
+      calculatePlanets(data).find(p => p.id === 'sun').longitude;
+
+    const referenceSunLongitude = (utcIso) =>
+      Ecliptic(GeoVector(Body.Sun, new AstroTime(new Date(utcIso)), true)).elon;
+
+    it('createAstroTime 应把出生地墙上时间换算成正确的 UTC 时刻', () => {
+      expect(createAstroTime(shanghai).date.toISOString()).toBe('2000-08-16T06:30:00.000Z');
+      expect(createAstroTime(utc).date.toISOString()).toBe('2000-08-16T06:30:00.000Z');
+      expect(createAstroTime(newYork).date.toISOString()).toBe('2000-08-16T06:30:00.000Z');
+    });
+
+    it('同一时刻的不同时区写法必须得到相同的行星位置', () => {
+      expect(sunLongitude(shanghai)).toBeCloseTo(sunLongitude(utc), 6);
+      expect(sunLongitude(newYork)).toBeCloseTo(sunLongitude(utc), 6);
+    });
+
+    it('太阳黄经应与 astronomy-engine 参考值一致（误差 < 0.01°）', () => {
+      expect(sunLongitude(shanghai)).toBeCloseTo(referenceSunLongitude('2000-08-16T06:30:00Z'), 2);
+    });
+
+    it('应正确处理历史夏令时（中国 1986-1991 年夏季为 UTC+9）', () => {
+      const data = { year: 1990, month: 6, day: 15, hour: 14, minute: 30, timezone: 'Asia/Shanghai', ...observer };
+      // 1990-06-15 中国在夏令时期间：14:30 本地 = 05:30 UTC（不是 06:30）
+      expect(createAstroTime(data).date.toISOString()).toBe('1990-06-15T05:30:00.000Z');
+      expect(sunLongitude(data)).toBeCloseTo(referenceSunLongitude('1990-06-15T05:30:00Z'), 2);
+    });
+  });
+
+  describe('上升点与宫位（回归）', () => {
+    const base = { year: 2000, month: 8, day: 16, hour: 14, minute: 30, timezone: 'Asia/Shanghai' };
+    const observer = { latitude: 31.2304, longitude: 121.4737 };
+    const DEG = Math.PI / 180;
+
+    const ascendantAt = (hour, extra = {}) =>
+      calculateAscendantMC({ ...base, hour, ...observer, ...extra }).ascendant.longitude;
+
+    it('上升点应随出生时间显著转动（约 10-20°/小时）', () => {
+      // 修复前 18 小时只转 0.74°，这里用 6 小时做界限即可判定回归
+      const diff = ((ascendantAt(6) - ascendantAt(0)) + 360) % 360;
+      expect(diff).toBeGreaterThan(60);
+      expect(diff).toBeLessThan(120);
+    });
+
+    it('未填经纬度时使用默认观测点并标记 assumed', () => {
+      const assumed = calculateAscendantMC(base);
+      expect(assumed.observer.assumed).toBe(true);
+      expect(assumed.observer.latitude).toBeCloseTo(DEFAULT_OBSERVER.latitude, 6);
+
+      const explicit = calculateAscendantMC({ ...base, ...DEFAULT_OBSERVER });
+      expect(explicit.observer.assumed).toBe(false);
+      expect(explicit.ascendant.longitude).toBeCloseTo(assumed.ascendant.longitude, 6);
+    });
+
+    it('上升点应随出生地经纬度变化', () => {
+      const shanghai = calculateAscendantMC({ ...base, ...observer }).ascendant.longitude;
+      const beijing = calculateAscendantMC({ ...base, latitude: 39.9042, longitude: 116.4074 });
+      expect(beijing.observer.latitude).toBeCloseTo(39.9042, 4);
+      expect(Math.abs(beijing.ascendant.longitude - shanghai)).toBeGreaterThan(1);
+    });
+
+    it('上升点应落在东地平线上（球面条件自检，与闭式公式互为独立验证）', () => {
+      const data = { ...base, ...observer };
+      const time = createAstroTime(data);
+      const localSiderealDegrees = (SiderealTime(time) * 15 + observer.longitude) % 360;
+      const lambda = calculateAscendantMC(data).ascendant.longitude * DEG;
+      const eps = OBLIQUITY_DEGREES * DEG;
+      const phi = observer.latitude * DEG;
+
+      const alpha = Math.atan2(Math.sin(lambda) * Math.cos(eps), Math.cos(lambda));
+      const delta = Math.asin(Math.sin(lambda) * Math.sin(eps));
+      const sinAltitude = Math.sin(phi) * Math.sin(delta) +
+        Math.cos(phi) * Math.cos(delta) * Math.cos(localSiderealDegrees * DEG - alpha);
+
+      expect(Math.abs(sinAltitude)).toBeLessThan(1e-3);
+
+      const hourAngle = ((localSiderealDegrees * DEG - alpha + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+      expect(hourAngle).toBeLessThan(0); // 负时角 = 东侧上升，而不是西沉
+    });
+
+    it('宫位是等宫制：第一宫等于上升点，每宫相差 30°', () => {
+      const chart = calculateAstrologyChart({ ...base, ...observer });
+      expect(chart.houseSystem).toBe(HOUSE_SYSTEM);
+      expect(chart.houses).toHaveLength(12);
+      expect(chart.houses[0].longitude).toBeCloseTo(chart.ascendant.longitude, 6);
+      chart.houses.forEach((house, index) => {
+        expect(house.longitude).toBeCloseTo((chart.ascendant.longitude + index * 30) % 360, 6);
+      });
+    });
+
+    it('calculateHouses 接受裸黄经', () => {
+      const houses = calculateHouses(123.45);
+      expect(houses).toHaveLength(12);
+      expect(houses[0].longitude).toBeCloseTo(123.45, 6);
+      expect(() => calculateHouses(undefined)).toThrow(/上升点/);
+    });
+  });
+
+  describe('输入校验（回归）', () => {
+    it('不存在的日期应报错，而不是被 Date 静默进位', () => {
+      expect(() => calculatePlanets({ year: 2021, month: 2, day: 30, hour: 12, minute: 0 }))
+        .toThrow(/不存在/);
+    });
+
+    it('越界的时间应报错', () => {
+      expect(() => calculatePlanets({ year: 2000, month: 1, day: 1, hour: 25, minute: 0 }))
+        .toThrow(/小时/);
+      expect(() => calculatePlanets({ year: 2000, month: 1, day: 1, hour: 1, minute: 61 }))
+        .toThrow(/分钟/);
+    });
+
+    it('缺字段与非法时区应报错', () => {
+      expect(() => calculatePlanets({ year: 2000, month: 1 })).toThrow(/不完整/);
+      expect(() => calculatePlanets({ year: 2000, month: 1, day: 1, hour: 1, minute: 1, timezone: 'Not/AZone' }))
+        .toThrow(/时区/);
+    });
+
+    it('越界的经纬度应报错', () => {
+      const data = { year: 2000, month: 1, day: 1, hour: 1, minute: 1, timezone: 'UTC' };
+      expect(() => calculateAscendantMC({ ...data, latitude: 999 })).toThrow(/纬度/);
+      expect(() => calculateAscendantMC({ ...data, longitude: 999 })).toThrow(/经度/);
     });
   });
 });

@@ -7,8 +7,8 @@ global.fetch = mockFetch;
 
 describe('getAIZiweiInterpretation branches', () => {
   beforeEach(() => {
-    localStorage.removeItem('minimax_api_key');
-    localStorage.setItem('ai_provider', 'minimax');
+    localStorage.removeItem('deepseek_api_key');
+    localStorage.setItem('ai_provider', 'deepseek');
     mockFetch.mockReset();
   });
 
@@ -22,11 +22,11 @@ describe('getAIZiweiInterpretation branches', () => {
         birthdayType: 'solar',
         language: 'zh'
       };
-      await expect(getAIZiweiInterpretation(birthData)).rejects.toThrow('请先在设置中配置 MiniMax API Key');
+      await expect(getAIZiweiInterpretation(birthData)).rejects.toThrow('请先在设置中配置 DeepSeek API Key');
     });
 
     it('should throw when API key format is invalid (not sk- or eyJ)', async () => {
-      localStorage.setItem('minimax_api_key', 'invalid-key-format');
+      localStorage.setItem('deepseek_api_key', 'invalid-key-format');
       const { getAIZiweiInterpretation } = api;
       const birthData = {
         birthday: '1990-01-01',
@@ -41,7 +41,7 @@ describe('getAIZiweiInterpretation branches', () => {
 
   describe('Network error branches', () => {
     it('should throw network error when fetch fails', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockRejectedValue(new Error('Network failure'));
       const { getAIZiweiInterpretation } = api;
       const birthData = {
@@ -57,7 +57,7 @@ describe('getAIZiweiInterpretation branches', () => {
 
   describe('HTTP error branches', () => {
     it('should handle 401 error', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: false,
         status: 401,
@@ -71,11 +71,11 @@ describe('getAIZiweiInterpretation branches', () => {
         birthdayType: 'solar',
         language: 'zh'
       };
-      await expect(getAIZiweiInterpretation(birthData)).rejects.toThrow('MiniMax API Key 无效或已过期，请检查设置');
+      await expect(getAIZiweiInterpretation(birthData)).rejects.toThrow('DeepSeek API Key 无效或已过期，请检查设置');
     });
 
     it('should handle 403 error', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: false,
         status: 403,
@@ -93,7 +93,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should handle 429 error', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: false,
         status: 429,
@@ -111,7 +111,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should handle 500 error', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
@@ -125,11 +125,11 @@ describe('getAIZiweiInterpretation branches', () => {
         birthdayType: 'solar',
         language: 'zh'
       };
-      await expect(getAIZiweiInterpretation(birthData)).rejects.toThrow('MiniMax 服务器繁忙，请稍后重试');
+      await expect(getAIZiweiInterpretation(birthData)).rejects.toThrow('DeepSeek 服务器繁忙，请稍后重试');
     });
 
     it('should use error body message when available', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: false,
         status: 400,
@@ -149,7 +149,7 @@ describe('getAIZiweiInterpretation branches', () => {
 
   describe('Response parsing branches', () => {
     it('should throw when JSON parsing fails', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => { throw new Error('Invalid JSON'); }
@@ -166,7 +166,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should throw when API returns base_resp with error status', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -185,7 +185,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should throw when choices is missing', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ base_resp: { status_code: 0 } })
@@ -202,7 +202,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should throw when choices is empty array', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ base_resp: { status_code: 0 }, choices: [] })
@@ -219,7 +219,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should throw when choice has no finish_reason and no messages', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ base_resp: { status_code: 0 }, choices: [{}] })
@@ -236,7 +236,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should throw when content extraction fails (no recognized field)', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -257,7 +257,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should throw when AI returns whitespace-only content', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -279,7 +279,7 @@ describe('getAIZiweiInterpretation branches', () => {
 
   describe('Successful response branches', () => {
     it('should return content from message.content', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -300,7 +300,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should return content from messages array', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -327,7 +327,7 @@ describe('getAIZiweiInterpretation branches', () => {
     });
 
     it('should use ziweiData when provided', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -354,8 +354,8 @@ describe('getAIZiweiInterpretation branches', () => {
 
 describe('getAIAstrologyInterpretation branches', () => {
   beforeEach(() => {
-    localStorage.removeItem('minimax_api_key');
-    localStorage.setItem('ai_provider', 'minimax');
+    localStorage.removeItem('deepseek_api_key');
+    localStorage.setItem('ai_provider', 'deepseek');
     mockFetch.mockReset();
   });
 
@@ -368,13 +368,13 @@ describe('getAIAstrologyInterpretation branches', () => {
         midheaven: { sign: { name: 'Capricorn' } },
         birthData: { year: 1990, month: 1, day: 1, hour: 12, minute: 0 }
       };
-      await expect(getAIAstrologyInterpretation(chartData)).rejects.toThrow('请先在设置中配置 MiniMax API Key');
+      await expect(getAIAstrologyInterpretation(chartData)).rejects.toThrow('请先在设置中配置 DeepSeek API Key');
     });
   });
 
   describe('Network error branches', () => {
     it('should throw network error when fetch fails', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockRejectedValue(new Error('Network failure'));
       const { getAIAstrologyInterpretation } = api;
       const chartData = {
@@ -389,7 +389,7 @@ describe('getAIAstrologyInterpretation branches', () => {
 
   describe('HTTP error branches', () => {
     it('should handle 401 error', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: false,
         status: 401,
@@ -402,11 +402,11 @@ describe('getAIAstrologyInterpretation branches', () => {
         midheaven: { sign: { name: 'Capricorn' } },
         birthData: { year: 1990, month: 1, day: 1, hour: 12, minute: 0 }
       };
-      await expect(getAIAstrologyInterpretation(chartData)).rejects.toThrow('MiniMax API Key 无效或已过期，请检查设置');
+      await expect(getAIAstrologyInterpretation(chartData)).rejects.toThrow('DeepSeek API Key 无效或已过期，请检查设置');
     });
 
     it('should handle 500 error', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
@@ -419,11 +419,11 @@ describe('getAIAstrologyInterpretation branches', () => {
         midheaven: { sign: { name: 'Capricorn' } },
         birthData: { year: 1990, month: 1, day: 1, hour: 12, minute: 0 }
       };
-      await expect(getAIAstrologyInterpretation(chartData)).rejects.toThrow('MiniMax 服务器繁忙，请稍后重试');
+      await expect(getAIAstrologyInterpretation(chartData)).rejects.toThrow('DeepSeek 服务器繁忙，请稍后重试');
     });
 
     it('should use error body message when available', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: false,
         status: 400,
@@ -442,7 +442,7 @@ describe('getAIAstrologyInterpretation branches', () => {
 
   describe('Response parsing branches', () => {
     it('should throw when choices is missing', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({})
@@ -458,7 +458,7 @@ describe('getAIAstrologyInterpretation branches', () => {
     });
 
     it('should throw when choices is empty array', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ choices: [] })
@@ -474,7 +474,7 @@ describe('getAIAstrologyInterpretation branches', () => {
     });
 
     it('should throw when AI returns empty content', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -494,7 +494,7 @@ describe('getAIAstrologyInterpretation branches', () => {
 
   describe('Successful response branches', () => {
     it('should return content from message.content', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -513,7 +513,7 @@ describe('getAIAstrologyInterpretation branches', () => {
     });
 
     it('should handle English language parameter', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({

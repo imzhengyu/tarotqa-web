@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import PoofNavLink from '../../components/common/PoofNavLink';
+
+const LocationDisplay = () => {
+  const location = useLocation();
+  return <div data-testid="location">{location.pathname}</div>;
+};
 
 describe('PoofNavLink', () => {
   let originalDispatchEvent;
@@ -111,31 +116,23 @@ describe('PoofNavLink', () => {
   });
 
   describe('Navigation Behavior', () => {
-    it('should not navigate immediately on click (due to poof delay)', () => {
+    // 回归：原来这里是两条用例，一条只断言"还在首页"、另一条连断言都没有。
+    // 现在直接断言导航结果：点击时先不跳，poof 动画（600ms）结束后跳到目标路由。
+    it('点击先不跳转，动画结束后跳到目标路由', async () => {
       render(
         <MemoryRouter initialEntries={['/']}>
-          <PoofNavLink to="/divination" delay={600}>Go to Divination</PoofNavLink>
-          <div>Current: /</div>
+          <PoofNavLink to="/divination">Go to Divination</PoofNavLink>
+          <LocationDisplay />
         </MemoryRouter>
       );
 
       fireEvent.click(screen.getByRole('link'));
+      expect(screen.getByTestId('location')).toHaveTextContent('/');
 
-      // Should still be on home page (navigate not called yet due to delay)
-      expect(screen.getByText('Current: /')).toBeInTheDocument();
-    });
-
-    it('should call navigate after delay', async () => {
-      render(
-        <MemoryRouter>
-          <PoofNavLink to="/divination" delay={100}>Go to Divination</PoofNavLink>
-        </MemoryRouter>
+      await waitFor(
+        () => expect(screen.getByTestId('location')).toHaveTextContent('/divination'),
+        { timeout: 2000 }
       );
-
-      fireEvent.click(screen.getByRole('link'));
-
-      // Wait for the delay to pass
-      await new Promise(resolve => setTimeout(resolve, 150));
     });
   });
 

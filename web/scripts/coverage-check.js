@@ -18,9 +18,17 @@ const THRESHOLDS = {
   lines: 80
 };
 
+// --no-run：只读取已有报告，不重复跑一遍测试（CI 里已经跑过 vitest --coverage）。
+// 本机是老机器，重复跑一次覆盖率会白花 40s+ 且不受 worker 上限约束。
+const SKIP_RUN = process.argv.includes('--no-run');
+
 function runTests() {
+  if (SKIP_RUN) {
+    console.log('跳过测试执行（--no-run）：直接读取已有的覆盖率报告\n');
+    return;
+  }
   console.log('Running tests with coverage...\n');
-  execSync('pnpm vitest run --coverage', {
+  execSync('pnpm vitest run --coverage --minWorkers=1 --maxWorkers=3', {
     encoding: 'utf-8',
     cwd: WEB_ROOT,
     stdio: 'inherit'

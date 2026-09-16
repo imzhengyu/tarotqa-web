@@ -3,7 +3,7 @@ import BirthInfoForm from '../../components/common/BirthInfoForm';
 import DisclaimerModal from '../../components/common/DisclaimerModal';
 import DelayedPoofButton from '../../components/common/DelayedPoofButton';
 import MarkdownSection from '../../components/common/MarkdownSection';
-import { StarIcon, SparkleEffect, ConstellationPattern } from '../../components/common/DecorativeElements';
+import Icon from '../../components/common/Icons';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
 import { useDevice } from '../../hooks/useDevice';
@@ -11,7 +11,7 @@ import { calculateAstrologyChart } from '../../utils/astrology/calculations';
 import { ZODIAC_SIGNS, PLANETS, PLANET_COLORS } from '../../utils/astrology/constants';
 import { useLanguage } from '../../context/LanguageContext';
 import { ASTROLOGY_CHART } from '../../constants';
-import { exportToPNG } from '../../utils/export';
+import { exportMarkdownToPdf } from '../../utils/exportPdf';
 import { formatTimestamp } from '../../utils/date';
 import api from '../../services/api';
 import './AstrologyChart.css';
@@ -27,6 +27,15 @@ export const generateAstrologyFilename = (birthData) => {
   const dateStr = `${year}${pad(month)}${pad(day)}`;
   const timeStr = `${pad(hour)}${pad(minute)}`;
   return `astrology-${dateStr}_${timeStr}-${formatTimestamp()}`;
+};
+
+/** 把观测点格式化成 121.47°E / 31.23°N 这样的可读文本 */
+export const formatObserverLocation = (observer) => {
+  if (!observer) return '';
+  const { longitude, latitude } = observer;
+  const lon = `${Math.abs(longitude).toFixed(2)}°${longitude >= 0 ? 'E' : 'W'}`;
+  const lat = `${Math.abs(latitude).toFixed(2)}°${latitude >= 0 ? 'N' : 'S'}`;
+  return `${lon} / ${lat}`;
 };
 
 const {
@@ -61,7 +70,7 @@ function AstrologyChart() {
     showCooldownToast,
     startCooldownTimer,
     startCooldown
-  } = useAIRequestCooldown('ai_astrology_cooldown_end');
+  } = useAIRequestCooldown();
 
   const handleBirthDataChange = useCallback((data) => {
     setBirthData(data);
@@ -184,7 +193,7 @@ function AstrologyChart() {
               y={sign.y}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill="#D4AF37"
+              fill="var(--accent-ink)"
               fontSize="20"
               style={{ userSelect: 'none' }}
             >
@@ -239,7 +248,7 @@ function AstrologyChart() {
             <text
               x={CENTER + 5}
               y={CENTER - 5}
-              fill="#D4AF37"
+              fill="var(--accent-ink)"
               fontSize="12"
               textAnchor="middle"
             >
@@ -248,7 +257,7 @@ function AstrologyChart() {
             <text
               x={CENTER + 5}
               y={CENTER + 15}
-              fill="#D4AF37"
+              fill="var(--accent-ink)"
               fontSize="10"
               textAnchor="middle"
             >
@@ -310,6 +319,7 @@ function AstrologyChart() {
             value={birthData}
             onChange={handleBirthDataChange}
             showGender={false}
+            showLocation={true}
           />
           <DelayedPoofButton
             className="btn btn-primary generate-btn"
@@ -353,19 +363,18 @@ function AstrologyChart() {
         {chartData ? (
           <>
             <div className="chartWrapper">
-              <div className="chartDecorations">
-                <StarIcon size={18} className="chartStar star1" />
-                <StarIcon size={14} className="chartStar star2" />
-                <StarIcon size={16} className="chartStar star3" />
-                <StarIcon size={12} className="chartStar star4" />
-                <SparkleEffect size={40} intensity={0.5} className="chartSparkle sparkle1" />
-                <SparkleEffect size={35} intensity={0.4} className="chartSparkle sparkle2" />
-                <ConstellationPattern stars={4} size={45} className="chartConstellation" />
-              </div>
               <div className="chart-container">
                 {renderChart()}
               </div>
             </div>
+            {chartData.observer?.assumed && (
+              <p className="observer-note">
+                {t(
+                  `上升点与宫位按默认出生地（${formatObserverLocation(chartData.observer)}）估算，填写出生地经纬度可提高精度。`,
+                  `Ascendant and houses assume a default birthplace (${formatObserverLocation(chartData.observer)}). Fill in the birth coordinates for higher accuracy.`
+                )}
+              </p>
+            )}
             {birthData && (
               <div className="ai-action">
                 <button
@@ -392,10 +401,13 @@ function AstrologyChart() {
                 <div className="ai-export-section">
                   <button
                     className="btn btn-secondary export-ai-btn"
-                    onClick={() => exportToPNG('astrology-ai-result', generateAstrologyFilename(birthData))}
-                    title={t('输出PNG图片', 'Export as PNG')}
+                    onClick={() => exportMarkdownToPdf(aiInterpretation, generateAstrologyFilename(birthData), {
+                      title: t('西方星盘 · AI 解读', 'Western Astrology · AI Analysis'),
+                      subtitle: `${birthData?.year}-${String(birthData?.month).padStart(2, '0')}-${String(birthData?.day).padStart(2, '0')} ${String(birthData?.hour).padStart(2, '0')}:${String(birthData?.minute).padStart(2, '0')}`
+                    })}
+                    title={t('导出 PDF', 'Export as PDF')}
                   >
-                    📥 {t('导出分析结果', 'Export Analysis')}
+                    <Icon name="download" size={16} /> {t('导出 PDF', 'Export as PDF')}
                   </button>
                 </div>
               </>

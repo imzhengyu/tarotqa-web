@@ -4,8 +4,8 @@
 }
 
 .export-menu-trigger {
-  background: rgba(212, 175, 55, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 16px;
@@ -14,7 +14,7 @@
 }
 
 .export-menu-trigger:hover {
-  background: rgba(212, 175, 55, 0.3);
+  background: var(--accent-soft);
   transform: scale(1.05);
 }
 
@@ -29,7 +29,7 @@
   right: 0;
   margin-top: 8px;
   background: rgba(30, 20, 50, 0.95);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px;
   min-width: 160px;
@@ -55,7 +55,7 @@
 }
 
 .export-menu-item:hover {
-  background: rgba(212, 175, 55, 0.2);
+  background: var(--accent-soft);
 }
 
 .export-icon {

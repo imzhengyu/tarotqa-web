@@ -17,8 +17,8 @@
 }
 
 .stat-card {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-soft));
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px 12px;
   text-align: center;
@@ -49,8 +49,8 @@
 
 /* Recent Records */
 .recent-records {
-  background: rgba(26, 15, 46, 0.5);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 20px;
@@ -84,12 +84,12 @@
 .records-header {
   color: var(--color-text-secondary);
   font-size: 12px;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 1px solid var(--border);
 }
 
 .records-row {
   color: var(--color-text);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 
 .records-row:last-child {
@@ -137,8 +137,8 @@
   width: 48px;
   height: 48px;
   border-radius: 8px;
-  background: rgba(45, 27, 78, 0.9);
-  border: 2px solid rgba(212, 175, 55, 0.5);
+  background: var(--surface-raised);
+  border: 2px solid var(--border-strong);
   color: var(--color-secondary);
   cursor: pointer;
   z-index: 999;
@@ -150,7 +150,7 @@
 }
 
 .back-to-top:hover {
-  background: rgba(45, 27, 78, 1);
+  background: var(--surface);
   transform: translateY(-3px);
   border-color: var(--color-secondary);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
@@ -161,8 +161,8 @@
   position: absolute;
   bottom: 56px;
   right: 0;
-  background: rgba(45, 27, 78, 0.95);
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
   color: var(--color-secondary);
   font-size: 12px;
   padding: 4px 10px;

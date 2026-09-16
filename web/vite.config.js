@@ -1,15 +1,21 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { version } from './package.json';
 
-export default defineConfig({
-  plugins: [react()],
-  define: {
+export default defineConfig(({ mode }) => {
+  // 默认 Key 从环境变量注入：CI 用 GitHub secret，本地由 web/.env.local 提供
+  // （vite.config 里的 process.env 不含 .env 文件，必须显式 loadEnv）
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  const defaultApiKey = env.VITE_TAROT_DEEPSEEK_API_KEY || process.env.VITE_TAROT_DEEPSEEK_API_KEY || '';
+
+  return {
+    plugins: [react()],
+    define: {
     __APP_VERSION__: JSON.stringify(version),
     __GIT_SHA__: JSON.stringify(process.env.VITE_GIT_SHA || 'local'),
-    'import.meta.env.VITE_DEFAULT_API_KEY': JSON.stringify(process.env.VITE_DEFAULT_API_KEY || '')
-  },
-  server: {
+      'import.meta.env.VITE_DEFAULT_API_KEY': JSON.stringify(defaultApiKey)
+    },
+    server: {
     port: 3001,
     proxy: {
       '/api': {
@@ -18,8 +24,11 @@ export default defineConfig({
       }
     }
   },
-  base: './',
-  build: {
+    // 部署基准：自定义域名（tarot.goodvibez.cn）在根目录 → '/'；
+    // 若改用 github.io/tarotqa-web/ 这种子路径，构建时设 VITE_BASE=/tarotqa-web/ 即可。
+    // 用绝对基准能同时解决"深层路由相对资源 404（白屏）"和"public 下字体路径"两个问题。
+    base: process.env.VITE_BASE || '/',
+    build: {
     outDir: '../dist',
     emptyOutDir: true,
     sourcemap: false,
@@ -37,5 +46,6 @@ export default defineConfig({
         }
       }
     }
-  }
+    }
+  };
 });

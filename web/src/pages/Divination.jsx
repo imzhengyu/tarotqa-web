@@ -3,9 +3,9 @@ import TarotCard from '../components/TarotCard';
 import DisclaimerModal from '../components/common/DisclaimerModal';
 import DelayedPoofButton from '../components/common/DelayedPoofButton';
 import MarkdownSection from '../components/common/MarkdownSection';
-import { StarIcon, SparkleEffect, OrbGlow } from '../components/common/DecorativeElements';
+import Icon from '../components/common/Icons';
 import { useLanguage } from '../context/LanguageContext';
-import { exportToPNG } from '../utils/export';
+import { exportMarkdownToPdf } from '../utils/exportPdf';
 import { formatTimestamp } from '../utils/date';
 import api from '../services/api';
 import { spreads } from '../data/spreads';
@@ -53,12 +53,13 @@ function Divination() {
   const [lastRequest, setLastRequest] = useState(null);
   const [isShuffling, setIsShuffling] = useState(false);
   const [dealingCard, setDealingCard] = useState(null);
+  const [questionError, setQuestionError] = useState(null);
   const { showBackToTop, scrollToTop } = useBackToTop();
 
   // Visit stats tracking
   const { incrementQuestionCount } = useVisitStats();
 
-  const { aiCooldown, showCooldownToast, canMakeAIRequest, startCooldownTimer, startCooldown } = useAIRequestCooldown('ai_cooldown_end');
+  const { aiCooldown, showCooldownToast, canMakeAIRequest, startCooldownTimer, startCooldown } = useAIRequestCooldown();
 
   // Language context
   const { language, t } = useLanguage();
@@ -91,9 +92,10 @@ function Divination() {
 
   const handleStartQuestion = () => {
     if (!question.trim()) {
-      alert(t('请描述您的问题', 'Please describe your question'));
+      setQuestionError(t('请描述您的问题', 'Please describe your question'));
       return;
     }
+    setQuestionError(null);
     shuffleDeck();
     setDrawnCards([]);
     setCurrentDrawIndex(0);
@@ -139,12 +141,13 @@ function Divination() {
     setLastRequest(null);
     setIsShuffling(false);
     setDealingCard(null);
+    setQuestionError(null);
   };
 
   const handleAIInterpretation = async () => {
     // 检查速率限制
     if (!canMakeAIRequest()) {
-      const endTime = localStorage.getItem('ai_cooldown_end');
+      const endTime = localStorage.getItem(TIMING.AI_COOLDOWN_STORAGE_KEY);
       const remaining = endTime ? Math.max(0, Math.ceil((parseInt(endTime, 10) - Date.now()) / 1000)) : 0;
       setAiError(`请等待 ${remaining} 秒后再试`);
       return;
@@ -200,11 +203,11 @@ function Divination() {
   // 解析 AI 回复为分节格式（简化为直接返回整个内容）
   const parseInterpretation = (text) => {
     if (!text || typeof text !== 'string') {
-      return [{ title: t('综合解读', 'Comprehensive Analysis'), icon: '📖', content: String(text || '') }];
+      return [{ title: t('综合解读', 'Comprehensive Analysis'), icon: 'book', content: String(text || '') }];
     }
 
     // 直接将整个文本作为一个 section 返回，由 Markdown 渲染处理格式
-    return [{ title: t('综合解读', 'Comprehensive Analysis'), icon: '📖', content: text }];
+    return [{ title: t('综合解读', 'Comprehensive Analysis'), icon: 'book', content: text }];
   };
 
   if (loading) {
@@ -288,6 +291,9 @@ function Divination() {
               </span>
             </div>
           </div>
+          {questionError && (
+            <p className="question-error" role="alert">{questionError}</p>
+          )}
           <div className="deck-area">
             <div
               className={`deck ${isShuffling ? 'shuffling' : ''}`}
@@ -409,16 +415,6 @@ function Divination() {
           {aiInterpretation && (
             <>
               <div className="ai-interpretation" id="divination-ai-result">
-                <div className="interpretationDecorations">
-                  <OrbGlow size={100} className="interpOrb orbLeft" />
-                  <OrbGlow size={80} className="interpOrb orbRight" />
-                  <StarIcon size={20} className="interpStar starLeft1" />
-                  <StarIcon size={16} className="interpStar starLeft2" />
-                  <StarIcon size={18} className="interpStar starRight1" />
-                  <StarIcon size={14} className="interpStar starRight2" />
-                  <SparkleEffect size={50} intensity={0.6} className="interpSparkle sparkleLeft" />
-                  <SparkleEffect size={40} intensity={0.4} className="interpSparkle sparkleRight" />
-                </div>
                 <h3>
                   {t('AI 深度解读', 'AI Deep Analysis')}
                   {aiRequestDuration !== null && (
@@ -428,7 +424,7 @@ function Divination() {
 
                 <div className="interpretation-question">
                   <div className="question-label">
-                    <span>❓</span>
+                    <Icon name="question" size={16} />
                     <span>{t('您的提问', 'Your Question')}</span>
                 </div>
                 <p className="question-text">&ldquo;{question || t('无特定问题，希望了解整体运势', 'No specific question, hoping to learn about overall fortune')}&rdquo;</p>
@@ -441,7 +437,7 @@ function Divination() {
                 {parseInterpretation(aiInterpretation).map((section, idx) => (
                   <div key={idx} className="interpretation-section">
                     <div className="interpretation-section-title">
-                      <span>{section.icon || '📖'}</span>
+                      <Icon name={section.icon || 'book'} size={16} />
                       <span>{section.title || t('综合解读', 'Comprehensive Analysis')}</span>
                     </div>
                     <div className="interpretation-section-content">
@@ -454,10 +450,13 @@ function Divination() {
               <div className="ai-export-section">
                 <button
                   className="btn btn-secondary export-ai-btn"
-                  onClick={() => exportToPNG('divination-ai-result', generateTarotFilename(selectedSpread?.name, drawnCards.length))}
-                  title={t('输出PNG图片', 'Export as PNG')}
+                  onClick={() => exportMarkdownToPdf(aiInterpretation, generateTarotFilename(selectedSpread?.name, drawnCards.length), {
+                    title: t('塔罗占卜 · AI 深度解读', 'Tarot Reading · AI Analysis'),
+                    subtitle: `${selectedSpread?.name} · ${drawnCards.length} ${t('张牌', 'cards')} · ${new Date().toLocaleString()}`
+                  })}
+                  title={t('导出 PDF', 'Export as PDF')}
                 >
-                  📥 {t('导出分析结果', 'Export Analysis')}
+                  <Icon name="download" size={16} /> {t('导出 PDF', 'Export as PDF')}
                 </button>
               </div>
             </>

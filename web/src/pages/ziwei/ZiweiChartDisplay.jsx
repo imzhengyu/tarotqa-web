@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import { Iztrolabe } from 'react-iztro';
 import MarkdownSection from '../../components/common/MarkdownSection';
-import { StarIcon, SparkleEffect, OrbGlow } from '../../components/common/DecorativeElements';
-import { exportToPNG } from '../../utils/export';
+import Icon from '../../components/common/Icons';
+import { exportMarkdownToPdf } from '../../utils/exportPdf';
 
 const markdownPlugins = [
   { loader: () => import('markdown-it-multimd-table'), options: { multiline: true, header: true } }
@@ -26,14 +26,6 @@ export default function ZiweiChartDisplay({
       {birthData ? (
         <>
           <div className="chartWrapper">
-            <div className="chartDecorations">
-              <OrbGlow size={80} className="chartOrb orbLeft" />
-              <OrbGlow size={60} className="chartOrb orbRight" />
-              <StarIcon size={18} className="chartStar star1" />
-              <StarIcon size={14} className="chartStar star2" />
-              <StarIcon size={16} className="chartStar star3" />
-              <SparkleEffect size={45} intensity={0.5} className="chartSparkle" />
-            </div>
             <div className="chart-container">
               <Iztrolabe
                 birthday={birthdayStr}
@@ -78,10 +70,13 @@ export default function ZiweiChartDisplay({
               <div className="ai-export-section">
                 <button
                   className="btn btn-secondary export-ai-btn"
-                  onClick={() => exportToPNG('ziwei-ai-result', generateFilename(birthData))}
-                  title={t('输出PNG图片', 'Export as PNG')}
+                  onClick={() => exportMarkdownToPdf(aiInterpretation, generateFilename(birthData), {
+                    title: t('紫微斗数 · AI 解读', 'Ziwei Dou Shu · AI Analysis'),
+                    subtitle: birthData ? `${birthData.year}-${String(birthData.month).padStart(2, '0')}-${String(birthData.day).padStart(2, '0')}` : ''
+                  })}
+                  title={t('导出 PDF', 'Export as PDF')}
                 >
-                  📥 {t('导出分析结果', 'Export Analysis')}
+                  <Icon name="download" size={16} /> {t('导出 PDF', 'Export as PDF')}
                 </button>
               </div>
             </>

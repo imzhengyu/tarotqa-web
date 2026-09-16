@@ -25,12 +25,12 @@ class ErrorBoundary extends React.Component {
         <div style={{
           padding: '40px',
           textAlign: 'center',
-          color: '#F5F5F5',
-          background: 'linear-gradient(135deg, #1A0F2E 0%, #2D1B4E 100%)',
+          color: 'var(--text)',
+          background: 'linear-gradient(135deg, var(--bg) 0%, var(--bg-soft) 100%)',
           minHeight: '100vh'
         }}>
-          <h1 style={{ color: '#D4AF37', marginBottom: '20px' }}>出错了</h1>
-          <p style={{ color: '#B8A9C9', marginBottom: '24px' }}>
+          <h1 style={{ color: 'var(--error-ink)', marginBottom: '20px' }}>出错了</h1>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
             {this.state.error?.message || '发生了未知错误'}
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -38,10 +38,10 @@ class ErrorBoundary extends React.Component {
               onClick={this.handleReset}
               style={{
                 padding: '12px 24px',
-                background: '#4CAF50',
+                background: 'var(--primary)',
                 border: 'none',
                 borderRadius: '8px',
-                color: '#fff',
+                color: 'var(--on-primary)',
                 cursor: 'pointer',
                 fontSize: '14px'
               }}
@@ -50,10 +50,10 @@ class ErrorBoundary extends React.Component {
             </button>
             <Link to="/" style={{
               padding: '12px 24px',
-              background: '#D4AF37',
-              border: 'none',
+              background: 'var(--surface)',
+              border: '1px solid var(--border-strong)',
               borderRadius: '8px',
-              color: '#1A0F2E',
+              color: 'var(--primary-ink)',
               textDecoration: 'none',
               fontSize: '14px',
               display: 'inline-block'
@@ -65,9 +65,9 @@ class ErrorBoundary extends React.Component {
               style={{
                 padding: '12px 24px',
                 background: 'transparent',
-                border: '1px solid #D4AF37',
+                border: '1px solid var(--border-strong)',
                 borderRadius: '8px',
-                color: '#D4AF37',
+                color: 'var(--primary-ink)',
                 cursor: 'pointer',
                 fontSize: '14px'
               }}

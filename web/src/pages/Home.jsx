@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { StarIcon, SparkleEffect, ConstellationPattern, OrbGlow } from '../components/common/DecorativeElements';
+import Icon from '../components/common/Icons';
 import { useLanguage } from '../context/LanguageContext';
 import { useBackToTop } from '../hooks/useBackToTop';
 import './Home.css';
@@ -17,15 +17,8 @@ function Home() {
       )}
       {/* 塔罗占卜区块 */}
       <section className="service-block tarot-hero">
-        <div className="service-decoration">
-          <StarIcon size={28} className="decoStarSvg star1" />
-          <StarIcon size={22} className="decoStarSvg star2" />
-          <StarIcon size={18} className="decoStarSvg star3" />
-          <SparkleEffect size={50} intensity={0.4} className="decoSparkle" />
-          <ConstellationPattern stars={4} size={50} className="decoConstellation" />
-        </div>
         <div className="service-content">
-          <div className="service-icon">🎴</div>
+          <div className="service-icon"><Icon name="tarot" size={26} /></div>
           <div className="service-info">
             <h2 className="service-title">{t('塔罗占卜', 'Tarot Divination')}</h2>
             <p className="service-desc">
@@ -35,7 +28,7 @@ function Home() {
               <li>{t('78张塔罗牌详解', '78 Tarot Cards Details')}</li>
               <li>{t('多种牌阵可选', 'Multiple Spreads Available')}</li>
               <li>{t('AI智能解读分析', 'AI-Powered Analysis')}</li>
-              <li>{t('12星座每日运势', 'Daily Horoscope for 12 Signs')}</li>
+              <li>{t('正位/逆位牌义解读', 'Upright & Reversed Meanings')}</li>
             </ul>
           </div>
           <div className="service-action">
@@ -48,14 +41,8 @@ function Home() {
 
       {/* 紫微斗数区块 */}
       <section className="service-block ziwei-block">
-        <div className="serviceDecorationZiwei">
-          <OrbGlow size={60} className="decoOrb" />
-          <StarIcon size={20} className="decoStarSvg star4" />
-          <StarIcon size={16} className="decoStarSvg star5" />
-          <SparkleEffect size={40} intensity={0.3} className="decoSparkle ziweiSparkle" />
-        </div>
         <div className="service-content">
-          <div className="service-icon">🀄</div>
+          <div className="service-icon"><Icon name="ziwei" size={26} /></div>
           <div className="service-info">
             <h2 className="service-title">{t('紫微斗数', 'Ziwei Dou Shu')}</h2>
             <p className="service-desc">
@@ -78,15 +65,8 @@ function Home() {
 
       {/* 十二宫星盘区块 */}
       <section className="service-block astrology-block">
-        <div className="serviceDecorationAstrology">
-          <SparkleEffect size={60} intensity={0.5} className="decoSparkle astroSparkle" />
-          <StarIcon size={24} className="decoStarSvg star6" />
-          <StarIcon size={20} className="decoStarSvg star7" />
-          <StarIcon size={16} className="decoStarSvg star8" />
-          <ConstellationPattern stars={5} size={55} className="decoConstellation astroConstellation" />
-        </div>
         <div className="service-content">
-          <div className="service-icon">⭐</div>
+          <div className="service-icon"><Icon name="astro" size={26} /></div>
           <div className="service-info">
             <h2 className="service-title">{t('十二宫星盘', 'Western Astrology')}</h2>
             <p className="service-desc">

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useBackToTop } from '../../hooks/useBackToTop';
 
 describe('useBackToTop', () => {
@@ -70,21 +70,34 @@ describe('useBackToTop', () => {
     });
   });
 
-  describe('Returned API', () => {
-    it('should return showBackToTop and scrollToTop', () => {
+  // 回归：原来这 3 条只断言"是布尔/是函数"，跑过了也说明不了行为。
+  // 现在直接驱动滚动事件，验证阈值行为本身。
+  describe('滚动阈值行为', () => {
+    const scrollTo = (handler, y) => {
+      Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+      act(() => handler());
+    };
+
+    it('未超过阈值时不显示，超过阈值后显示', () => {
       const { result } = renderHook(() => useBackToTop());
-      expect(result.current).toHaveProperty('showBackToTop');
-      expect(result.current).toHaveProperty('scrollToTop');
+      const handler = addEventListenerMock.mock.calls[0][1];
+
+      scrollTo(handler, 400);
+      expect(result.current.showBackToTop).toBe(false);
+
+      scrollTo(handler, 1200);
+      expect(result.current.showBackToTop).toBe(true);
+
+      scrollTo(handler, 0);
+      expect(result.current.showBackToTop).toBe(false);
     });
 
-    it('showBackToTop should be a boolean', () => {
-      const { result } = renderHook(() => useBackToTop());
-      expect(typeof result.current.showBackToTop).toBe('boolean');
-    });
+    it('阈值可通过参数自定义', () => {
+      const { result } = renderHook(() => useBackToTop(100));
+      const handler = addEventListenerMock.mock.calls[0][1];
 
-    it('scrollToTop should be a function', () => {
-      const { result } = renderHook(() => useBackToTop());
-      expect(typeof result.current.scrollToTop).toBe('function');
+      scrollTo(handler, 150);
+      expect(result.current.showBackToTop).toBe(true);
     });
   });
 });

@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
+import { TIMING } from '../../constants';
+
+const COOLDOWN = TIMING.AI_COOLDOWN_SECONDS;
 
 describe('useAIRequestCooldown', () => {
   beforeEach(() => {
@@ -36,7 +39,7 @@ describe('useAIRequestCooldown', () => {
         result.current.startCooldown();
       });
 
-      expect(result.current.aiCooldown).toBe(5); // Debug TIMING.AI_COOLDOWN_SECONDS
+      expect(result.current.aiCooldown).toBe(COOLDOWN);
     });
 
     it('should set canMakeAIRequest to return false when in cooldown', () => {
@@ -56,13 +59,13 @@ describe('useAIRequestCooldown', () => {
         result.current.startCooldown();
       });
 
-      expect(result.current.aiCooldown).toBe(5);
+      expect(result.current.aiCooldown).toBe(COOLDOWN);
 
       act(() => {
         vi.advanceTimersByTime(1000);
       });
 
-      expect(result.current.aiCooldown).toBe(4);
+      expect(result.current.aiCooldown).toBe(COOLDOWN - 1);
     });
 
     it('should reset to 0 after cooldown expires', () => {
@@ -73,11 +76,19 @@ describe('useAIRequestCooldown', () => {
       });
 
       act(() => {
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(COOLDOWN * 1000);
       });
 
       expect(result.current.aiCooldown).toBe(0);
       expect(result.current.canMakeAIRequest()).toBe(true);
+    });
+  });
+
+  describe('冷却配置（回归）', () => {
+    it('全站统一冷却 10 秒（塔罗/紫微/星盘共用一个存储键），可被 VITE_AI_COOLDOWN_SECONDS 覆盖', () => {
+      expect(COOLDOWN).toBeGreaterThan(0);
+      expect(COOLDOWN).toBe(10);
+      expect(TIMING.AI_COOLDOWN_STORAGE_KEY).toBe('tarotqa_ai_cooldown_end');
     });
   });
 

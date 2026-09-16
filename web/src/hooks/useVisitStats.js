@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { TIMING, BREAKPOINTS } from '../constants';
+import { TIMING } from '../constants';
+import { detectDeviceType } from './useDevice';
+
+// 设备判定与布局共用 useDevice 的实现，避免同一用户在布局里是桌面、在统计里是手机
+export { detectDeviceType };
 
 const STORAGE_KEY = 'tarotqa_visit_stats';
 const MAX_RECORDS = 100;
@@ -12,24 +16,6 @@ export const generateUUID = () => {
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
-};
-
-// Anonymize IP address - keep first two segments
-export const anonymizeIp = (ip) => {
-  if (!ip) return 'unknown';
-  const segments = ip.split('.');
-  if (segments.length >= 2) {
-    return `${segments[0]}.${segments[1]}.*.*`;
-  }
-  return 'unknown';
-};
-
-// Detect device type from screen width
-export const detectDeviceType = () => {
-  const width = window.innerWidth;
-  if (width < BREAKPOINTS.TABLET) return 'mobile';
-  if (width < BREAKPOINTS.DESKTOP) return 'tablet';
-  return 'desktop';
 };
 
 // Detect OS from user agent
@@ -84,10 +70,11 @@ export const calculateOsStats = (records) => {
   return stats;
 };
 
-// Get session IP (simulated - in real app this would come from server)
-export const getSessionIP = () => {
-  // In a pure frontend app, we can't get real IP without a backend
-  // We'll use a hash of available info as a pseudo-IP
+/**
+ * 设备指纹（纯前端拿不到 IP，这里只是用 UA/屏幕/时区算出的稳定哈希，
+ * 仅用于本地统计去重；不是真实 IP，也不会上传）。
+ */
+export const getDeviceFingerprint = () => {
   const seed = navigator.userAgent + screen.width + screen.height + new Date().getTimezoneOffset();
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
@@ -95,7 +82,6 @@ export const getSessionIP = () => {
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash;
   }
-  // Generate a pseudo IPv4 format
   const part1 = Math.abs(hash % 256);
   const part2 = Math.abs((hash >> 8) % 256);
   return `${part1}.${part2}`;
@@ -178,7 +164,7 @@ export function useVisitStats() {
       // Create new session
       const newSession = {
         sessionId: generateUUID(),
-        anonymizedIp: anonymizeIp(getSessionIP()),
+        deviceFingerprint: getDeviceFingerprint(),
         questionCount: 0,
         firstVisit: now,
         lastVisit: now,
@@ -204,7 +190,7 @@ export function useVisitStats() {
       // First visit - create new stats
       const newSession = {
         sessionId: generateUUID(),
-        anonymizedIp: anonymizeIp(getSessionIP()),
+        deviceFingerprint: getDeviceFingerprint(),
         questionCount: 0,
         firstVisit: now,
         lastVisit: now,
@@ -261,7 +247,7 @@ export function useVisitStats() {
     const now = new Date().toISOString();
     const newSession = {
       sessionId: generateUUID(),
-      anonymizedIp: anonymizeIp(getSessionIP()),
+      deviceFingerprint: getDeviceFingerprint(),
       questionCount: 0,
       firstVisit: now,
       lastVisit: now,
@@ -288,8 +274,9 @@ export function useVisitStats() {
     const todayStart = today.getTime();
 
     return statsData.records.reduce((count, record) => {
-      const recordTime = new Date(record.firstVisit).getTime();
-      if (recordTime >= todayStart) {
+      // 用 lastVisit 判断：会话可能昨天开始、今天才提问，只看 firstVisit 会漏算
+      const recordTime = new Date(record.lastVisit || record.firstVisit).getTime();
+      if (Number.isFinite(recordTime) && recordTime >= todayStart) {
         return count + record.questionCount;
       }
       return count;
@@ -306,8 +293,8 @@ export function useVisitStats() {
     const weekStart = monday.getTime();
 
     return statsData.records.reduce((count, record) => {
-      const recordTime = new Date(record.firstVisit).getTime();
-      if (recordTime >= weekStart) {
+      const recordTime = new Date(record.lastVisit || record.firstVisit).getTime();
+      if (Number.isFinite(recordTime) && recordTime >= weekStart) {
         return count + record.questionCount;
       }
       return count;
@@ -327,16 +314,16 @@ export function useVisitStats() {
 
     if (total === 0) {
       return [
-        { type: 'desktop', label: '桌面', icon: '💻', count: 0, percentage: 0, color: '#D4AF37' },
-        { type: 'tablet', label: '平板', icon: '📱', count: 0, percentage: 0, color: '#8B0000' },
-        { type: 'mobile', label: '手机', icon: '📱', count: 0, percentage: 0, color: '#2D1B4E' }
+        { type: 'desktop', label: '桌面', count: 0, percentage: 0, color: 'var(--chart-1)' },
+        { type: 'tablet', label: '平板', count: 0, percentage: 0, color: 'var(--chart-3)' },
+        { type: 'mobile', label: '手机', count: 0, percentage: 0, color: 'var(--chart-4)' }
       ];
     }
 
     return [
-      { type: 'desktop', label: '桌面', icon: '💻', count: statsData.stats.deviceStats.desktop, percentage: Math.round((statsData.stats.deviceStats.desktop / total) * 100), color: '#D4AF37' },
-      { type: 'tablet', label: '平板', icon: '📱', count: statsData.stats.deviceStats.tablet, percentage: Math.round((statsData.stats.deviceStats.tablet / total) * 100), color: '#8B0000' },
-      { type: 'mobile', label: '手机', icon: '📱', count: statsData.stats.deviceStats.mobile, percentage: Math.round((statsData.stats.deviceStats.mobile / total) * 100), color: '#2D1B4E' }
+      { type: 'desktop', label: '桌面', count: statsData.stats.deviceStats.desktop, percentage: Math.round((statsData.stats.deviceStats.desktop / total) * 100), color: 'var(--chart-1)' },
+      { type: 'tablet', label: '平板', count: statsData.stats.deviceStats.tablet, percentage: Math.round((statsData.stats.deviceStats.tablet / total) * 100), color: 'var(--chart-3)' },
+      { type: 'mobile', label: '手机', count: statsData.stats.deviceStats.mobile, percentage: Math.round((statsData.stats.deviceStats.mobile / total) * 100), color: 'var(--chart-4)' }
     ];
   }, [statsData]);
 
@@ -346,12 +333,12 @@ export function useVisitStats() {
     const total = Object.values(osStats).reduce((sum, val) => sum + val, 0);
 
     const osConfig = {
-      Windows: { label: 'Windows', color: '#0078D4' },
-      macOS: { label: 'macOS', color: '#333333' },
-      Linux: { label: 'Linux', color: '#FCC624' },
-      Android: { label: 'Android', color: '#3DDC84' },
-      iOS: { label: 'iOS', color: '#A2AAAD' },
-      Other: { label: '其他', color: '#666666' }
+      Windows: { label: 'Windows', color: 'var(--chart-3)' },
+      macOS: { label: 'macOS', color: 'var(--chart-5)' },
+      Linux: { label: 'Linux', color: 'var(--chart-1)' },
+      Android: { label: 'Android', color: 'var(--chart-2)' },
+      iOS: { label: 'iOS', color: 'var(--chart-4)' },
+      Other: { label: '其他', color: 'var(--chart-6)' }
     };
 
     return Object.entries(osStats)
@@ -359,7 +346,7 @@ export function useVisitStats() {
       .map(([os, count]) => ({
         type: os,
         label: osConfig[os]?.label || os,
-        color: osConfig[os]?.color || '#666666',
+        color: osConfig[os]?.color || 'var(--chart-6)',
         count,
         percentage: total > 0 ? Math.round((count / total) * 100) : 0
       }))

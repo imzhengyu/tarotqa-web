@@ -1,5 +1,6 @@
 import useVisitStats from '../hooks/useVisitStats';
 import PieChart from '../components/PieChart';
+import Icon from '../components/common/Icons';
 import { useLanguage } from '../context/LanguageContext';
 import { useBackToTop } from '../hooks/useBackToTop';
 import './Statistics.css';
@@ -35,14 +36,14 @@ function Statistics() {
     return `${month}-${day} ${hours}:${minutes}`;
   };
 
-  const DEVICE_ICONS = { desktop: '💻', tablet: '📱', mobile: '📱' };
+  const DEVICE_ICONS = { desktop: 'desktop', tablet: 'tablet', mobile: 'mobile' };
   const DEVICE_LABELS = {
     desktop: t('桌面', 'Desktop'),
     tablet: t('平板', 'Tablet'),
     mobile: t('手机', 'Mobile')
   };
 
-  const getDeviceIcon = (deviceType) => DEVICE_ICONS[deviceType] || '💻';
+  const getDeviceIcon = (deviceType) => <Icon name={DEVICE_ICONS[deviceType] || 'desktop'} size={16} />;
   const getDeviceLabel = (deviceType) => DEVICE_LABELS[deviceType] || t('未知', 'Unknown');
 
   if (!isInitialized) {

@@ -3,10 +3,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 // 由于内部函数未导出，这里复现当前实现以验证行为。
 
 const AI_PROVIDERS = {
-  minimax: { id: 'minimax', name: 'MiniMax' }
+  deepseek: { id: 'deepseek', name: 'DeepSeek' }
 };
 
-const DEFAULT_AI_PROVIDER = 'minimax';
+const DEFAULT_AI_PROVIDER = 'deepseek';
 
 const _getProvider = () => {
   const provider = localStorage.getItem('ai_provider');
@@ -14,7 +14,7 @@ const _getProvider = () => {
 };
 
 const _getApiKey = () => {
-  return localStorage.getItem('minimax_api_key') || import.meta.env.VITE_DEFAULT_API_KEY || '';
+  return localStorage.getItem('deepseek_api_key') || import.meta.env.VITE_DEFAULT_API_KEY || '';
 };
 
 const _getErrorMessageFromStatus = (response, errorData, providerName, language = 'zh') => {
@@ -63,7 +63,7 @@ const _extractAIContent = (result) => {
 
 describe('API Helper Functions', () => {
   beforeEach(() => {
-    localStorage.removeItem('minimax_api_key');
+    localStorage.removeItem('deepseek_api_key');
     localStorage.removeItem('ai_provider');
   });
 
@@ -73,28 +73,28 @@ describe('API Helper Functions', () => {
 
   describe('_getProvider', () => {
     it('should return default provider when none is saved', () => {
-      expect(_getProvider()).toBe('minimax');
+      expect(_getProvider()).toBe('deepseek');
     });
 
     it('should return saved provider when valid', () => {
-      localStorage.setItem('ai_provider', 'minimax');
-      expect(_getProvider()).toBe('minimax');
+      localStorage.setItem('ai_provider', 'deepseek');
+      expect(_getProvider()).toBe('deepseek');
     });
 
     it('should fall back to default when saved provider is invalid', () => {
       localStorage.setItem('ai_provider', 'unknown');
-      expect(_getProvider()).toBe('minimax');
+      expect(_getProvider()).toBe('deepseek');
     });
   });
 
   describe('_getApiKey', () => {
-    it('should return empty string when no MiniMax key is configured', () => {
+    it('should return empty string when no DeepSeek key is configured', () => {
       const result = _getApiKey();
       expect(result).toBe('');
     });
 
-    it('should return localStorage MiniMax key when available', () => {
-      localStorage.setItem('minimax_api_key', 'test-key-123');
+    it('should return localStorage DeepSeek key when available', () => {
+      localStorage.setItem('deepseek_api_key', 'test-key-123');
       const result = _getApiKey();
       expect(result).toBe('test-key-123');
     });
@@ -109,44 +109,44 @@ describe('API Helper Functions', () => {
   describe('_getErrorMessageFromStatus', () => {
     it('should return message for 401 status with provider label', () => {
       const response = { status: 401 };
-      const result = _getErrorMessageFromStatus(response, {}, 'MiniMax');
-      expect(result).toBe('MiniMax API Key 无效或已过期，请检查设置');
+      const result = _getErrorMessageFromStatus(response, {}, 'DeepSeek');
+      expect(result).toBe('DeepSeek API Key 无效或已过期，请检查设置');
     });
 
     it('should return English message for 401 when language is en', () => {
       const response = { status: 401 };
-      const result = _getErrorMessageFromStatus(response, {}, 'MiniMax', 'en');
-      expect(result).toBe('MiniMax API Key is invalid or expired, please check settings');
+      const result = _getErrorMessageFromStatus(response, {}, 'DeepSeek', 'en');
+      expect(result).toBe('DeepSeek API Key is invalid or expired, please check settings');
     });
 
     it('should return message for 403 status', () => {
       const response = { status: 403 };
-      const result = _getErrorMessageFromStatus(response, {}, 'MiniMax');
-      expect(result).toBe('MiniMax API Key 权限不足');
+      const result = _getErrorMessageFromStatus(response, {}, 'DeepSeek');
+      expect(result).toBe('DeepSeek API Key 权限不足');
     });
 
     it('should return message for 429 status', () => {
       const response = { status: 429 };
-      const result = _getErrorMessageFromStatus(response, {}, 'MiniMax');
+      const result = _getErrorMessageFromStatus(response, {}, 'DeepSeek');
       expect(result).toBe('请求过于频繁，请稍后重试');
     });
 
     it('should return message for 500 status', () => {
       const response = { status: 500 };
-      const result = _getErrorMessageFromStatus(response, {}, 'MiniMax');
-      expect(result).toBe('MiniMax 服务器繁忙，请稍后重试');
+      const result = _getErrorMessageFromStatus(response, {}, 'DeepSeek');
+      expect(result).toBe('DeepSeek 服务器繁忙，请稍后重试');
     });
 
     it('should return message for 502 status', () => {
       const response = { status: 502 };
-      const result = _getErrorMessageFromStatus(response, {}, 'MiniMax');
-      expect(result).toBe('MiniMax 服务器繁忙，请稍后重试');
+      const result = _getErrorMessageFromStatus(response, {}, 'DeepSeek');
+      expect(result).toBe('DeepSeek 服务器繁忙，请稍后重试');
     });
 
     it('should prefer base_resp.status_msg over default messages', () => {
       const response = { status: 400 };
       const errorData = { base_resp: { status_msg: 'Custom error message' } };
-      const result = _getErrorMessageFromStatus(response, errorData, 'MiniMax');
+      const result = _getErrorMessageFromStatus(response, errorData, 'DeepSeek');
       expect(result).toBe('Custom error message');
     });
 
@@ -156,13 +156,13 @@ describe('API Helper Functions', () => {
         base_resp: { status_msg: 'Base error' },
         error: { message: 'Error message from error field' }
       };
-      const result = _getErrorMessageFromStatus(response, errorData, 'MiniMax');
+      const result = _getErrorMessageFromStatus(response, errorData, 'DeepSeek');
       expect(result).toBe('Base error');
     });
 
     it('should return default message when no specific match', () => {
       const response = { status: 418 };
-      const result = _getErrorMessageFromStatus(response, {}, 'MiniMax');
+      const result = _getErrorMessageFromStatus(response, {}, 'DeepSeek');
       expect(result).toBe('API 请求失败');
     });
   });

@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Statistics from './pages/Statistics';
+import NotFound from './pages/NotFound';
 import Layout from './components/Layout';
 import RouteFallback from './components/RouteFallback';
 
@@ -34,6 +35,7 @@ function App() {
           path="astrology/chart"
           element={<Suspense fallback={<RouteFallback />}><AstrologyChart /></Suspense>}
         />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

@@ -6,6 +6,8 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.*
+!.env.example
 
 # Logs
 logs/
@@ -42,8 +44,50 @@ test_output.txt
 # Playwright
 .playwright-mcp/
 
-# Claude
-.claude/
+# Codex
+.codex-log/
+.codex/tmp/
+
+# 检查脚本日志（scripts/run_sanity.py 等）
+logs/
+
+# 主题预览截图（本地验收用，重新生成即可）
+design/preview-shots/
+
+# 本地专用脚本与中间产物（不外流）
+#   —— 只保留 CI/质量门禁需要的 scripts/run_sanity.py、run_checks.py、checklog.py
+__pycache__/
+*.pyc
+scripts/audit_*.py
+scripts/probe_*.py
+scripts/snapshot_*.py
+scripts/serve_dist.py
+scripts/run_local_server.py
+scripts/port_tools.py
+scripts/migrate_*.py
+scripts/build_pdf_fonts.py
+scripts/build_style_preview.py
+scripts/build_theme_preview.py
+scripts/generate_mimi_tarot.py
+scripts/deploy-local.ps1
+scripts/install_git_hooks.py
+deploy-local.bat
+
+# 设计预览产物与生成页
+design/
+
+# 其它本地调试产物
+font-preview.html
+web/.tmp-build/
+.tmp-build/
+web/public/tarot-mimi-images/
+
+# Agent 工作流配置（本地使用，不随库发布）
+.agents/
+.codex/
+
+# Claude Code 迁移备份（仅本地留档，不入库）
+deprecated/
 
 # Temporary files
 tmp/

@@ -27,15 +27,15 @@ const mockCards = [
 
 describe('API Service', () => {
   beforeEach(() => {
-    localStorage.removeItem('minimax_api_key');
-    // 测试默认按 minimax 跑，需要验证默认 provider 的用例会单独覆盖。
-    localStorage.setItem('ai_provider', 'minimax');
+    localStorage.removeItem('deepseek_api_key');
+    // 测试默认按 deepseek 跑，需要验证默认 provider 的用例会单独覆盖。
+    localStorage.setItem('ai_provider', 'deepseek');
   });
 
   describe('默认 AI provider', () => {
     it('未设置时应回退到 DEFAULT_AI_PROVIDER', () => {
       localStorage.removeItem('ai_provider');
-      expect(api.getProvider()).toBe('minimax');
+      expect(api.getProvider()).toBe('deepseek');
     });
   });
 
@@ -117,120 +117,6 @@ describe('API Service', () => {
       cards.forEach(card => {
         expect(card.arcana).toBe('major');
       });
-    });
-  });
-
-  describe('createDivination', () => {
-    it('应该创建占卜记录', async () => {
-      const data = {
-        question: '测试问题',
-        selectedSpread: { id: 'three-cards', name: '三张牌阵' },
-        drawnCards: [mockCards[0], mockCards[1]]
-      };
-
-      const result = await api.createDivination(data);
-      expect(result).toHaveProperty('id');
-      expect(result).toHaveProperty('createdAt');
-      expect(result.question).toBe('测试问题');
-    });
-  });
-
-  describe('getDivination', () => {
-    it('应该返回 null（未实现）', async () => {
-      const result = await api.getDivination(1);
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('getHoroscope', () => {
-    it('应该返回指定星座的运势', async () => {
-      const horoscope = await api.getHoroscope('aries');
-      expect(horoscope).toBeDefined();
-      expect(horoscope).toHaveProperty('name');
-      expect(horoscope.name).toBe('白羊座');
-      expect(horoscope).toHaveProperty('overall');
-      expect(horoscope).toHaveProperty('love');
-      expect(horoscope).toHaveProperty('career');
-      expect(horoscope).toHaveProperty('finance');
-    });
-
-    it('应该返回不存在的星座的 null', async () => {
-      const horoscope = await api.getHoroscope('unknown');
-      expect(horoscope).toBeNull();
-    });
-  });
-
-  describe('getAllHoroscopes', () => {
-    it('应该返回所有星座运势', async () => {
-      const horoscopes = await api.getAllHoroscopes();
-      expect(Object.keys(horoscopes).length).toBe(12);
-    });
-
-    it('应该包含所有12个星座', async () => {
-      const horoscopes = await api.getAllHoroscopes();
-      const zodiacs = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
-      zodiacs.forEach(zodiac => {
-        expect(horoscopes).toHaveProperty(zodiac);
-      });
-    });
-  });
-
-  describe('getHoroscopesData', () => {
-    it('应该返回运势数据对象', () => {
-      const data = api.getHoroscopesData();
-      expect(typeof data).toBe('object');
-      expect(Object.keys(data).length).toBe(12);
-    });
-
-    it('每个星座应该包含正确的字段', () => {
-      const data = api.getHoroscopesData();
-      const aries = data.aries;
-      expect(aries).toHaveProperty('name');
-      expect(aries).toHaveProperty('overall');
-      expect(aries).toHaveProperty('love');
-      expect(aries).toHaveProperty('career');
-      expect(aries).toHaveProperty('finance');
-    });
-  });
-
-  describe('sendCode', () => {
-    it('应该返回成功结果', async () => {
-      const result = await api.sendCode('13800138000');
-      expect(result).toHaveProperty('success');
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe('verifyCode', () => {
-    it('应该返回成功结果和 token', async () => {
-      const result = await api.verifyCode('13800138000', '123456');
-      expect(result).toHaveProperty('success');
-      expect(result).toHaveProperty('token');
-      expect(result.success).toBe(true);
-      expect(result.token).toBe('demo-token');
-    });
-  });
-
-  describe('getMe', () => {
-    it('应该返回 null', async () => {
-      const result = await api.getMe();
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('createOrder', () => {
-    it('应该创建订单并返回订单 ID', async () => {
-      const result = await api.createOrder({ type: 'test' });
-      expect(result).toHaveProperty('id');
-      expect(result).toHaveProperty('type');
-    });
-  });
-
-  describe('getOrders', () => {
-    it('应该返回空数组', async () => {
-      const result = await api.getOrders();
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(0);
     });
   });
 
@@ -364,8 +250,11 @@ describe('API Service', () => {
       };
 
       const messages = api.buildTarotMessages(data);
-      expect(typeof messages[0].content).toBe('string');
-      expect(messages[0].content.length).toBeGreaterThan(0);
+      const persona = api.getRecommendedPersona(data.selectedSpread.id, data.question);
+
+      expect(messages[0].role).toBe('system');
+      expect(messages[0].content).toBe(persona.description);
+      expect(messages[0].content.length).toBeGreaterThan(10);
     });
 
     it('user 消息应该包含抽牌信息', () => {
@@ -491,7 +380,7 @@ describe('API Service', () => {
 
   describe('getAIInterpretation', () => {
     it('应该抛出错误当没有配置 API Key 且无默认 Key', async () => {
-      localStorage.removeItem('minimax_api_key');
+      localStorage.removeItem('deepseek_api_key');
 
       try {
         await api.getAIInterpretation({
@@ -501,12 +390,12 @@ describe('API Service', () => {
         });
         expect.fail('应该抛出错误');
       } catch (error) {
-        expect(error.message).toBe('请先在设置中配置 MiniMax API Key');
+        expect(error.message).toBe('请先在设置中配置 DeepSeek API Key');
       }
     });
 
     it('应该抛出错误当 API Key 格式无效', async () => {
-      localStorage.setItem('minimax_api_key', 'invalid-key-format');
+      localStorage.setItem('deepseek_api_key', 'invalid-key-format');
 
       try {
         await api.getAIInterpretation({
@@ -521,7 +410,7 @@ describe('API Service', () => {
     });
 
     it('应该接受有效的 Bearer token 格式', async () => {
-      localStorage.setItem('minimax_api_key', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test');
+      localStorage.setItem('deepseek_api_key', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test');
 
       try {
         await api.getAIInterpretation({
@@ -535,7 +424,7 @@ describe('API Service', () => {
     });
 
     it('应该接受 sk- 前缀的 API Key', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-abcdef123456');
+      localStorage.setItem('deepseek_api_key', 'sk-abcdef123456');
 
       try {
         await api.getAIInterpretation({
@@ -551,7 +440,7 @@ describe('API Service', () => {
 
   describe('API Key Priority', () => {
     it('应该处理 localStorage 中 API Key 为空字符串', async () => {
-      localStorage.setItem('minimax_api_key', '');
+      localStorage.setItem('deepseek_api_key', '');
 
       try {
         await api.getAIInterpretation({
@@ -561,7 +450,7 @@ describe('API Service', () => {
         });
         expect.fail('应该抛出错误');
       } catch (error) {
-        expect(error.message).toBe('请先在设置中配置 MiniMax API Key');
+        expect(error.message).toBe('请先在设置中配置 DeepSeek API Key');
       }
     });
   });
@@ -583,7 +472,7 @@ describe('API Service', () => {
     });
 
     it('应该处理网络错误', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
       try {
@@ -595,7 +484,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 HTTP 401 错误', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 401,
@@ -606,12 +495,12 @@ describe('API Service', () => {
         await api.getAIInterpretation(mockData);
         expect.fail('应该抛出错误');
       } catch (error) {
-        expect(error.message).toBe('MiniMax API Key 无效或已过期，请检查设置');
+        expect(error.message).toBe('DeepSeek API Key 无效或已过期，请检查设置');
       }
     });
 
     it('应该处理 HTTP 403 错误', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 403,
@@ -622,12 +511,12 @@ describe('API Service', () => {
         await api.getAIInterpretation(mockData);
         expect.fail('应该抛出错误');
       } catch (error) {
-        expect(error.message).toBe('MiniMax API Key 权限不足');
+        expect(error.message).toBe('DeepSeek API Key 权限不足');
       }
     });
 
     it('应该处理 HTTP 429 错误', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 429,
@@ -643,7 +532,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 HTTP 500 错误', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 500,
@@ -654,12 +543,12 @@ describe('API Service', () => {
         await api.getAIInterpretation(mockData);
         expect.fail('应该抛出错误');
       } catch (error) {
-        expect(error.message).toBe('MiniMax 服务器繁忙，请稍后重试');
+        expect(error.message).toBe('DeepSeek 服务器繁忙，请稍后重试');
       }
     });
 
     it('应该处理无效的 JSON 响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockRejectedValue(new Error('Invalid JSON'))
@@ -674,7 +563,7 @@ describe('API Service', () => {
     });
 
     it('应该处理缺少 choices 的响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({})
@@ -689,7 +578,7 @@ describe('API Service', () => {
     });
 
     it('应该处理空 choices 数组的响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ choices: [] })
@@ -704,7 +593,7 @@ describe('API Service', () => {
     });
 
     it('应该处理缺少 finish_reason 和 messages 的 choice', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -721,7 +610,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 AI 返回空内容', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -740,8 +629,8 @@ describe('API Service', () => {
       }
     });
 
-    it('应该成功解析 MiniMax 格式的响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    it('应该成功解析 DeepSeek 格式的响应', async () => {
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -759,7 +648,7 @@ describe('API Service', () => {
     });
 
     it('应该成功解析标准格式的响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -775,7 +664,7 @@ describe('API Service', () => {
     });
 
     it('应该成功解析 delta 格式的响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -791,7 +680,7 @@ describe('API Service', () => {
     });
 
     it('应该处理带有 error.message 的错误响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 400,
@@ -809,7 +698,7 @@ describe('API Service', () => {
     });
 
     it('应该处理无法解析的 HTTP 错误响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 500,
@@ -821,12 +710,12 @@ describe('API Service', () => {
         await api.getAIInterpretation(mockData);
         expect.fail('应该抛出错误');
       } catch (error) {
-        expect(error.message).toBe('MiniMax 服务器繁忙，请稍后重试');
+        expect(error.message).toBe('DeepSeek 服务器繁忙，请稍后重试');
       }
     });
 
     it('应该处理 choices 为 null 的响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ choices: null })
@@ -841,7 +730,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 choices 为 undefined 的响应', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({})
@@ -856,7 +745,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 choice 对象所有必需字段都缺失的情况', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -873,7 +762,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 choice 中 delta 和 message 都不存在的情况', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -890,7 +779,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 message.content 为空字符串的情况', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -911,7 +800,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 delta.content 为空字符串的情况', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -932,7 +821,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 messages 数组全为空内容的情况', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -956,7 +845,7 @@ describe('API Service', () => {
     });
 
     it('应该正确拼接多个 assistant 消息的内容', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -976,7 +865,7 @@ describe('API Service', () => {
     });
 
     it('应该忽略非 assistant 角色的消息', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -996,7 +885,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 HTTP 400 错误', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 400,
@@ -1012,7 +901,7 @@ describe('API Service', () => {
     });
 
     it('应该处理 HTTP 502 错误', async () => {
-      localStorage.setItem('minimax_api_key', 'sk-valid-key');
+      localStorage.setItem('deepseek_api_key', 'sk-valid-key');
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 502,
@@ -1023,7 +912,7 @@ describe('API Service', () => {
         await api.getAIInterpretation(mockData);
         expect.fail('应该抛出错误');
       } catch (error) {
-        expect(error.message).toBe('MiniMax 服务器繁忙，请稍后重试');
+        expect(error.message).toBe('DeepSeek 服务器繁忙，请稍后重试');
       }
     });
   });
@@ -1031,12 +920,12 @@ describe('API Service', () => {
 
 describe('getAIHoroscope', () => {
   beforeEach(() => {
-    localStorage.removeItem('minimax_api_key');
+    localStorage.removeItem('deepseek_api_key');
     global.fetch = vi.fn();
   });
 
   it('应该返回 AI 运势分析结果', async () => {
-    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    localStorage.setItem('deepseek_api_key', 'sk-valid-key');
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({
@@ -1051,7 +940,7 @@ describe('getAIHoroscope', () => {
   });
 
   it('应该使用传入的日期参数', async () => {
-    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    localStorage.setItem('deepseek_api_key', 'sk-valid-key');
 
     let capturedRequestBody;
     global.fetch = vi.fn().mockImplementation((url, options) => {
@@ -1077,7 +966,7 @@ describe('getAIHoroscope', () => {
   });
 
   it('应该使用当前日期当未传入日期参数', async () => {
-    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    localStorage.setItem('deepseek_api_key', 'sk-valid-key');
 
     let capturedRequestBody;
     global.fetch = vi.fn().mockImplementation((url, options) => {
@@ -1099,18 +988,18 @@ describe('getAIHoroscope', () => {
   });
 
   it('应该抛出错误当 API Key 未配置', async () => {
-    localStorage.removeItem('minimax_api_key');
+    localStorage.removeItem('deepseek_api_key');
 
     try {
       await api.getAIHoroscope('aries', '白羊座');
       expect.fail('应该抛出错误');
     } catch (error) {
-      expect(error.message).toBe('请先在设置中配置 MiniMax API Key');
+      expect(error.message).toBe('请先在设置中配置 DeepSeek API Key');
     }
   });
 
   it('应该处理网络错误', async () => {
-    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    localStorage.setItem('deepseek_api_key', 'sk-valid-key');
     global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
     try {
@@ -1122,7 +1011,7 @@ describe('getAIHoroscope', () => {
   });
 
   it('应该处理 HTTP 401 错误', async () => {
-    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    localStorage.setItem('deepseek_api_key', 'sk-valid-key');
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 401,
@@ -1133,12 +1022,12 @@ describe('getAIHoroscope', () => {
       await api.getAIHoroscope('aries', '白羊座');
       expect.fail('应该抛出错误');
     } catch (error) {
-      expect(error.message).toBe('MiniMax API Key 无效或已过期，请检查设置');
+      expect(error.message).toBe('DeepSeek API Key 无效或已过期，请检查设置');
     }
   });
 
   it('应该处理 HTTP 429 错误', async () => {
-    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    localStorage.setItem('deepseek_api_key', 'sk-valid-key');
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 429,
@@ -1154,7 +1043,7 @@ describe('getAIHoroscope', () => {
   });
 
   it('应该处理空响应', async () => {
-    localStorage.setItem('minimax_api_key', 'sk-valid-key');
+    localStorage.setItem('deepseek_api_key', 'sk-valid-key');
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({

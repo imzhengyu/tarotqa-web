@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import Icon from './Icons';
 import { useLanguage } from '../../context/LanguageContext';
 import { exportToPNG } from '../../utils/export';
 import './ExportMenu.css';
@@ -43,7 +44,7 @@ function ExportMenu({ elementId, filename = 'export' }) {
         disabled={exporting}
         title={language === 'zh' ? '导出' : 'Export'}
       >
-        {exporting ? '...' : '📥'}
+        {exporting ? '...' : <Icon name="download" size={18} />}
       </button>
       {isOpen && (
         <div className="export-menu-dropdown">
@@ -51,7 +52,7 @@ function ExportMenu({ elementId, filename = 'export' }) {
             className="export-menu-item"
             onClick={handleExport}
           >
-            <span className="export-icon">🖼️</span>
+            <span className="export-icon"><Icon name="image" size={18} /></span>
             <span>{language === 'zh' ? '导出为 PNG' : 'Export as PNG'}</span>
           </button>
         </div>

@@ -21,7 +21,7 @@
       "element": null,
       "reversedDescription": "逆位愚者代表冲动、冒险、缺乏准备。可能表示错误的选择或旅途中的障碍。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/00_Fool.jpg"
+      "localPath": "tarot-images/major/00_Fool.webp"
     },
     {
       "id": 1,
@@ -42,7 +42,7 @@
       "element": null,
       "reversedDescription": "逆位魔术师代表技能滥用、欺骗、缺乏决心。可能表示计划无法实现。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/01_Magician.jpg"
+      "localPath": "tarot-images/major/01_Magician.webp"
     },
     {
       "id": 2,
@@ -63,7 +63,7 @@
       "element": null,
       "reversedDescription": "逆位女祭司代表秘密、谎言、忽视直觉。可能表示真相被隐藏。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/02_High_Priestess.jpg"
+      "localPath": "tarot-images/major/02_High_Priestess.webp"
     },
     {
       "id": 3,
@@ -84,7 +84,7 @@
       "element": null,
       "reversedDescription": "逆位女皇代表停滞、无创造力、依赖他人。可能表示丰收不再。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/03_Empress.jpg"
+      "localPath": "tarot-images/major/03_Empress.webp"
     },
     {
       "id": 4,
@@ -105,7 +105,7 @@
       "element": null,
       "reversedDescription": "逆位皇帝代表缺乏控制、冲动、脆弱。可能表示领导力不足。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/04_Emperor.jpg"
+      "localPath": "tarot-images/major/04_Emperor.webp"
     },
     {
       "id": 5,
@@ -126,7 +126,7 @@
       "element": null,
       "reversedDescription": "逆位教皇代表叛逆、不诚实、精神压迫。可能表示信仰危机。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/05_Hierophant.jpg"
+      "localPath": "tarot-images/major/05_Hierophant.webp"
     },
     {
       "id": 6,
@@ -147,7 +147,7 @@
       "element": null,
       "reversedDescription": "逆位恋人代表犹豫不决、冲突、价值观差异。可能表示关系失衡。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/06_Lovers.jpg"
+      "localPath": "tarot-images/major/06_Lovers.webp"
     },
     {
       "id": 7,
@@ -168,7 +168,7 @@
       "element": null,
       "reversedDescription": "逆位战车代表失控、愤怒、方向迷失。可能表示遭遇挫折。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/07_Chariot.jpg"
+      "localPath": "tarot-images/major/07_Chariot.webp"
     },
     {
       "id": 8,
@@ -189,7 +189,7 @@
       "element": null,
       "reversedDescription": "逆位力量代表恐惧、怀疑、自我怀疑。可能表示内在力量被压制。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/08_Strength.jpg"
+      "localPath": "tarot-images/major/08_Strength.webp"
     },
     {
       "id": 9,
@@ -210,7 +210,7 @@
       "element": null,
       "reversedDescription": "逆位隐士代表孤独、孤立、迷失方向。可能表示拒绝帮助或过度独处。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/09_Hermit.jpg"
+      "localPath": "tarot-images/major/09_Hermit.webp"
     },
     {
       "id": 10,
@@ -231,7 +231,7 @@
       "element": null,
       "reversedDescription": "逆位命运之轮代表倒霉、延误、阻碍。可能表示命运不顺。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/10_Wheel_of_Fortune.jpg"
+      "localPath": "tarot-images/major/10_Wheel_of_Fortune.webp"
     },
     {
       "id": 11,
@@ -252,7 +252,7 @@
       "element": null,
       "reversedDescription": "逆位正义代表不公正、偏见、欺诈。可能表示逃避责任。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/11_Justice.jpg"
+      "localPath": "tarot-images/major/11_Justice.webp"
     },
     {
       "id": 12,
@@ -273,7 +273,7 @@
       "element": null,
       "reversedDescription": "逆位倒吊人代表牺牲白费、犹豫不决、停滞不前。可能表示被迫放弃。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/12_Hanged_Man.jpg"
+      "localPath": "tarot-images/major/12_Hanged_Man.webp"
     },
     {
       "id": 13,
@@ -294,7 +294,7 @@
       "element": null,
       "reversedDescription": "逆位死神代表恐惧变化、停滞、僵局。可能表示旧事物不愿离去。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/13_Death.jpg"
+      "localPath": "tarot-images/major/13_Death.webp"
     },
     {
       "id": 14,
@@ -315,7 +315,7 @@
       "element": null,
       "reversedDescription": "逆位节制代表失衡、过度、缺乏进步。可能表示中庸之道被打破。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/14_Temperance.jpg"
+      "localPath": "tarot-images/major/14_Temperance.webp"
     },
     {
       "id": 15,
@@ -336,7 +336,7 @@
       "element": null,
       "reversedDescription": "逆位恶魔代表束缚解脱、打破枷锁、战胜诱惑。可能表示从物质主义中解放。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/15_Devil.jpg"
+      "localPath": "tarot-images/major/15_Devil.webp"
     },
     {
       "id": 16,
@@ -357,7 +357,7 @@
       "element": null,
       "reversedDescription": "逆位塔代表害怕改变、压抑、避免灾难。可能表示抗拒必要的转变。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/16_Tower.jpg"
+      "localPath": "tarot-images/major/16_Tower.webp"
     },
     {
       "id": 17,
@@ -378,7 +378,7 @@
       "element": null,
       "reversedDescription": "逆位星星代表绝望、失落、精神干涸。可能表示失去希望。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/17_Star.jpg"
+      "localPath": "tarot-images/major/17_Star.webp"
     },
     {
       "id": 18,
@@ -399,7 +399,7 @@
       "element": null,
       "reversedDescription": "逆位月亮代表恐惧、焦虑、困惑。可能表示被错觉困扰。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/18_Moon.jpg"
+      "localPath": "tarot-images/major/18_Moon.webp"
     },
     {
       "id": 19,
@@ -420,7 +420,7 @@
       "element": null,
       "reversedDescription": "逆位太阳代表悲伤、失败、活力下降。可能表示能量不足。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/19_Sun.jpg"
+      "localPath": "tarot-images/major/19_Sun.webp"
     },
     {
       "id": 20,
@@ -441,7 +441,7 @@
       "element": null,
       "reversedDescription": "逆位审判代表自我否定、后悔、停滞不前。可能表示缺乏自我反省。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/20_Judgement.jpg"
+      "localPath": "tarot-images/major/20_Judgement.webp"
     },
     {
       "id": 21,
@@ -462,7 +462,7 @@
       "element": null,
       "reversedDescription": "逆位世界代表缺乏成就感、拖延、停滞。可能表示周期未完成。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/major/21_World.jpg"
+      "localPath": "tarot-images/major/21_World.webp"
     },
     {
       "id": 22,
@@ -483,7 +483,7 @@
       "element": "火",
       "reversedDescription": "创造力和热情被阻碍，可能表示新的开始遇到挫折。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/22_Ace_of_Wands.jpg"
+      "localPath": "tarot-images/wands/22_Ace_of_Wands.webp"
     },
     {
       "id": 23,
@@ -504,7 +504,7 @@
       "element": "火",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示冲动、缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/23_Two_of_Wands.jpg"
+      "localPath": "tarot-images/wands/23_Two_of_Wands.webp"
     },
     {
       "id": 24,
@@ -525,7 +525,7 @@
       "element": "火",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示冲动、缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/24_Three_of_Wands.jpg"
+      "localPath": "tarot-images/wands/24_Three_of_Wands.webp"
     },
     {
       "id": 25,
@@ -546,7 +546,7 @@
       "element": "火",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示冲动、缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/25_Four_of_Wands.jpg"
+      "localPath": "tarot-images/wands/25_Four_of_Wands.webp"
     },
     {
       "id": 26,
@@ -567,7 +567,7 @@
       "element": "火",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示冲动、缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/26_Five_of_Wands.jpg"
+      "localPath": "tarot-images/wands/26_Five_of_Wands.webp"
     },
     {
       "id": 27,
@@ -588,7 +588,7 @@
       "element": "火",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示冲动、缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/27_Six_of_Wands.jpg"
+      "localPath": "tarot-images/wands/27_Six_of_Wands.webp"
     },
     {
       "id": 28,
@@ -609,7 +609,7 @@
       "element": "火",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示冲动、缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/28_Seven_of_Wands.jpg"
+      "localPath": "tarot-images/wands/28_Seven_of_Wands.webp"
     },
     {
       "id": 29,
@@ -630,7 +630,7 @@
       "element": "火",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示冲动、缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/29_Eight_of_Wands.jpg"
+      "localPath": "tarot-images/wands/29_Eight_of_Wands.webp"
     },
     {
       "id": 30,
@@ -651,7 +651,7 @@
       "element": "火",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示冲动、缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/30_Nine_of_Wands.jpg"
+      "localPath": "tarot-images/wands/30_Nine_of_Wands.webp"
     },
     {
       "id": 31,
@@ -672,7 +672,7 @@
       "element": "火",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示冲动、缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/31_Ten_of_Wands.jpg"
+      "localPath": "tarot-images/wands/31_Ten_of_Wands.webp"
     },
     {
       "id": 32,
@@ -693,7 +693,7 @@
       "element": "火",
       "reversedDescription": "缺乏热情和创造力，可能表示犹豫不决或消息延迟。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/32_Page_of_Wands.jpg"
+      "localPath": "tarot-images/wands/32_Page_of_Wands.webp"
     },
     {
       "id": 33,
@@ -714,7 +714,7 @@
       "element": "火",
       "reversedDescription": "热情变成冲动，可能表示鲁莽或方向错误。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/33_Knight_of_Wands.jpg"
+      "localPath": "tarot-images/wands/33_Knight_of_Wands.webp"
     },
     {
       "id": 34,
@@ -735,7 +735,7 @@
       "element": "火",
       "reversedDescription": "温暖变成控制欲，可能表示热情过度或嫉妒。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/34_Queen_of_Wands.jpg"
+      "localPath": "tarot-images/wands/34_Queen_of_Wands.webp"
     },
     {
       "id": 35,
@@ -756,7 +756,7 @@
       "element": "火",
       "reversedDescription": "领导力变成专制，可能表示霸道或滥用权力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/wands/35_King_of_Wands.jpg"
+      "localPath": "tarot-images/wands/35_King_of_Wands.webp"
     },
     {
       "id": 36,
@@ -777,7 +777,7 @@
       "element": "水",
       "reversedDescription": "情感新开始受阻，可能表示爱无法表达或情感空虚。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/50_Ace_of_Cups.jpg"
+      "localPath": "tarot-images/cups/50_Ace_of_Cups.webp"
     },
     {
       "id": 37,
@@ -798,7 +798,7 @@
       "element": "水",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示情绪化、冷漠。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/51_Two_of_Cups.jpg"
+      "localPath": "tarot-images/cups/51_Two_of_Cups.webp"
     },
     {
       "id": 38,
@@ -819,7 +819,7 @@
       "element": "水",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示情绪化、冷漠。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/52_Three_of_Cups.jpg"
+      "localPath": "tarot-images/cups/52_Three_of_Cups.webp"
     },
     {
       "id": 39,
@@ -840,7 +840,7 @@
       "element": "水",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示情绪化、冷漠。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/53_Four_of_Cups.jpg"
+      "localPath": "tarot-images/cups/53_Four_of_Cups.webp"
     },
     {
       "id": 40,
@@ -861,7 +861,7 @@
       "element": "水",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示情绪化、冷漠。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/54_Five_of_Cups.jpg"
+      "localPath": "tarot-images/cups/54_Five_of_Cups.webp"
     },
     {
       "id": 41,
@@ -882,7 +882,7 @@
       "element": "水",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示情绪化、冷漠。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/55_Six_of_Cups.jpg"
+      "localPath": "tarot-images/cups/55_Six_of_Cups.webp"
     },
     {
       "id": 42,
@@ -903,7 +903,7 @@
       "element": "水",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示情绪化、冷漠。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/56_Seven_of_Cups.jpg"
+      "localPath": "tarot-images/cups/56_Seven_of_Cups.webp"
     },
     {
       "id": 43,
@@ -924,7 +924,7 @@
       "element": "水",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示情绪化、冷漠。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/57_Eight_of_Cups.jpg"
+      "localPath": "tarot-images/cups/57_Eight_of_Cups.webp"
     },
     {
       "id": 44,
@@ -945,7 +945,7 @@
       "element": "水",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示情绪化、冷漠。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/58_Nine_of_Cups.jpg"
+      "localPath": "tarot-images/cups/58_Nine_of_Cups.webp"
     },
     {
       "id": 45,
@@ -966,7 +966,7 @@
       "element": "水",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示情绪化、冷漠。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/59_Ten_of_Cups.jpg"
+      "localPath": "tarot-images/cups/59_Ten_of_Cups.webp"
     },
     {
       "id": 46,
@@ -987,7 +987,7 @@
       "element": "水",
       "reversedDescription": "情感不成熟或直觉被忽视，可能表示创意停滞。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/60_Page_of_Cups.jpg"
+      "localPath": "tarot-images/cups/60_Page_of_Cups.webp"
     },
     {
       "id": 47,
@@ -1008,7 +1008,7 @@
       "element": "水",
       "reversedDescription": "浪漫变成幻想，可能表示情感不成熟或情绪化。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/61_Knight_of_Cups.jpg"
+      "localPath": "tarot-images/cups/61_Knight_of_Cups.webp"
     },
     {
       "id": 48,
@@ -1029,7 +1029,7 @@
       "element": "水",
       "reversedDescription": "关怀变成情绪化，可能表示过度敏感或依赖。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/62_Queen_of_Cups.jpg"
+      "localPath": "tarot-images/cups/62_Queen_of_Cups.webp"
     },
     {
       "id": 49,
@@ -1050,7 +1050,7 @@
       "element": "水",
       "reversedDescription": "情感平衡变成情绪化，可能表示情感操纵或不稳定。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/cups/63_King_of_Cups.jpg"
+      "localPath": "tarot-images/cups/63_King_of_Cups.webp"
     },
     {
       "id": 50,
@@ -1071,7 +1071,7 @@
       "element": "风",
       "reversedDescription": "新想法或突破受阻，可能表示思维混乱或决定延迟。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/64_Ace_of_Swords.jpg"
+      "localPath": "tarot-images/swords/64_Ace_of_Swords.webp"
     },
     {
       "id": 51,
@@ -1092,7 +1092,7 @@
       "element": "风",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示困惑、犹豫不决。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/65_Two_of_Swords.jpg"
+      "localPath": "tarot-images/swords/65_Two_of_Swords.webp"
     },
     {
       "id": 52,
@@ -1113,7 +1113,7 @@
       "element": "风",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示困惑、犹豫不决。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/66_Three_of_Swords.jpg"
+      "localPath": "tarot-images/swords/66_Three_of_Swords.webp"
     },
     {
       "id": 53,
@@ -1134,7 +1134,7 @@
       "element": "风",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示困惑、犹豫不决。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/67_Four_of_Swords.jpg"
+      "localPath": "tarot-images/swords/67_Four_of_Swords.webp"
     },
     {
       "id": 54,
@@ -1155,7 +1155,7 @@
       "element": "风",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示困惑、犹豫不决。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/68_Five_of_Swords.jpg"
+      "localPath": "tarot-images/swords/68_Five_of_Swords.webp"
     },
     {
       "id": 55,
@@ -1176,7 +1176,7 @@
       "element": "风",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示困惑、犹豫不决。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/69_Six_of_Swords.jpg"
+      "localPath": "tarot-images/swords/69_Six_of_Swords.webp"
     },
     {
       "id": 56,
@@ -1197,7 +1197,7 @@
       "element": "风",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示困惑、犹豫不决。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/70_Seven_of_Swords.jpg"
+      "localPath": "tarot-images/swords/70_Seven_of_Swords.webp"
     },
     {
       "id": 57,
@@ -1218,7 +1218,7 @@
       "element": "风",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示困惑、犹豫不决。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/71_Eight_of_Swords.jpg"
+      "localPath": "tarot-images/swords/71_Eight_of_Swords.webp"
     },
     {
       "id": 58,
@@ -1239,7 +1239,7 @@
       "element": "风",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示困惑、犹豫不决。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/72_Nine_of_Swords.jpg"
+      "localPath": "tarot-images/swords/72_Nine_of_Swords.webp"
     },
     {
       "id": 59,
@@ -1260,7 +1260,7 @@
       "element": "风",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示困惑、犹豫不决。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/73_Ten_of_Swords.jpg"
+      "localPath": "tarot-images/swords/73_Ten_of_Swords.webp"
     },
     {
       "id": 60,
@@ -1281,7 +1281,7 @@
       "element": "风",
       "reversedDescription": "思维不清晰或沟通不畅，可能表示好奇变成轻率。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/74_Page_of_Swords.jpg"
+      "localPath": "tarot-images/swords/74_Page_of_Swords.webp"
     },
     {
       "id": 61,
@@ -1302,7 +1302,7 @@
       "element": "风",
       "reversedDescription": "雄心变成攻击性，可能表示言语伤人。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/75_Knight_of_Swords.jpg"
+      "localPath": "tarot-images/swords/75_Knight_of_Swords.webp"
     },
     {
       "id": 62,
@@ -1323,7 +1323,7 @@
       "element": "风",
       "reversedDescription": "独立变成冷漠，可能表示批判性过强或孤独。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/76_Queen_of_Swords.jpg"
+      "localPath": "tarot-images/swords/76_Queen_of_Swords.webp"
     },
     {
       "id": 63,
@@ -1344,7 +1344,7 @@
       "element": "风",
       "reversedDescription": "智慧变成冷酷，可能表示道德沦丧或滥用权威。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/swords/77_King_of_Swords.jpg"
+      "localPath": "tarot-images/swords/77_King_of_Swords.webp"
     },
     {
       "id": 64,
@@ -1365,7 +1365,7 @@
       "element": "土",
       "reversedDescription": "新的财务或事业机会延误，可能表示缺乏资源。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/36_Ace_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/36_Ace_of_Pentacles.webp"
     },
     {
       "id": 65,
@@ -1386,7 +1386,7 @@
       "element": "土",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示财务问题、贪婪。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/37_Two_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/37_Two_of_Pentacles.webp"
     },
     {
       "id": 66,
@@ -1407,7 +1407,7 @@
       "element": "土",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示财务问题、贪婪。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/38_Three_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/38_Three_of_Pentacles.webp"
     },
     {
       "id": 67,
@@ -1428,7 +1428,7 @@
       "element": "土",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示财务问题、贪婪。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/39_Four_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/39_Four_of_Pentacles.webp"
     },
     {
       "id": 68,
@@ -1449,7 +1449,7 @@
       "element": "土",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示财务问题、贪婪。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/40_Five_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/40_Five_of_Pentacles.webp"
     },
     {
       "id": 69,
@@ -1470,7 +1470,7 @@
       "element": "土",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示财务问题、贪婪。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/41_Six_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/41_Six_of_Pentacles.webp"
     },
     {
       "id": 70,
@@ -1491,7 +1491,7 @@
       "element": "土",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示财务问题、贪婪。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/42_Seven_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/42_Seven_of_Pentacles.webp"
     },
     {
       "id": 71,
@@ -1512,7 +1512,7 @@
       "element": "土",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示财务问题、贪婪。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/43_Eight_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/43_Eight_of_Pentacles.webp"
     },
     {
       "id": 72,
@@ -1533,7 +1533,7 @@
       "element": "土",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示财务问题、贪婪。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/44_Nine_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/44_Nine_of_Pentacles.webp"
     },
     {
       "id": 73,
@@ -1554,7 +1554,7 @@
       "element": "土",
       "reversedDescription": "逆位时能量减弱或失衡，可能表示财务问题、贪婪。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/45_Ten_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/45_Ten_of_Pentacles.webp"
     },
     {
       "id": 74,
@@ -1575,7 +1575,7 @@
       "element": "土",
       "reversedDescription": "缺乏承诺或专注，可能表示工作态度散漫。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/46_Page_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/46_Page_of_Pentacles.webp"
     },
     {
       "id": 75,
@@ -1596,7 +1596,7 @@
       "element": "土",
       "reversedDescription": "野心变成懒散，可能表示缺乏行动力。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/47_Knight_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/47_Knight_of_Pentacles.webp"
     },
     {
       "id": 76,
@@ -1617,7 +1617,7 @@
       "element": "土",
       "reversedDescription": "实用变成占有欲，可能表示过于物质或吝啬。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/48_Queen_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/48_Queen_of_Pentacles.webp"
     },
     {
       "id": 77,
@@ -1638,7 +1638,7 @@
       "element": "土",
       "reversedDescription": "成功变成贪婪，可能表示物质主义或商业不道德。",
       "imageSource": "fatemaster.ai",
-      "localPath": "tarot-images/pentacles/49_King_of_Pentacles.jpg"
+      "localPath": "tarot-images/pentacles/49_King_of_Pentacles.webp"
     }
   ]
 }

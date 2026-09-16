@@ -40,8 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd web
-          rm -rf node_modules pnpm-lock.yaml
-          pnpm install
+          pnpm install --frozen-lockfile
 
       - name: Lint
         run: |
@@ -49,18 +48,42 @@ jobs:
           pnpm run lint
           pnpm run lint:css
 
-      - name: Test
+      - name: Scan for leaked API keys
         run: |
           cd web
-          pnpm run test:ci
+          node scripts/check-api-key-leaks.js
+
+      # 较大的改动先过快速 sanity（lint + 关键用例），再跑全量
+      - name: Sanity
+        run: python3 scripts/run_sanity.py
+
+      - name: Test with coverage
+        run: |
+          cd web
+          pnpm run test:coverage
+
+      - name: Coverage gate
+        run: |
+          cd web
+          node scripts/coverage-check.js --no-run
 
       - name: Build
         run: |
           cd web
           pnpm run build
         env:
-          VITE_DEFAULT_API_KEY: ${{ secrets.DEFAULT_MINIMAX_API_KEY }}
+          VITE_TAROT_DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           VITE_GIT_SHA: ${{ github.sha }}
+
+      # 失败时把检查日志带出来，便于定位（日志平时只落本地 logs/）
+      - name: Upload check logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-logs
+          path: logs/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Copy files to dist
         run: |

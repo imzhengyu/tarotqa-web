@@ -28,14 +28,14 @@ function PieChart({ data, size = 200, title }) {
     if (item.count === 0) return;
     const percentage = (item.count / total) * 100;
     const angle = (percentage / 100) * 360;
-    const color = item.color || '#666666';
+    const color = item.color || 'var(--text-muted)';
     gradientParts.push(`${color} ${currentAngle}deg ${currentAngle + angle}deg`);
     currentAngle += angle;
   });
 
   const gradient = gradientParts.length > 0
     ? `conic-gradient(${gradientParts.join(', ')})`
-    : '#333';
+    : 'var(--surface-alt)';
 
   return (
     <div className="pie-chart-container">

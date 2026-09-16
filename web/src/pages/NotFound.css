@@ -1,0 +1,13 @@
+.not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.not-found-hint {
+  color: var(--color-text-secondary);
+  font-size: 16px;
+}

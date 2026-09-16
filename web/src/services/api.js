@@ -26,10 +26,10 @@ const _getProvider = () => {
   return DEFAULT_AI_PROVIDER;
 };
 
-// 辅助函数：获取 MiniMax API Key
+// 辅助函数：获取 DeepSeek API Key
 const _getApiKey = () => {
   try {
-    const key = localStorage.getItem('minimax_api_key');
+    const key = localStorage.getItem('deepseek_api_key');
     if (key) return key;
   } catch (e) {
     console.warn('[API] localStorage 读取失败:', e.message);
@@ -103,14 +103,24 @@ const _extractAIContent = (result) => {
   throw new Error('AI 响应内容解析失败');
 };
 
-// 通用 AI 调用管道（仅 MiniMax）
+// 辅助函数：格式化出生地观测点，并标明是否为默认地点估算
+const _formatObserver = (observer) => {
+  if (!observer) return null;
+  const { longitude, latitude } = observer;
+  if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) return null;
+  const lon = `${Math.abs(longitude).toFixed(2)}°${longitude >= 0 ? 'E' : 'W'}`;
+  const lat = `${Math.abs(latitude).toFixed(2)}°${latitude >= 0 ? 'N' : 'S'}`;
+  return { text: `${lon} / ${lat}`, assumed: Boolean(observer.assumed) };
+};
+
+// 通用 AI 调用管道（仅 DeepSeek）
 const _callAI = async ({ messages, language = 'zh' }) => {
   const apiKey = _getApiKey();
 
   if (!apiKey) {
     throw new Error(language === 'zh'
-      ? '请先在设置中配置 MiniMax API Key'
-      : 'Please configure MiniMax API Key in settings');
+      ? '请先在设置中配置 DeepSeek API Key'
+      : 'Please configure DeepSeek API Key in settings');
   }
 
   if (!apiKey.startsWith('sk-') && !apiKey.startsWith('eyJ')) {
@@ -119,7 +129,7 @@ const _callAI = async ({ messages, language = 'zh' }) => {
       : 'Invalid API Key format');
   }
 
-  const provider = AI_PROVIDERS.minimax;
+  const provider = AI_PROVIDERS.deepseek;
   const requestBody = {
     model: provider.model,
     messages,
@@ -238,141 +248,6 @@ const api = {
     }
 
     return cards;
-  },
-
-  // 占卜相关 - 本地模拟
-  async createDivination(data) {
-    // 模拟创建占卜记录
-    return {
-      id: Date.now(),
-      ...data,
-      createdAt: new Date().toISOString()
-    };
-  },
-
-  async getDivination(_id) {
-    return null;
-  },
-
-  // 运势相关 - 本地数据
-  async getHoroscope(zodiac) {
-    const horoscopes = this.getHoroscopesData();
-    return horoscopes[zodiac] || null;
-  },
-
-  async getAllHoroscopes() {
-    return this.getHoroscopesData();
-  },
-
-  getHoroscopesData() {
-    return {
-      aries: {
-        name: '白羊座',
-        overall: '今日运势整体不错，适合开展新项目。',
-        love: '感情上可能会有意外惊喜。',
-        career: '工作上表现突出，获得认可。',
-        finance: '财务状况稳定，适合投资。'
-      },
-      taurus: {
-        name: '金牛座',
-        overall: '今日运势平稳，适合稳扎稳打。',
-        love: '感情关系需要更多沟通。',
-        career: '在工作方面需要更多耐心。',
-        finance: '财务状况良好，注意节约。'
-      },
-      gemini: {
-        name: '双子座',
-        overall: '今日思维活跃，适合创意工作。',
-        love: '爱情运势上升，单身者有机会。',
-        career: '沟通能力得到发挥。',
-        finance: '财务收支平衡。'
-      },
-      cancer: {
-        name: '巨蟹座',
-        overall: '今日情绪稳定，家庭运不错。',
-        love: '与家人相处融洽。',
-        career: '适合处理家务事。',
-        finance: '财务状况稳定。'
-      },
-      leo: {
-        name: '狮子座',
-        overall: '今日自信满满，魅力四射。',
-        love: '感情生活丰富多彩。',
-        career: '领导能力得到展现。',
-        finance: '财务状况不错。'
-      },
-      virgo: {
-        name: '处女座',
-        overall: '今日适合处理细节问题。',
-        love: '感情上需要更加细心。',
-        career: '工作效率高，获得好评。',
-        finance: '财务状况良好。'
-      },
-      libra: {
-        name: '天秤座',
-        overall: '今日人际关系和谐。',
-        love: '感情关系需要平衡。',
-        career: '协作能力得到发挥。',
-        finance: '财务状况稳定。'
-      },
-      scorpio: {
-        name: '天蝎座',
-        overall: '今日洞察力敏锐。',
-        love: '感情上可能会有突破。',
-        career: '适合深入研究问题。',
-        finance: '财务状况不错。'
-      },
-      sagittarius: {
-        name: '射手座',
-        overall: '今日适合冒险和探索。',
-        love: '单身者有机会遇到心仪的人。',
-        career: '适合出差或旅行。',
-        finance: '财务状况起伏。'
-      },
-      capricorn: {
-        name: '摩羯座',
-        overall: '今日事业心强。',
-        love: '感情上比较务实。',
-        career: '工作进展顺利。',
-        finance: '财务状况稳定。'
-      },
-      aquarius: {
-        name: '水瓶座',
-        overall: '今日创意十足。',
-        love: '感情上需要更多自由。',
-        career: '适合创新项目。',
-        finance: '财务状况良好。'
-      },
-      pisces: {
-        name: '双鱼座',
-        overall: '今日直觉敏锐。',
-        love: '感情生活温馨。',
-        career: '艺术创造力旺盛。',
-        finance: '财务状况需要关注。'
-      }
-    };
-  },
-
-  // 认证相关 - 简化版本
-  async sendCode(_phone) {
-    return { success: true };
-  },
-
-  async verifyCode(_phone, _code) {
-    return { success: true, token: 'demo-token' };
-  },
-
-  async getMe() {
-    return null;
-  },
-
-  // 订单相关 - 简化版本
-  async createOrder(data) {
-    return { id: Date.now(), ...data };
-  },
-
-  async getOrders() {
-    return [];
   },
 
   // AI 解读相关
@@ -550,7 +425,13 @@ Use professional yet friendly tone. Provide analysis directly without including 
 
   // AI 西方星盘解读
   async getAIAstrologyInterpretation(chartData, language = 'zh') {
-    const { planets, ascendant, midheaven, birthData } = chartData;
+    const { planets, ascendant, midheaven, birthData, observer: rawObserver } = chartData;
+    const observer = _formatObserver(rawObserver);
+    const observerLine = observer
+      ? (language === 'zh'
+          ? `- 出生地：${observer.text}${observer.assumed ? '（用户未填写经纬度，按默认地点估算）' : ''}\n`
+          : `- Birthplace: ${observer.text}${observer.assumed ? ' (coordinates not provided; default assumed)' : ''}\n`)
+      : '';
 
     const systemPrompt = language === 'zh'
       ? `你是一位专业的西方占星师，精通十二星座、行星相位、宫位含义以及星盘综合分析。你需要根据星盘数据给出专业、准确、有洞察力的分析。请用中文回答，以 Markdown 格式输出。`
@@ -565,12 +446,14 @@ Use professional yet friendly tone. Provide analysis directly without including 
 出生信息：
 - 出生日期：${birthData.year}年${birthData.month}月${birthData.day}日
 - 出生时间：${String(birthData.hour).padStart(2, '0')}:${String(birthData.minute).padStart(2, '0')}
+${observerLine}
 
 星盘数据：
 - 太阳星座：${sunPlanet?.sign?.name || '未知'} ${sunPlanet ? Math.round(sunPlanet.degree) + '°' : ''}
 - 月亮星座：${moonPlanet?.sign?.name || '未知'} ${moonPlanet ? Math.round(moonPlanet.degree) + '°' : ''}
 - 上升星座：${ascendant?.sign?.name || '未知'} ${ascendant ? Math.round(ascendant.degree) + '°' : ''}
 - 天顶星座：${midheaven?.sign?.name || '未知'}
+- 宫位制：等宫制（Equal House）
 
 行星分布：
 ${planets.map(p => `- ${p.name}：${p.sign?.name} ${Math.round(p.degree)}°`).join('\n')}
@@ -588,12 +471,14 @@ ${planets.map(p => `- ${p.name}：${p.sign?.name} ${Math.round(p.degree)}°`).jo
 Birth Information:
 - Birth Date: ${birthData.year}/${birthData.month}/${birthData.day}
 - Birth Time: ${String(birthData.hour).padStart(2, '0')}:${String(birthData.minute).padStart(2, '0')}
+${observerLine}
 
 Chart Data:
 - Sun Sign: ${sunPlanet?.sign?.name || 'Unknown'} ${sunPlanet ? Math.round(sunPlanet.degree) + '°' : ''}
 - Moon Sign: ${moonPlanet?.sign?.name || 'Unknown'} ${moonPlanet ? Math.round(moonPlanet.degree) + '°' : ''}
 - Ascendant: ${ascendant?.sign?.name || 'Unknown'} ${ascendant ? Math.round(ascendant.degree) + '°' : ''}
 - Midheaven: ${midheaven?.sign?.name || 'Unknown'}
+- House system: Equal House
 
 Planet Distribution:
 ${planets.map(p => `- ${p.name}: ${p.sign?.name} ${Math.round(p.degree)}°`).join('\n')}

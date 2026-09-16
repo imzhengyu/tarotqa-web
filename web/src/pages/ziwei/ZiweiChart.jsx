@@ -41,7 +41,7 @@ function ZiweiChart() {
     showCooldownToast,
     startCooldownTimer,
     startCooldown
-  } = useAIRequestCooldown('ai_ziwei_cooldown_end');
+  } = useAIRequestCooldown();
 
   const handleBirthDataChange = useCallback((data) => {
     setBirthData(data);

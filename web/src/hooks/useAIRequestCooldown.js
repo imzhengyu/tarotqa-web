@@ -5,10 +5,10 @@ const AI_COOLDOWN_SECONDS = TIMING.AI_COOLDOWN_SECONDS;
 
 /**
  * AI 请求冷却 hook
- * @param {string} storageKey - localStorage key for cooldown
+ * @param {string} [storageKey] - localStorage key；默认用 constants 里全站统一的键
  * @returns {object} - { aiCooldown, aiCooldownEnd, showCooldownToast, canMakeAIRequest, startCooldownTimer }
  */
-export function useAIRequestCooldown(storageKey) {
+export function useAIRequestCooldown(storageKey = TIMING.AI_COOLDOWN_STORAGE_KEY) {
   const [aiCooldown, setAiCooldown] = useState(0);
   const [aiCooldownEnd, setAiCooldownEnd] = useState(0);
   const [showCooldownToast, setShowCooldownToast] = useState(false);

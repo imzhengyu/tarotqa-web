@@ -20,7 +20,10 @@ export default defineConfig({
         'public/',
         'coverage/',
         '**/*.config.*',
-        'dist/'
+        'dist/',
+        // 搁置的 Word 导出方案（未接入任何页面，等启用时再补测试）
+        'src/utils/docxMarkdown.js',
+        'src/utils/exportDocx.js'
       ],
       thresholds: {
         statements: 80,

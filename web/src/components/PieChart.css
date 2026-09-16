@@ -103,8 +103,8 @@
 
 .pie-chart-empty {
   border-radius: 50%;
-  background: rgba(45, 27, 78, 0.5);
-  border: 2px dashed rgba(212, 175, 55, 0.3);
+  background: var(--surface-alt);
+  border: 2px dashed var(--border);
   display: flex;
   align-items: center;
   justify-content: center;

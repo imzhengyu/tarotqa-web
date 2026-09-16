@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+
+// 注：设备类型只按 UA 判定（见 git 历史 feat: refactor device detection to use UA），
+// 不要在这里混用 window.innerWidth，否则布局与统计会给出互相矛盾的结论。
 
 /**
  * Device types based on User Agent only
@@ -47,14 +50,17 @@ const getDeviceInfo = () => {
 };
 
 export function useDevice() {
-  const [device, setDevice] = useState(getDeviceInfo);
-
-  useEffect(() => {
-    // UA doesn't change during runtime, but we still call it for consistency
-    setDevice(getDeviceInfo());
-  }, []);
-
+  const [device] = useState(getDeviceInfo);
   return device;
 }
+
+/**
+ * 统计用的设备分类：与 useDevice 共用同一套 UA 判定，只把 'pad' 映射成 'tablet'。
+ * 这样「页面布局按手机渲染」和「统计里算作手机」不会互相打架。
+ */
+export const detectDeviceType = () => {
+  const { deviceType } = getDeviceInfo();
+  return deviceType === DeviceType.PAD ? 'tablet' : deviceType;
+};
 
 export default useDevice;

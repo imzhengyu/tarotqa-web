@@ -1,10 +1,13 @@
 import { useState, useEffect, memo, useRef } from 'react';
 import PropTypes from 'prop-types';
 import useIntersectionObserver from '../hooks/useIntersectionObserver';
+import { useLanguage } from '../context/LanguageContext';
+import Icon from './common/Icons';
 import { INTERSECTION } from '../constants';
 import './TarotCard.css';
 
 const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small = false, selected = false, dealing = false, shuffling = false }) {
+  const { t } = useLanguage();
   const [imageState, setImageState] = useState('pending'); // 'pending' | 'loading' | 'loaded' | 'error'
   const [justRevealed, setJustRevealed] = useState(false);
   const prevFaceUpRef = useRef(faceUp);
@@ -69,8 +72,8 @@ const TarotCard = memo(function TarotCard({ card, faceUp = false, onClick, small
                 )}
                 {imageState === 'error' && (
                   <div className="card-image-error">
-                    <span className="error-icon">🖼️</span>
-                    <span className="error-text">图片加载失败</span>
+                    <span className="error-icon"><Icon name="image" size={24} /></span>
+                    <span className="error-text">{t('图片加载失败', 'Image failed to load')}</span>
                   </div>
                 )}
                 {imageState !== 'pending' && imageState !== 'error' && (

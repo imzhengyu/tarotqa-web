@@ -17,8 +17,8 @@
 }
 
 .planet-list-card {
-  background: rgba(45, 27, 78, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 24px;
 }
@@ -36,8 +36,8 @@
 }
 
 .form-card {
-  background: rgba(45, 27, 78, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 24px;
 }
@@ -57,8 +57,8 @@
 }
 
 .chart-container {
-  background: rgba(45, 27, 78, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 16px;
   display: flex;
@@ -188,8 +188,8 @@
   width: 100%;
   aspect-ratio: 1;
   max-width: 600px;
-  background: rgba(45, 27, 78, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   border-radius: 16px;
   color: var(--color-text-secondary);
 }
@@ -231,7 +231,7 @@
 }
 
 .planet-item:not(:disabled):hover {
-  background: rgba(212, 175, 55, 0.1);
+  background: var(--accent-soft);
 }
 
 .planet-symbol {
@@ -261,10 +261,22 @@
   min-width: 200px;
 }
 
+.observer-note {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
 .ai-error {
   margin-top: 16px;
   padding: 16px;
-  background: rgba(244, 67, 54, 0.1);
+  background: var(--error-soft);
   border: 1px solid var(--color-error);
   border-radius: 8px;
   text-align: center;
@@ -287,8 +299,8 @@
 .ai-interpretation {
   margin-top: 16px;
   padding: 20px;
-  background: rgba(45, 27, 78, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   border-radius: 16px;
 }
 
@@ -326,7 +338,7 @@
 
 .planet-detail-modal {
   background: var(--color-background);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 24px;
   max-width: 400px;
@@ -369,7 +381,7 @@
   top: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(45, 27, 78, 0.95);
+  background: var(--surface-raised);
   border: 1px solid var(--color-secondary);
   border-radius: 8px;
   padding: 12px 20px;
@@ -439,14 +451,14 @@
 }
 
 .markdown-body code {
-  background: rgba(45, 27, 78, 0.8);
+  background: var(--surface-alt);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 14px;
 }
 
 .markdown-body pre {
-  background: rgba(26, 15, 46, 0.8);
+  background: var(--surface-alt);
   padding: 16px;
   border-radius: 8px;
   overflow-x: auto;
@@ -471,23 +483,23 @@
 
 .markdown-body table th,
 .markdown-body table td {
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid var(--border);
   padding: 8px 12px;
   text-align: left;
 }
 
 .markdown-body table th {
-  background: rgba(45, 27, 78, 0.8);
+  background: var(--surface-alt);
   color: var(--color-secondary);
   font-weight: 600;
 }
 
 .markdown-body table tr:nth-child(even) {
-  background: rgba(45, 27, 78, 0.4);
+  background: var(--surface-alt);
 }
 
 .markdown-body table tr:hover {
-  background: rgba(45, 27, 78, 0.6);
+  background: var(--surface-alt);
 }
 
 /* 回到顶部浮动按钮 */
@@ -498,8 +510,8 @@
   width: 48px;
   height: 48px;
   border-radius: 8px;
-  background: rgba(45, 27, 78, 0.9);
-  border: 2px solid rgba(212, 175, 55, 0.5);
+  background: var(--surface-raised);
+  border: 2px solid var(--border-strong);
   color: var(--color-secondary);
   cursor: pointer;
   z-index: 999;
@@ -511,7 +523,7 @@
 }
 
 .back-to-top:hover {
-  background: rgba(45, 27, 78, 1);
+  background: var(--surface);
   transform: translateY(-3px);
   border-color: var(--color-secondary);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
@@ -522,8 +534,8 @@
   position: absolute;
   bottom: 56px;
   right: 0;
-  background: rgba(45, 27, 78, 0.95);
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
   color: var(--color-secondary);
   font-size: 12px;
   padding: 4px 10px;

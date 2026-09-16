@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { LanguageProvider, useLanguage } from '../../context/LanguageContext';
-import LanguageContext from '../../context/LanguageContext';
 
 function TestComponent() {
   const { language, setLanguage, toggleLanguage, t, isChinese, isEnglish } = useLanguage();
@@ -111,11 +110,5 @@ describe('useLanguage', () => {
     expect(() => {
       render(<TestComponent />);
     }).toThrow('useLanguage must be used within a LanguageProvider');
-  });
-});
-
-describe('LanguageContext', () => {
-  it('should be defined', () => {
-    expect(LanguageContext).toBeDefined();
   });
 });

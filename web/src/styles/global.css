@@ -3,21 +3,82 @@
 /* Loaded via <link> in index.html with preconnect+preload for non-blocking first paint */
 
 :root {
-  /* 亮浅紫罗兰主题 - Bright Light Lavender Theme */
-  --color-primary: #7B5B9E;
-  --color-secondary: #FFD700;
-  --color-background: #1A1028;
-  --color-text: #F5F0FA;
-  --color-text-secondary: #C4B5D4;
-  --color-success: #B088C4;
-  --color-warning: #F0D060;
-  --color-error: #E8A0B0;
+  /* 主题：蜜桃柠檬 C1（来源 design/palettes.json → peach-lemon-deep）
+     令牌一律按"用途分层"：背景 / 卡片 / 文字 / 品牌 / 语义 / 描边 / 图表。
+     改动配色时请改 design/palettes.json 并跑 scripts/audit_ui_colors.py 校验对比度。 */
+  --bg: #F6E4CE;
+  --bg-soft: #EFD6B8;
+  --surface: #FFF;
+  --surface-alt: #FDF1E2;
+  --surface-raised: #FFF;
+  --text: #2F2A24;
+  --text-secondary: #5A5045;
+  --text-muted: #6D6255;
+  --text-inverse: #FFF;
+  --primary: #FBB584;
+  --primary-hover: #F5A265;
+  --primary-ink: #A34A10;
+  --primary-soft: #FCE3CC;
+  --on-primary: #3A1A05;
+  --accent: #F3D45F;
+  --accent-ink: #7A5A00;
+  --accent-soft: #FBEEC4;
+  --success-ink: #106237;
+  --success-soft: #E6F6EC;
+  --warning-ink: #8A5A12;
+  --warning-soft: #FCF2DF;
+  --error-ink: #B3261E;
+  --error-soft: #FDECEA;
+  --info-ink: #1F5FA8;
+  --info-soft: #E8F1FB;
+  --border: #E3C8A8;
+  --border-strong: #A87850;
+  --focus-ring: #A34A10;
+  --shadow: rgba(47, 42, 36, 0.14);
 
-  /* 面板颜色 */
-  --color-panel: rgba(123, 91, 158, 0.6);
-  --color-panel-solid: rgba(26, 16, 40, 0.95);
-  --color-border: rgba(255, 215, 0, 0.25);
-  --color-border-strong: rgba(255, 215, 0, 0.5);
+  /* 图表色（对白色卡片 ≥3:1） */
+  --chart-1: #A34A10;
+  --chart-2: #157A58;
+  --chart-3: #2F6FB5;
+  --chart-4: #8A2F6B;
+  --chart-5: #6E6410;
+  --chart-6: #C0455A;
+
+  /* 视觉风格 B · 柔和文档（来源 design/styles.json → soft-doc）
+     排版 / 间距 / 圆角 / 阴影统一走这里的令牌，组件不要再写死像素值 */
+  --font-body: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-body);
+  --fs-display: 34px;
+  --fs-h1: 26px;
+  --fs-h2: 20px;
+  --fs-body: 16px;
+  --fs-small: 13px;
+  --lh-body: 1.75;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-card: 0 1px 3px rgba(47, 42, 36, 0.07);
+  --reading-width: 72ch;
+
+  /* 迁移期别名：旧组件 CSS 还在用这些名字，逐步替换后可删除 */
+  --color-primary: var(--primary-ink);
+  --color-secondary: var(--accent-ink);
+  --color-background: var(--bg);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-success: var(--success-ink);
+  --color-warning: var(--warning-ink);
+  --color-error: var(--error-ink);
+  --color-panel: var(--surface-alt);
+  --color-panel-solid: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
 }
 
 * {
@@ -27,17 +88,34 @@
 }
 
 body {
-  font-family: 'Noto Serif SC', Cinzel, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 600;
-  font-size: 20px;
-  background: linear-gradient(135deg, var(--color-background) 0%, var(--color-primary) 100%);
-  color: var(--color-text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-body);
+  background: var(--bg);
+  color: var(--text);
   min-height: 100vh;
-  line-height: 1.6;
+  line-height: var(--lh-body);
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-size: 1.2em;
+  font-family: var(--font-display);
+  line-height: 1.35;
+}
+
+h1 {
+  font-size: var(--fs-h1);
+}
+
+h2 {
+  font-size: var(--fs-h2);
+}
+
+h3 {
+  font-size: var(--fs-body);
+}
+
+h4, h5, h6 {
+  font-size: var(--fs-small);
 }
 
 p, li, span, label, input, textarea, button {
@@ -88,32 +166,32 @@ textarea {
 @keyframes btnPoof {
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 0 0 var(--accent-soft);
   }
 
   15% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 0 0 var(--accent-soft);
   }
 
   30% {
     transform: scale(1.08);
-    box-shadow: 0 0 20px 4px rgba(255, 215, 0, 0.6), 0 0 40px 8px rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 20px 4px var(--border-strong), 0 0 40px 8px var(--accent-soft);
   }
 
   50% {
     transform: scale(1.02);
-    box-shadow: 0 0 15px 3px rgba(255, 215, 0, 0.5), 0 0 30px 6px rgba(255, 215, 0, 0.2);
+    box-shadow: 0 0 15px 3px var(--accent-soft), 0 0 30px 6px var(--accent-soft);
   }
 
   70% {
     transform: scale(1);
-    box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.3), 0 0 15px 3px rgba(255, 215, 0, 0.15);
+    box-shadow: 0 0 8px 2px var(--accent-soft), 0 0 15px 3px var(--accent-soft);
   }
 
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+    box-shadow: 0 0 0 0 var(--border);
   }
 }
 
@@ -141,7 +219,7 @@ textarea {
   left: 50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(0);
   pointer-events: none;
@@ -159,7 +237,7 @@ textarea {
   z-index: 9998;
   background:
     radial-gradient(ellipse at center, transparent 0%, rgba(60, 30, 80, 0.25) 100%),
-    radial-gradient(ellipse at top left, rgba(123, 91, 158, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at top left, var(--primary-soft) 0%, transparent 50%),
     radial-gradient(ellipse at bottom right, rgba(180, 120, 180, 0.15) 0%, transparent 50%);
   animation: mistPulse 8s ease-in-out infinite;
 }
@@ -198,7 +276,7 @@ textarea {
   box-shadow:
     0 0 4px var(--color-secondary),
     0 0 8px var(--color-secondary),
-    0 0 16px rgba(255, 215, 0, 0.5);
+    0 0 16px var(--border-strong);
 }
 
 @keyframes stardustFade {
@@ -219,7 +297,7 @@ textarea {
   width: 200px;
   height: 200px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
   pointer-events: none;
   z-index: 9997;
   transform: translate(-50%, -50%);
@@ -240,13 +318,13 @@ textarea {
 
 .poof-particle {
   position: absolute;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.9) 0%, rgba(255, 215, 0, 0.4) 50%, transparent 70%);
+  background: radial-gradient(circle, var(--accent-soft) 0%, var(--accent-soft) 50%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
   box-shadow:
-    0 0 10px 3px rgba(255, 215, 0, 0.6),
-    0 0 20px 6px rgba(255, 215, 0, 0.3),
-    0 0 30px 10px rgba(255, 215, 0, 0.1);
+    0 0 10px 3px var(--border-strong),
+    0 0 20px 6px var(--border),
+    0 0 30px 10px var(--border);
   transform: translate(-50%, -50%);
 }
 
@@ -312,55 +390,61 @@ textarea {
 }
 
 .btn {
-  display: inline-block;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 40px;
+  padding: 0 var(--sp-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-body);
+  font-family: inherit;
   font-weight: 500;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .btn-primary {
-  background: var(--color-secondary);
-  color: var(--color-primary);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
 }
 
 .btn-primary:hover {
-  background: #D8B2E2;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(200, 162, 214, 0.4);
+  background: var(--primary-hover);
 }
 
 .btn-primary:disabled {
-  background: #555;
-  color: #888;
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border-color: var(--border);
   cursor: not-allowed;
-  transform: none;
 }
 
 .btn-secondary {
-  background: transparent;
-  border: 1px solid var(--color-secondary);
-  color: var(--color-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--primary-ink);
 }
 
 .btn-secondary:hover {
-  background: rgba(200, 162, 214, 0.1);
+  background: var(--primary-soft);
 }
 
 .btn-secondary:disabled {
-  border-color: #555;
-  color: #666;
+  border-color: var(--border);
+  color: var(--text-muted);
+  background: var(--surface-alt);
   cursor: not-allowed;
 }
 
 .page-title {
-  font-size: 32px;
-  color: var(--color-secondary);
-  margin-bottom: 24px;
-  text-align: center;
-  text-shadow: 0 0 20px rgba(200, 162, 214, 0.3);
+  font-size: var(--fs-display);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--sp-5);
+  text-align: left;
 }
 
 .loading {

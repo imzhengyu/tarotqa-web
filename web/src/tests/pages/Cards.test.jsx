@@ -131,4 +131,19 @@ describe('Cards', () => {
       expect(screen.queryByText('关键词')).not.toBeInTheDocument();
     });
   });
+
+  // 覆盖加载失败分支：接口报错时不应崩溃，页面仍能渲染
+  it('牌库加载失败时给出空状态而不是崩溃', async () => {
+    const api = (await import('../../services/api')).default;
+    api.getCards.mockRejectedValueOnce(new Error('network down'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(<Cards />, { wrapper: TestWrapper });
+
+    await waitFor(() => {
+      expect(screen.queryByText('愚者')).not.toBeInTheDocument();
+    });
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
 });

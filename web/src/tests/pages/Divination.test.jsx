@@ -3,6 +3,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Divination, { generateTarotFilename, spreadList } from '../../pages/Divination';
 import { LanguageProvider } from '../../context/LanguageContext';
 
+// 导出 PDF 会真的加载字体并生成文件，这里换成可断言的桩
+vi.mock('../../utils/exportPdf', () => ({ exportMarkdownToPdf: vi.fn() }));
+
 const mockCards = [
   {
     id: 'fool',
@@ -125,7 +128,8 @@ describe('Divination', () => {
     });
   });
 
-  it('should show alert when starting question without input', async () => {
+  // 回归：空问题以前用 alert() 提示，现在改为页面内联错误提示
+  it('should show inline error when starting question without input', async () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     render(<Divination />, { wrapper: TestWrapper });
 
@@ -143,8 +147,9 @@ describe('Divination', () => {
 
     fireEvent.click(screen.getByText('开始抽牌'));
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalled();
+      expect(screen.getByRole('alert')).toHaveTextContent('请描述您的问题');
     }, { timeout: 1000 });
+    expect(alertSpy).not.toHaveBeenCalled();
     alertSpy.mockRestore();
   });
 
@@ -215,5 +220,32 @@ describe('Divination', () => {
     await waitFor(() => {
       expect(screen.getByText('选择牌阵')).toBeInTheDocument();
     });
+  });
+
+  // 覆盖页面里的导出回调：AI 解读完成后点「导出 PDF」应调用导出模块
+  it('AI 解读完成后可以导出 PDF', async () => {
+    const { exportMarkdownToPdf } = await import('../../utils/exportPdf');
+
+    render(<Divination />, { wrapper: TestWrapper });
+
+    await waitFor(() => expect(screen.getByText('选择牌阵')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('我已阅读并同意'));
+
+    fireEvent.click(screen.getByText(spreadList.find((s) => s.id === 'single').name));
+    fireEvent.click(screen.getByText('选择此牌阵 →'));
+    await waitFor(() => expect(screen.getByText('描述您的问题')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByPlaceholderText('请描述您想要咨询的问题...'), { target: { value: '测试问题' } });
+    fireEvent.click(screen.getByText('开始抽牌'));
+    await waitFor(() => expect(screen.getByText('点击卡牌抽取')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(document.querySelector('.draw-cards .deck'));
+    await waitFor(() => expect(screen.getByText('占卜结果')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByText('AI深度解读'));
+    await waitFor(() => expect(screen.getByText('导出 PDF')).toBeInTheDocument(), { timeout: 3000 });
+
+    fireEvent.click(screen.getByText('导出 PDF'));
+    await waitFor(() => expect(exportMarkdownToPdf).toHaveBeenCalled());
   });
 });

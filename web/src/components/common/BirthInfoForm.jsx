@@ -13,13 +13,15 @@ const TIMEZONES = [
   { value: 'Asia/Tokyo', label_zh: '日本时间 (UTC+9)', label_en: 'Japan Time (UTC+9)' },
   { value: 'Asia/Seoul', label_zh: '韩国时间 (UTC+9)', label_en: 'Korea Time (UTC+9)' },
   { value: 'Asia/Singapore', label_zh: '新加坡时间 (UTC+8)', label_en: 'Singapore Time (UTC+8)' },
-  { value: 'America/New_York', label_zh: '纽约时间 (UTC-5)', label_en: 'New York Time (UTC-5)' },
-  { value: 'America/Los_Angeles', label_zh: '洛杉矶时间 (UTC-8)', label_en: 'Los Angeles Time (UTC-8)' },
-  { value: 'America/Chicago', label_zh: '芝加哥时间 (UTC-6)', label_en: 'Chicago Time (UTC-6)' },
-  { value: 'Europe/London', label_zh: '伦敦时间 (UTC+0)', label_en: 'London Time (UTC+0)' },
-  { value: 'Europe/Paris', label_zh: '巴黎时间 (UTC+1)', label_en: 'Paris Time (UTC+1)' },
-  { value: 'Europe/Berlin', label_zh: '柏林时间 (UTC+1)', label_en: 'Berlin Time (UTC+1)' },
-  { value: 'Australia/Sydney', label_zh: '悉尼时间 (UTC+10)', label_en: 'Sydney Time (UTC+10)' },
+  // 夏令时地区不写死 UTC 偏移：实际偏移由 IANA 时区规则在计算时确定
+  { value: 'America/New_York', label_zh: '纽约', label_en: 'New York' },
+  { value: 'America/Los_Angeles', label_zh: '洛杉矶', label_en: 'Los Angeles' },
+  { value: 'America/Chicago', label_zh: '芝加哥', label_en: 'Chicago' },
+  { value: 'Europe/London', label_zh: '伦敦', label_en: 'London' },
+  { value: 'Europe/Paris', label_zh: '巴黎', label_en: 'Paris' },
+  { value: 'Europe/Berlin', label_zh: '柏林', label_en: 'Berlin' },
+  { value: 'Australia/Sydney', label_zh: '悉尼', label_en: 'Sydney' },
+  { value: 'UTC', label_zh: 'UTC 协调世界时', label_en: 'UTC' },
 ];
 
 const getDaysInMonth = (year, month) => {
@@ -32,7 +34,7 @@ const getDefaultTimezone = () => {
   return found ? userTimezone : 'Asia/Shanghai';
 };
 
-function BirthInfoForm({ value, onChange, showGender = false }) {
+function BirthInfoForm({ value, onChange, showGender = false, showLocation = false }) {
   const { language } = useLanguage();
   const [localValue, setLocalValue] = useState(value || {
     year: 2000,
@@ -67,6 +69,11 @@ function BirthInfoForm({ value, onChange, showGender = false }) {
 
     setLocalValue(newValue);
     onChange?.(newValue);
+  };
+
+  const handleLocationChange = (field, rawValue) => {
+    const trimmed = rawValue.trim();
+    handleChange(field, trimmed === '' ? undefined : Number(trimmed));
   };
 
   const years = Array.from(
@@ -193,6 +200,48 @@ function BirthInfoForm({ value, onChange, showGender = false }) {
           </div>
         </div>
       )}
+
+      {showLocation && (
+        <div className="form-row location-row">
+          <div className="form-group longitude-group">
+            <label htmlFor="birth-longitude">{isZh ? '出生地经度' : 'Birth Longitude'}</label>
+            <input
+              id="birth-longitude"
+              type="number"
+              inputMode="decimal"
+              step="0.0001"
+              min="-180"
+              max="180"
+              placeholder={isZh ? '东经为正，如 121.4737' : 'East positive, e.g. 121.4737'}
+              value={localValue.longitude ?? ''}
+              onChange={(e) => handleLocationChange('longitude', e.target.value)}
+            />
+          </div>
+
+          <div className="form-group latitude-group">
+            <label htmlFor="birth-latitude">{isZh ? '出生地纬度' : 'Birth Latitude'}</label>
+            <input
+              id="birth-latitude"
+              type="number"
+              inputMode="decimal"
+              step="0.0001"
+              min="-90"
+              max="90"
+              placeholder={isZh ? '北纬为正，如 31.2304' : 'North positive, e.g. 31.2304'}
+              value={localValue.latitude ?? ''}
+              onChange={(e) => handleLocationChange('latitude', e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
+      {showLocation && (
+        <p className="form-hint">
+          {isZh
+            ? '经度/纬度用于计算上升点与宫位；留空则按默认出生地（上海）估算。'
+            : 'Longitude/latitude drive the ascendant and houses; if empty, a default location (Shanghai) is assumed.'}
+        </p>
+      )}
     </div>
   );
 }
@@ -205,10 +254,13 @@ BirthInfoForm.propTypes = {
     hour: PropTypes.number,
     minute: PropTypes.number,
     timezone: PropTypes.string,
-    gender: PropTypes.oneOf(['male', 'female'])
+    gender: PropTypes.oneOf(['male', 'female']),
+    latitude: PropTypes.number,
+    longitude: PropTypes.number
   }),
   onChange: PropTypes.func.isRequired,
-  showGender: PropTypes.bool
+  showGender: PropTypes.bool,
+  showLocation: PropTypes.bool
 };
 
 export default BirthInfoForm;

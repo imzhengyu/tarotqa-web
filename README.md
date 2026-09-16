@@ -12,7 +12,7 @@
 - **78张完整塔罗牌**：大阿卡纳22张 + 小阿卡纳56张
 - **5种牌阵**：单牌、三牌、凯尔特十字、爱情金字塔、马蹄铁
 - **正位/逆位**：每张牌50%概率出现逆位，牌义解读不同
-- **AI深度解读**：集成 MiniMax AI，支持Markdown格式输出
+- **AI深度解读**：集成 DeepSeek AI，支持Markdown格式输出
 
 ### 紫微斗数
 - 基于传统紫微斗数排盘算法
@@ -65,16 +65,24 @@
 
 ### 个人中心
 - 查看访问统计数据（总会话数、总提问数、设备分布等）
-- 管理MiniMax API Key
+- 管理 DeepSeek API Key
 - 清除访问记录
 
 ---
 
 ## 隐私说明
 
-- 所有数据仅在浏览器内存中处理
-- 不存储到任何服务器或本地存储
-- 访问统计采用脱敏处理
+- 占卜、紫微斗数、星盘的排盘计算全部在浏览器本地完成，项目没有后端，不会把数据上传到自有服务器
+- 使用 **AI 解读**时，会把问题、抽到的牌面或命盘数据发送给 DeepSeek API（使用你自己的 API Key，或站点内置的默认 Key）
+- 浏览器 localStorage 中会保存：访问统计（`tarotqa_visit_stats`）、AI 冷却时间、以及你自己填写的 DeepSeek API Key；
+ 访问统计可在「统计」页一键清除，其中不含真实 IP（只有 UA/屏幕尺寸算出的设备指纹）
+- 站点若内置默认 API Key，该 Key 会随前端产物一起下发，任何人都可以提取；介意的话建议在「我的」页填入自己的 Key
+
+### 默认 API Key 的存放方式
+
+- 本地开发：写在 `web/.env.local` 的 `VITE_TAROT_DEEPSEEK_API_KEY`（该文件已被 `.gitignore` 忽略，禁止提交）
+- CI / 构建：GitHub Actions secret `DEEPSEEK_API_KEY`，构建时注入同名环境变量
+- 代码里只通过 `import.meta.env.VITE_DEFAULT_API_KEY` 读取，不出现明文 Key
 
 ---
 
@@ -94,6 +102,11 @@
 - AI解读结果支持导出为PNG图片
 - 点击"导出分析结果"按钮保存
 - 文件名包含日期时间戳
+
+### 出生地经纬度（可选）
+- 西方星盘的上升点与宫位依赖出生地，可在「出生信息」里填写经度/纬度（东经、北纬为正）
+- 留空则按默认出生地（上海 121.47°E / 31.23°N）估算，页面会提示这是估算值
+- 目前的宫位制为**等宫制（Equal House）**，每宫 30°
 
 ### Markdown渲染
 - AI解读支持完整的Markdown格式
@@ -122,3 +135,21 @@
 ---
 
 *TarotQA - AI塔罗占卜*
+
+---
+
+## 开发与质量
+
+| 用途 | 命令 |
+|------|------|
+| 快速 sanity（改动后先跑，约 30s） | `python scripts/run_sanity.py` |
+| 全量检查（lint + csslint + 单测 + 覆盖率 + 构建） | `python scripts/run_checks.py` |
+| 数据/图片/资源一致性检查 | `python scripts/audit_assets.py` |
+| 西方星盘计算探针（跨时区对拍 + 参考值比对） | `python scripts/probe_astrology.py` |
+| UI 配色与对比度审计（WCAG） | `python scripts/audit_ui_colors.py --palettes design/palettes.json` |
+| 主题示例网页（马卡龙候选配色） | `python scripts/build_theme_preview.py` → `design/theme-preview.html` |
+| 主题示例截图（本机 Edge） | `python scripts/snapshot_theme_preview.py` → `design/preview-shots/` |
+
+每次运行都会在 `logs/<脚本名>-<时间戳>/` 落下完整日志与 `summary.md`，终端只输出解析后的 PASS/FAIL 摘要。
+已知问题与修复状态记录在 [ISSUES.md](ISSUES.md)。
+UI 配色分析与改版计划见 [design/ui-review.md](design/ui-review.md)。

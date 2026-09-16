@@ -44,7 +44,7 @@ vi.mock('iztro', () => ({
   }
 }));
 
-import { generateZiweiData, formatZiweiPrompt } from '../../../utils/ziwei/ziweiData';
+import { generateZiweiData, formatZiweiPrompt, hourToTimeIndex } from '../../../utils/ziwei/ziweiData';
 
 describe('Ziwei Data', () => {
   describe('generateZiweiData', () => {
@@ -158,14 +158,6 @@ describe('Ziwei Data', () => {
       ]);
     });
 
-    it('isEmpty should be boolean', () => {
-      const result = generateZiweiData('2000-08-16', '午', 'male', 'solar');
-
-      result.palaces.forEach(palace => {
-        expect(typeof palace.isEmpty).toBe('boolean');
-      });
-    });
-
     it('isEmpty should be true for palace with no major or minor stars', () => {
       const result = generateZiweiData('2000-08-16', '午', 'male', 'solar');
       const secondPalace = result.palaces.find(p => p.name === '兄弟宫');
@@ -182,14 +174,6 @@ describe('Ziwei Data', () => {
   });
 
   describe('formatZiweiPrompt', () => {
-    it('should return string', () => {
-      const data = generateZiweiData('2000-08-16', '午', 'male', 'solar');
-      const prompt = formatZiweiPrompt(data);
-
-      expect(typeof prompt).toBe('string');
-      expect(prompt.length).toBeGreaterThan(0);
-    });
-
     it('should include basic info', () => {
       const data = generateZiweiData('2000-08-16', '午', 'male', 'solar');
       const prompt = formatZiweiPrompt(data);
@@ -313,6 +297,44 @@ describe('Ziwei Data', () => {
       generateZiweiData('2000-08-16', '午', 'male', 'solar');
 
       expect(mockBySolar).toHaveBeenCalledWith('2000-08-16', '午', 'male', true, 'zh-CN');
+    });
+  });
+
+  // 回归：旧实现用 Math.floor(hour/2)%12，把 23:00 算成亥时(11)，
+  // 而 iztro 的区间是 11: 21:00~23:00 亥时、12: 23:00~00:00 晚子时。
+  describe('hourToTimeIndex（回归）', () => {
+    it.each([
+      [0, 0],
+      [1, 1],
+      [2, 1],
+      [3, 2],
+      [8, 4],
+      [11, 6],
+      [12, 6],
+      [13, 7],
+      [21, 11],
+      [22, 11],
+      [23, 12]
+    ])('小时 %i → 时辰序号 %i', (hour, expected) => {
+      expect(hourToTimeIndex(hour)).toBe(expected);
+    });
+
+    it('越界或非整数应报错', () => {
+      expect(() => hourToTimeIndex(-1)).toThrow(/0-23/);
+      expect(() => hourToTimeIndex(24)).toThrow(/0-23/);
+      expect(() => hourToTimeIndex(1.5)).toThrow(/0-23/);
+      expect(() => hourToTimeIndex(undefined)).toThrow(/0-23/);
+    });
+
+    it('generateZiweiData 应把小时换算成 iztro 的时辰序号', () => {
+      generateZiweiData('2000-08-16', 23, 'male', 'solar');
+      expect(mockBySolar).toHaveBeenLastCalledWith('2000-08-16', 12, 'male', true, 'zh-CN');
+
+      generateZiweiData('2000-08-16', 22, 'male', 'solar');
+      expect(mockBySolar).toHaveBeenLastCalledWith('2000-08-16', 11, 'male', true, 'zh-CN');
+
+      generateZiweiData('2000-08-16', 0, 'male', 'solar');
+      expect(mockBySolar).toHaveBeenLastCalledWith('2000-08-16', 0, 'male', true, 'zh-CN');
     });
   });
 });
