@@ -129,6 +129,9 @@ UI/配色改动另见 `design/ui-review.md`：改动配色后必须跑一次对�
   需要推送时，Codex 必须先明确报告「将推送哪些提交、目标分支、会触发 Pages 发布」并取得用户确认；
   确认后写入放行标记 `git rev-parse HEAD > .git/CODEX_PUSH_APPROVED`，再由用户执行 `git push`。
   `pre-push` hook 会校验该标记；没有标记（或标记 sha 与 HEAD 不一致）一律拒绝推送。
+- **所有 git 操作都走脚本**：推送用 `python scripts/push_approved.py [--approve] [--dry-run]`，
+  代理检测/配置用 `python scripts/check_network.py --detect-proxy|--apply-proxy`。
+  禁止在终端里拼接多条命令（`;` `&&` `|`）完成多步操作——写进脚本再调用。
 
 完整发布流程见 `.agents/skills/deploy/SKILL.md`。
 
