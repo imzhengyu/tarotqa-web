@@ -1,6 +1,27 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import { version } from './package.json';
+
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+// 构建时把「提交 sha + 提交时间」写进产物：CI 由 workflow 传入，本地直接问 git。
+// 提交时间用 committer date（ISO8601），页面上再用 Asia/Shanghai 格式化成北京时间。
+function fromGit(format) {
+  try {
+    return execFileSync('git', ['-C', REPO_ROOT, 'log', '-1', `--format=${format}`], {
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+  } catch {
+    return '';
+  }
+}
+
+const gitSha = process.env.VITE_GIT_SHA || fromGit('%H') || 'local';
+const gitTime = process.env.VITE_GIT_TIME || fromGit('%cI') || '';
 
 export default defineConfig(({ mode }) => {
   // 默认 Key 从环境变量注入：CI 用 GitHub secret，本地由 web/.env.local 提供
@@ -12,7 +33,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
     __APP_VERSION__: JSON.stringify(version),
-    __GIT_SHA__: JSON.stringify(process.env.VITE_GIT_SHA || 'local'),
+    __GIT_SHA__: JSON.stringify(gitSha),
+    __GIT_TIME__: JSON.stringify(gitTime),
       'import.meta.env.VITE_DEFAULT_API_KEY': JSON.stringify(defaultApiKey)
     },
     server: {

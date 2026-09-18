@@ -236,6 +236,10 @@ for (const spec of pages) {{
     if (overflow > 4) problems.push(`横向溢出 ${{overflow}}px`);
 
     await page.screenshot({{ path: `${{outDir}}/${{spec.name}}.png`, fullPage: true }});
+    // footer 单独出一张元素截图：发布信息（版本 / sha / 提交时间）要看得到
+    await page.locator('.footer').first()
+      .screenshot({{ path: `${{outDir}}/${{spec.name}}-footer.png` }})
+      .catch(() => {{}});
   }} catch (error) {{
     problems.push(`执行失败[step=${{currentStep}}]：${{error.message.split('\\n')[0]}}`);
   }}

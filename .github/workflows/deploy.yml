@@ -67,6 +67,10 @@ jobs:
           cd web
           node scripts/coverage-check.js --no-run
 
+      # footer 展示用：把本次提交的时间（committer date）传给构建，页面上换算成北京时间
+      - name: Resolve commit metadata
+        run: echo "VITE_GIT_TIME=$(git log -1 --format=%cI)" >> "$GITHUB_ENV"
+
       - name: Build
         run: |
           cd web

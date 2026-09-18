@@ -357,6 +357,9 @@ describe('Layout', () => {
 
       const footer = document.querySelector('.footer');
       expect(footer.textContent).toContain('TarotQA');
+      // footer 里 SHA 右边要跟提交时间（北京时间）
+      expect(footer.textContent).toContain('(test1234)');
+      expect(footer.textContent).toContain('2026-09-18 20:00（北京时间）');
     });
   });
 });

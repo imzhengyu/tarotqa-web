@@ -26,6 +26,7 @@ globalThis.expect = expect;
 // Vite 注入的全局变量
 globalThis.__APP_VERSION__ = '2.9.0';
 globalThis.__GIT_SHA__ = 'test1234';
+globalThis.__GIT_TIME__ = '2026-09-18T12:00:00Z'; // → 北京时间 2026-09-18 20:00
 
 // localStorage mock
 const localStorageMock = (() => {

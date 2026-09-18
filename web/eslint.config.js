@@ -89,7 +89,8 @@ export default [
         ...browserGlobals,
         importMeta: 'readonly',
         __APP_VERSION__: 'readonly',
-        __GIT_SHA__: 'readonly'
+        __GIT_SHA__: 'readonly',
+        __GIT_TIME__: 'readonly'
       }
     },
     plugins: {

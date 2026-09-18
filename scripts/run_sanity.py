@@ -35,6 +35,7 @@ SANITY_TESTS = [
     "src/tests/utils/exportPdf.test.js",
     "src/tests/utils/date.test.js",
     "src/tests/utils/chinaGeoData.test.js",
+    "src/tests/utils/commitInfo.test.js",
     "src/tests/api.test.js",
     "src/tests/api-helpers.test.js",
     "src/tests/api-ziwei-astrology.test.js",

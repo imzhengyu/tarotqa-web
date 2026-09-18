@@ -150,7 +150,9 @@
 
 .layout-mobile .footer {
   display: block;
-  padding: 12px 20px;
+
+  /* 底部留出"回到顶部"浮标（48px 按钮 + 30px 边距）的高度，否则会把发布信息盖掉 */
+  padding: 12px 20px calc(78px + env(safe-area-inset-bottom, 0px));
   text-align: center;
   font-size: 12px;
   color: var(--color-text-secondary);

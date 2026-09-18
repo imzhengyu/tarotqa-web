@@ -59,4 +59,27 @@ describe('ChinaCityPicker', () => {
     render(<ChinaCityPicker isOpen={false} onSelect={vi.fn()} onClose={vi.fn()} />, { wrapper: Wrapper });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+
+  it('数据晚到 / 父组件重渲染都不会重置已选省份（竞态回归）', async () => {
+    const onSelect = vi.fn();
+    // 让 fetch 晚 80ms 才 resolve，复现"数据到了、用户已经点过省份"的时序
+    vi.stubGlobal('fetch', vi.fn(() => new Promise((resolve) => {
+      setTimeout(() => resolve({ ok: true, json: async () => GEO }), 80);
+    })));
+
+    const { rerender } = render(
+      <ChinaCityPicker isOpen value={undefined} onSelect={onSelect} onClose={vi.fn()} />,
+      { wrapper: Wrapper }
+    );
+    await waitFor(() => expect(screen.getByText('广东省')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('广东省'));
+    expect(screen.getByText('深圳市')).toBeInTheDocument();
+
+    // 父组件用新的对象字面量重渲染（模拟 BirthInfoForm 每次 setState 都换引用）
+    rerender(<ChinaCityPicker isOpen value={{ latitude: 1 }} onSelect={onSelect} onClose={vi.fn()} />);
+    expect(screen.getByText('深圳市')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('深圳市'));
+    expect(onSelect).toHaveBeenCalledWith({ province: '广东省', city: '深圳市', lat: 22.5565, lon: 113.9859 });
+  });
 });

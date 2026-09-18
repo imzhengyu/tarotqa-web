@@ -5,6 +5,7 @@ import PoofNavLink from './common/PoofNavLink';
 import Icon from './common/Icons';
 import { useDevice } from '../hooks/useDevice';
 import { useLanguage } from '../context/LanguageContext';
+import { commitTimeSuffix, shortSha } from '../utils/commitInfo';
 import './Layout.css';
 
 /**
@@ -67,8 +68,8 @@ function Layout() {
       <footer className="footer">
         <p>
           {t(
-            `© 2026 TarotQA - 塔罗占卜 v${__APP_VERSION__ || '1.0.0'} (${__GIT_SHA__?.slice(0, 8) || 'local'})`,
-            `© 2026 TarotQA - Tarot Divination v${__APP_VERSION__ || '1.0.0'} (${__GIT_SHA__?.slice(0, 8) || 'local'})`
+            `© 2026 TarotQA - 塔罗占卜 v${__APP_VERSION__ || '1.0.0'} (${shortSha(__GIT_SHA__)})${commitTimeSuffix(__GIT_TIME__, 'zh')}`,
+            `© 2026 TarotQA - Tarot Divination v${__APP_VERSION__ || '1.0.0'} (${shortSha(__GIT_SHA__)})${commitTimeSuffix(__GIT_TIME__, 'en')}`
           )}
         </p>
       </footer>

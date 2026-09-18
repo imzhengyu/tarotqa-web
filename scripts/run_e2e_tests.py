@@ -53,6 +53,7 @@ import {{ chromium }} from {entry};
 const base = {base};
 const mockMarkdown = {mock_markdown};
 const downloadDir = {download_dir};
+const ONLY = {only};
 
 const browser = await chromium.launch({{
   channel: {channel},
@@ -93,21 +94,25 @@ async function closeDisclaimer(page) {{
 }}
 
 // poof 动画会延迟 ~600ms 才跳转/触发，用等待代替固定 sleep
-async function clickAnd(page, locator, waitFor, attempts = 2) {{
+async function clickAnd(page, locator, waitFor, label = '未知点击', attempts = 2) {{
   let lastError = null;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {{
-    await locator.waitFor({{ state: 'visible', timeout: 8000 }});
-    await locator.scrollIntoViewIfNeeded().catch(() => {{}});
-    await locator.click({{ force: true }});
-    if (!waitFor) return;
     try {{
+      await locator.waitFor({{ state: 'visible', timeout: 8000 }});
+      await locator.scrollIntoViewIfNeeded().catch(() => {{}});
+      await locator.click({{ force: true, timeout: 8000 }});
+      if (!waitFor) return;
       await waitFor();
       return;
     }} catch (error) {{
-      lastError = error;
-      await page.waitForTimeout(800); // 点击可能被弹窗/动画吞掉，再点一次
+      // 每次失败都把 DOM 关键状态带出来：点击超时多半是被弹窗/动画吞掉，没诊断只能靠猜
+      lastError = new Error(
+        `[${{label}}] ${{(error.message || String(error)).split('\\n')[0]}} | 诊断：${{await diagnose(page)}}`
+      );
+      await page.waitForTimeout(800); // 再点一次
     }}
   }}
+  await locator.screenshot({{ path: 'logs/e2e-failure-last-click.png', timeout: 2000 }}).catch(() => {{}});
   throw lastError;
 }}
 
@@ -149,10 +154,15 @@ const scenarios = {{
     await page.goto(base + '/', {{ waitUntil: 'load' }});
     await page.locator('.service-block').first().waitFor({{ timeout: 8000 }});
 
+    // footer 必须带上本次提交的 sha 与提交时间（北京时间）
+    const footerText = (await page.locator('.footer').first().innerText()).replace(/\\s+/g, ' ');
+    assert(/\\(\\w+\\)\\s·\\s\\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d（北京时间）/.test(footerText),
+      `footer 应显示 "(sha) · YYYY-MM-DD HH:mm（北京时间）"，实际：${{footerText}}`);
+
     // 移动端导航也在 DOM 里（desktop 下被 CSS 隐藏），所以限定到桌面 header 的 .nav
     try {{
       await clickAnd(page, page.locator('.nav').getByRole('link', {{ name: '塔罗占卜' }}).first(),
-        () => page.waitForURL('**/divination', {{ timeout: 8000 }}));
+        () => page.waitForURL('**/divination', {{ timeout: 8000 }}), '导航→塔罗占卜');
     }} catch (error) {{
       throw new Error(`${{error.message.split('\\n')[0]}} | 诊断：${{await diagnose(page)}}`);
     }}
@@ -161,12 +171,12 @@ const scenarios = {{
     await closeDisclaimer(page);
 
     await clickAnd(page, page.locator('.nav').getByRole('link', {{ name: '塔罗牌库' }}).first(),
-      () => page.waitForURL('**/cards', {{ timeout: 8000 }}));
+      () => page.waitForURL('**/cards', {{ timeout: 8000 }}), '导航→塔罗牌库');
     assert(new URL(page.url()).pathname === '/cards', `导航后路径应为 /cards，实际 ${{page.url()}}`);
     await closeDisclaimer(page);
 
     await clickAnd(page, page.locator('button.language-toggle').first(),
-      () => page.getByText('Cards', {{ exact: true }}).first().waitFor({{ timeout: 5000 }}));
+      () => page.getByText('Cards', {{ exact: true }}).first().waitFor({{ timeout: 5000 }}), '切换语言');
     const navText = await page.locator('.nav, .mobile-nav').first().innerText();
     assert(navText.includes('Home') || navText.includes('Cards'), `切换语言后导航应变为英文，实际：${{navText.slice(0, 60)}}`);
     await isolated.close();
@@ -327,7 +337,8 @@ const scenarios = {{
 }};
 
 const results = [];
-for (const [name, run] of Object.entries(scenarios)) {{
+const selected = Object.entries(scenarios).filter(([name]) => ONLY.length === 0 || ONLY.includes(name));
+for (const [name, run] of selected) {{
   // UI 有 600ms 动画与懒加载，允许重试一次；重试成功会在报告里标注（暴露偶发性）
   let attempts = 0;
   let firstFailure = [];
@@ -401,6 +412,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--base-url", default=None)
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--allow-skip", action="store_true")
+    parser.add_argument("--only", action="append", default=[], metavar="SCENARIO", help="只跑指定场景（可重复，调试用）")
     args = parser.parse_args(argv or [])
 
     DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -451,6 +463,7 @@ def main(argv: list[str] | None = None) -> int:
             base=f"'{base}'",
             mock_markdown=f"'{MOCK_MARKDOWN}'",
             download_dir=f"'{DOWNLOAD_DIR.as_posix()}'",
+            only=json.dumps(args.only, ensure_ascii=False),
         ),
         encoding="utf-8",
     )

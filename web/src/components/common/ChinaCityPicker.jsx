@@ -24,24 +24,24 @@ function ChinaCityPicker({ isOpen, value, onSelect, onClose }) {
   const [geo, setGeo] = useState(null);
   const [error, setError] = useState(null);
   const [province, setProvince] = useState(null);
+  // 只依赖省名字符串：父组件每次渲染都会换 value 的对象引用，用它当依赖会把用户刚选的省份重置掉
+  const selectedProvince = value?.province ?? null;
 
+  // 加载数据 + 同步初始选择**放在同一个 effect 里**：拆成两个 effect 时，
+  // "按 value 同步"那次会在数据晚到时后执行，把用户刚点的省份清空（竞态）。
   useEffect(() => {
-    if (!isOpen || geo) return undefined;
+    if (!isOpen) return undefined;
     let alive = true;
+    setError(null);
     loadChinaGeo()
-      .then((data) => { if (alive) setGeo(data); })
+      .then((data) => {
+        if (!alive) return;
+        setGeo(data);
+        setProvince(selectedProvince ? data.provinces.find((item) => item.name === selectedProvince) ?? null : null);
+      })
       .catch((loadError) => { if (alive) setError(loadError.message); });
     return () => { alive = false; };
-  }, [isOpen, geo]);
-
-  // 打开时定位到已选省份
-  useEffect(() => {
-    if (!isOpen || !geo) return;
-    const target = value?.province
-      ? geo.provinces.find((item) => item.name === value.province)
-      : null;
-    setProvince(target || null);
-  }, [isOpen, geo, value]);
+  }, [isOpen, selectedProvince]);
 
   if (!isOpen) return null;
 
