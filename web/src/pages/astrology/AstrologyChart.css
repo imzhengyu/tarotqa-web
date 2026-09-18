@@ -79,6 +79,22 @@
   align-items: center;
 }
 
+/* 星盘 SVG 自身声明尺寸与方形比例：只靠父容器高度时，移动端(height:auto)会解析失败 */
+.astrology-svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+/* 星座/行星符号(♈♉♊… ☉☽☿…)不在正文字体里，需要显式指定符号字体，否则会显示成方框 */
+.astrology-svg text,
+.planet-symbol,
+.planet-sign {
+  font-family: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', 'Noto Sans SC', sans-serif;
+}
+
 .chartDecorations {
   position: absolute;
   inset: 0;

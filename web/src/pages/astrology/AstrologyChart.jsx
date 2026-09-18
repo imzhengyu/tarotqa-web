@@ -20,6 +20,9 @@ const markdownPlugins = [
   { loader: () => import('markdown-it-multimd-table'), options: { multiline: true, header: true } }
 ];
 
+// 十二宫扇区底色：用主题浅色令牌轮换，替代旧的深紫色块（在米色底上会像缺口）
+const ZODIAC_SEGMENT_FILLS = ['var(--primary-soft)', 'var(--surface-alt)', 'var(--accent-soft)'];
+
 export const generateAstrologyFilename = (birthData) => {
   if (!birthData) return `astrology-${formatTimestamp()}`;
   const { year, month, day, hour, minute } = birthData;
@@ -176,7 +179,7 @@ function AstrologyChart() {
           cy={CENTER}
           r={OUTER_RADIUS}
           fill="none"
-          stroke="rgba(212, 175, 55, 0.3)"
+          stroke="var(--border-strong)"
           strokeWidth="2"
         />
 
@@ -184,8 +187,8 @@ function AstrologyChart() {
           <g key={index}>
             <path
               d={sign.path}
-              fill={`rgba(45, 27, 78, ${0.3 + (index % 3) * 0.1})`}
-              stroke="rgba(212, 175, 55, 0.2)"
+              fill={ZODIAC_SEGMENT_FILLS[index % ZODIAC_SEGMENT_FILLS.length]}
+              stroke="var(--border)"
               strokeWidth="1"
             />
             <text
@@ -207,7 +210,7 @@ function AstrologyChart() {
           cy={CENTER}
           r={INNER_RADIUS}
           fill="none"
-          stroke="rgba(212, 175, 55, 0.3)"
+          stroke="var(--border)"
           strokeWidth="1"
         />
 
@@ -216,7 +219,7 @@ function AstrologyChart() {
           cy={CENTER}
           r={HOUSE_RADIUS}
           fill="none"
-          stroke="rgba(212, 175, 55, 0.2)"
+          stroke="var(--border)"
           strokeWidth="1"
           strokeDasharray="4,4"
         />
@@ -228,13 +231,13 @@ function AstrologyChart() {
               y1={line.y1}
               x2={line.x2}
               y2={line.y2}
-              stroke="rgba(212, 175, 55, 0.4)"
+              stroke="var(--border-strong)"
               strokeWidth="1"
             />
             <text
               x={(line.x1 + CENTER) / 2 + 15}
               y={(line.y1 + CENTER) / 2 + 15}
-              fill="rgba(212, 175, 55, 0.6)"
+              fill="var(--accent-ink)"
               fontSize="10"
               textAnchor="middle"
             >
@@ -277,9 +280,8 @@ function AstrologyChart() {
               cx={planet.x}
               cy={planet.y}
               r="16"
-              fill={PLANET_COLORS[planet.id] || '#888'}
-              fillOpacity="0.8"
-              stroke="#fff"
+              fill={PLANET_COLORS[planet.id] || 'var(--text-muted)'}
+              stroke="var(--surface)"
               strokeWidth="1"
             />
             <text
@@ -287,7 +289,7 @@ function AstrologyChart() {
               y={planet.y}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill="#fff"
+              fill="#FFFFFF"
               fontSize="12"
               style={{ userSelect: 'none', pointerEvents: 'none' }}
             >
