@@ -1,0 +1,142 @@
+.city-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(47, 42, 36, 0.45);
+}
+
+.city-picker {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: min(520px, 85vh);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+
+.city-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.city-picker-head h3 {
+  margin: 0;
+  font-size: var(--fs-h2);
+}
+
+.city-picker-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.city-picker-message {
+  padding: var(--sp-5);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.city-picker-body {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(160px, 1.4fr);
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  overflow: hidden;
+}
+
+.city-picker-provinces,
+.city-picker-cities {
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.city-picker-provinces {
+  max-height: 340px;
+}
+
+.city-picker-cities {
+  max-height: 340px;
+}
+
+.city-picker-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--fs-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.city-picker-option:hover {
+  background: var(--primary-soft);
+}
+
+.city-picker-option.active {
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+
+.city-picker-coord {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.city-picker-option.active .city-picker-coord {
+  color: var(--on-primary);
+}
+
+.city-picker-hint {
+  padding: 10px;
+  color: var(--text-muted);
+  font-size: var(--fs-small);
+}
+
+.city-picker-attribution {
+  margin: 0;
+  padding: 0 var(--sp-5) var(--sp-4);
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 480px) {
+  .city-picker-body {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-2);
+    padding: var(--sp-3);
+  }
+
+  .city-picker-provinces,
+  .city-picker-cities {
+    max-height: 46vh;
+  }
+}

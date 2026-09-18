@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import argparse
 import os
 import shutil
 import sys
@@ -33,12 +34,14 @@ SANITY_TESTS = [
     "src/tests/utils/exportDocx.test.js",
     "src/tests/utils/exportPdf.test.js",
     "src/tests/utils/date.test.js",
+    "src/tests/utils/chinaGeoData.test.js",
     "src/tests/api.test.js",
     "src/tests/api-helpers.test.js",
     "src/tests/api-ziwei-astrology.test.js",
     "src/tests/useVisitStats.test.js",
     "src/tests/hooks/useAIRequestCooldown.test.js",
     "src/tests/components/BirthInfoForm.test.jsx",
+    "src/tests/components/ChinaCityPicker.test.jsx",
     "src/tests/components/Icons.test.jsx",
     "src/tests/data/personas.test.js",
     "src/tests/components/TarotCard.test.jsx",
@@ -60,7 +63,12 @@ def resolve(name: str) -> str:
     return path
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="快速 sanity 门禁")
+    parser.add_argument("--only", action="append", default=[], metavar="FILE", help="只跑指定测试文件（可重复，调试用）")
+    parser.add_argument("--skip-lint", action="store_true", help="跳过 ESLint（配合 --only 做单文件调试）")
+    args = parser.parse_args(argv or [])
+
     npx = resolve("npx")
     env = dict(os.environ)
     env["NODE_OPTIONS"] = f"{env.get('NODE_OPTIONS', '')} --max-old-space-size=4096".strip()
@@ -68,16 +76,21 @@ def main() -> int:
 
     print(f"[sanity] worker 1-3，Node 堆 ≤ 4096MB，日志目录 {log_dir.relative_to(ROOT)}")
 
-    results = [
-        run_and_log("ESLint", [npx, "eslint", "src", "--ext", "js,jsx"], WEB, log_dir, env),
+    tests = args.only or SANITY_TESTS
+    label = "指定用例" if args.only else "关键用例"
+
+    results = []
+    if not args.skip_lint:
+        results.append(run_and_log("ESLint", [npx, "eslint", "src", "--ext", "js,jsx"], WEB, log_dir, env))
+    results.append(
         run_and_log(
-            "关键用例",
-            [npx, "vitest", "run", "--reporter=dot", "--minWorkers=1", "--maxWorkers=3", *SANITY_TESTS],
+            label,
+            [npx, "vitest", "run", "--reporter=dot", "--minWorkers=1", "--maxWorkers=3", *tests],
             WEB,
             log_dir,
             env,
-        ),
-    ]
+        )
+    )
 
     print_report(results, log_dir, "sanity 结果（日志后处理）")
     summary = write_summary(results, log_dir, "TarotQA Web sanity")
@@ -92,4 +105,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import BirthInfoForm from '../../components/common/BirthInfoForm';
 import { LanguageProvider } from '../../context/LanguageContext';
@@ -119,36 +119,62 @@ describe('BirthInfoForm', () => {
     });
   });
 
-  describe('出生地经纬度（星盘上升点用）', () => {
+  // 出生地改为「省市两级弹窗选择」，不再手输经纬度
+  describe('出生地选择（星盘上升点用）', () => {
     const baseValue = { year: 2000, month: 1, day: 1, hour: 12, minute: 0, timezone: 'Asia/Shanghai' };
+    const geo = {
+      sourceUrl: 'https://download.geonames.org/export/dump/',
+      provinces: [{ name: '广东省', cities: [{ name: '深圳市', lat: 22.5565, lon: 113.9859 }] }]
+    };
 
-    it('默认不渲染经纬度输入', () => {
+    beforeEach(() => {
+      vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => geo })));
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('showLocation=false 时不显示出生地入口', () => {
       render(<BirthInfoForm value={baseValue} onChange={mockOnChange} />, { wrapper: TestWrapper });
-      expect(screen.queryByLabelText('出生地经度')).not.toBeInTheDocument();
-      expect(screen.queryByLabelText('出生地纬度')).not.toBeInTheDocument();
+      expect(screen.queryByText('选择省市')).not.toBeInTheDocument();
     });
 
-    it('showLocation 为 true 时渲染经纬度输入', () => {
+    it('showLocation=true 时显示「选择省市」入口', () => {
       render(<BirthInfoForm value={baseValue} onChange={mockOnChange} showLocation />, { wrapper: TestWrapper });
-      expect(screen.getByLabelText('出生地经度')).toBeInTheDocument();
-      expect(screen.getByLabelText('出生地纬度')).toBeInTheDocument();
+      expect(screen.getByText('选择省市')).toBeInTheDocument();
     });
 
-    it('输入经度时以数字回传，清空时回传 undefined', () => {
+    it('通过省市弹窗选择后回传经纬度与出生地名称', async () => {
       render(<BirthInfoForm value={baseValue} onChange={mockOnChange} showLocation />, { wrapper: TestWrapper });
-      const longitude = screen.getByLabelText('出生地经度');
 
-      fireEvent.change(longitude, { target: { value: '121.4737' } });
-      expect(mockOnChange.mock.calls.at(-1)[0].longitude).toBe(121.4737);
+      fireEvent.click(screen.getByText('选择省市'));
+      await waitFor(() => expect(screen.getByText('广东省')).toBeInTheDocument());
+      fireEvent.click(screen.getByText('广东省'));
+      await waitFor(() => expect(screen.getByText('深圳市')).toBeInTheDocument());
+      fireEvent.click(screen.getByText('深圳市'));
 
-      fireEvent.change(longitude, { target: { value: '' } });
-      expect(mockOnChange.mock.calls.at(-1)[0].longitude).toBeUndefined();
+      const payload = mockOnChange.mock.calls.at(-1)[0];
+      expect(payload.latitude).toBe(22.5565);
+      expect(payload.longitude).toBe(113.9859);
+      expect(payload.birthplace).toMatchObject({ province: '广东省', city: '深圳市' });
     });
 
-    it('输入纬度时以数字回传', () => {
-      render(<BirthInfoForm value={baseValue} onChange={mockOnChange} showLocation />, { wrapper: TestWrapper });
-      fireEvent.change(screen.getByLabelText('出生地纬度'), { target: { value: '31.2304' } });
-      expect(mockOnChange.mock.calls.at(-1)[0].latitude).toBe(31.2304);
+    it('已选择出生地时可清除', () => {
+      const selected = {
+        ...baseValue,
+        latitude: 22.5565,
+        longitude: 113.9859,
+        birthplace: { province: '广东省', city: '深圳市', lat: 22.5565, lon: 113.9859 }
+      };
+      render(<BirthInfoForm value={selected} onChange={mockOnChange} showLocation />, { wrapper: TestWrapper });
+
+      expect(screen.getByText('广东省 · 深圳市')).toBeInTheDocument();
+      fireEvent.click(screen.getByText('清除'));
+
+      const payload = mockOnChange.mock.calls.at(-1)[0];
+      expect(payload.latitude).toBeUndefined();
+      expect(payload.birthplace).toBeUndefined();
     });
   });
 

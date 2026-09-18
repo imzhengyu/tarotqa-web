@@ -60,6 +60,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--coverage", action="store_true", help="vitest run --coverage + coverage-check.js")
     parser.add_argument("--build", action="store_true", help="vite build")
     parser.add_argument("--visual", action="store_true", help="移动端视觉回归（需要本机 Edge/Chromium）")
+    parser.add_argument("--e2e", action="store_true", help="端到端交互回归（Playwright + Edge，AI 走 mock）")
     parser.add_argument("--keep-build", action="store_true", help="构建后保留产物（默认删除临时产物）")
     parser.add_argument(
         "--commit",
@@ -69,7 +70,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("test_args", nargs="*", help="追加给 vitest 的参数（放在 -- 之后）")
     args = parser.parse_args(argv)
     if not any([args.lint, args.csslint, args.tests, args.coverage, args.build]):
-        args.lint = args.csslint = args.tests = args.coverage = args.build = args.visual = True
+        args.lint = args.csslint = args.tests = args.coverage = args.build = args.visual = args.e2e = True
     return args
 
 
@@ -153,6 +154,13 @@ def main(argv: list[str]) -> int:
         results.append(run_and_log(
             "移动端视觉回归",
             [sys.executable, str(ROOT / "scripts" / "run_visual_tests.py"), "--allow-skip"],
+            ROOT, log_dir, env,
+        ))
+
+    if args.e2e:
+        results.append(run_and_log(
+            "E2E 交互回归",
+            [sys.executable, str(ROOT / "scripts" / "run_e2e_tests.py"), "--allow-skip"],
             ROOT, log_dir, env,
         ))
 

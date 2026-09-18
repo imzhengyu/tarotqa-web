@@ -81,6 +81,16 @@ PAGES = [
         ],
     },
     {
+        # 单独一页：打开出生地省市弹窗，用于人工验收弹窗版式
+        "name": "astrology-picker",
+        "path": "/astrology/chart",
+        "steps": ["closeDisclaimer", "openCityPicker"],
+        "asserts": [
+            {"selector": ".city-picker .city-picker-option", "minCount": 30},
+            {"selector": ".city-picker-option", "minFontSize": 12},
+        ],
+    },
+    {
         "name": "statistics",
         "path": "/statistics",
         "steps": [],
@@ -171,6 +181,14 @@ for (const spec of pages) {{
       if (step === 'generateChart') {{
         await clickByText(page, /生成/);
         await page.waitForTimeout(1500);
+      }}
+      if (step === 'openCityPicker') {{
+        const trigger = page.locator('.birthplace-trigger').first();
+        await trigger.scrollIntoViewIfNeeded().catch(() => {{}});
+        await trigger.click({{ force: true }});
+        await page.locator('.city-picker').first().waitFor({{ timeout: 8000 }});
+        await page.locator('.city-picker-provinces .city-picker-option').first().waitFor({{ timeout: 8000 }});
+        await page.waitForTimeout(400);
       }}
     }}
 

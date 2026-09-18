@@ -68,6 +68,7 @@ scripts/migrate_*.py
 scripts/build_pdf_fonts.py
 scripts/build_style_preview.py
 scripts/build_theme_preview.py
+scripts/.geo-cache/
 scripts/generate_mimi_tarot.py
 scripts/deploy-local.ps1
 scripts/install_git_hooks.py

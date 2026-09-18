@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useLanguage } from '../../context/LanguageContext';
+import Icon from './Icons';
+import ChinaCityPicker from './ChinaCityPicker';
 import './BirthInfoForm.css';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -36,6 +38,7 @@ const getDefaultTimezone = () => {
 
 function BirthInfoForm({ value, onChange, showGender = false, showLocation = false }) {
   const { language } = useLanguage();
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [localValue, setLocalValue] = useState(value || {
     year: 2000,
     month: 1,
@@ -71,9 +74,21 @@ function BirthInfoForm({ value, onChange, showGender = false, showLocation = fal
     onChange?.(newValue);
   };
 
-  const handleLocationChange = (field, rawValue) => {
-    const trimmed = rawValue.trim();
-    handleChange(field, trimmed === '' ? undefined : Number(trimmed));
+  const handleSelectBirthplace = (place) => {
+    const newValue = {
+      ...localValue,
+      birthplace: place,
+      longitude: place.lon,
+      latitude: place.lat
+    };
+    setLocalValue(newValue);
+    onChange?.(newValue);
+  };
+
+  const handleClearBirthplace = () => {
+    const newValue = { ...localValue, birthplace: undefined, longitude: undefined, latitude: undefined };
+    setLocalValue(newValue);
+    onChange?.(newValue);
   };
 
   const years = Array.from(
@@ -203,34 +218,32 @@ function BirthInfoForm({ value, onChange, showGender = false, showLocation = fal
 
       {showLocation && (
         <div className="form-row location-row">
-          <div className="form-group longitude-group">
-            <label htmlFor="birth-longitude">{isZh ? '出生地经度' : 'Birth Longitude'}</label>
-            <input
-              id="birth-longitude"
-              type="number"
-              inputMode="decimal"
-              step="0.0001"
-              min="-180"
-              max="180"
-              placeholder={isZh ? '东经为正，如 121.4737' : 'East positive, e.g. 121.4737'}
-              value={localValue.longitude ?? ''}
-              onChange={(e) => handleLocationChange('longitude', e.target.value)}
-            />
-          </div>
-
-          <div className="form-group latitude-group">
-            <label htmlFor="birth-latitude">{isZh ? '出生地纬度' : 'Birth Latitude'}</label>
-            <input
-              id="birth-latitude"
-              type="number"
-              inputMode="decimal"
-              step="0.0001"
-              min="-90"
-              max="90"
-              placeholder={isZh ? '北纬为正，如 31.2304' : 'North positive, e.g. 31.2304'}
-              value={localValue.latitude ?? ''}
-              onChange={(e) => handleLocationChange('latitude', e.target.value)}
-            />
+          <div className="form-group birthplace-group">
+            <span className="form-label">{isZh ? '出生地' : 'Birthplace'}</span>
+            <div className="birthplace-row">
+              <button
+                type="button"
+                className="birthplace-trigger"
+                onClick={() => setPickerOpen(true)}
+              >
+                <Icon name="astro" size={16} />
+                <span>
+                  {localValue.birthplace
+                    ? `${localValue.birthplace.province} · ${localValue.birthplace.city}`
+                    : (isZh ? '选择省市' : 'Select city')}
+                </span>
+                {localValue.longitude !== undefined && (
+                  <span className="birthplace-coord">
+                    {Number(localValue.latitude).toFixed(2)}, {Number(localValue.longitude).toFixed(2)}
+                  </span>
+                )}
+              </button>
+              {localValue.birthplace && (
+                <button type="button" className="birthplace-clear" onClick={handleClearBirthplace}>
+                  {isZh ? '清除' : 'Clear'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -238,10 +251,17 @@ function BirthInfoForm({ value, onChange, showGender = false, showLocation = fal
       {showLocation && (
         <p className="form-hint">
           {isZh
-            ? '经度/纬度用于计算上升点与宫位；留空则按默认出生地（上海）估算。'
-            : 'Longitude/latitude drive the ascendant and houses; if empty, a default location (Shanghai) is assumed.'}
+            ? '出生地用于计算上升点与宫位；未选择则按默认出生地（上海）估算。'
+            : 'The birthplace drives the ascendant and houses; if unset, a default location (Shanghai) is assumed.'}
         </p>
       )}
+
+      <ChinaCityPicker
+        isOpen={pickerOpen}
+        value={localValue.birthplace}
+        onSelect={handleSelectBirthplace}
+        onClose={() => setPickerOpen(false)}
+      />
     </div>
   );
 }
@@ -256,7 +276,13 @@ BirthInfoForm.propTypes = {
     timezone: PropTypes.string,
     gender: PropTypes.oneOf(['male', 'female']),
     latitude: PropTypes.number,
-    longitude: PropTypes.number
+    longitude: PropTypes.number,
+    birthplace: PropTypes.shape({
+      province: PropTypes.string,
+      city: PropTypes.string,
+      lat: PropTypes.number,
+      lon: PropTypes.number
+    })
   }),
   onChange: PropTypes.func.isRequired,
   showGender: PropTypes.bool,
