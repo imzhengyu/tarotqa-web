@@ -77,6 +77,7 @@ pnpm run lint:css:fix # Stylelint 自动修复
 | 本地人工视觉验收（构建 + 起服务 + 打印 URL） | `python scripts/run_local_server.py [--open] [--no-build]` |
 | 双击即可的本地部署（Windows） | `deploy-local.bat`（内部调用 `scripts/deploy-local.ps1`，端口固定 4000） |
 | 真实页面截图（Edge + Pages 同款回落） | `python scripts/snapshot_app_pages.py [--skip-build]` → `design/preview-shots/app/` |
+| **移动端视觉回归（每个页面）** | `python scripts/run_visual_tests.py` → `design/preview-shots/mobile/`；已并入全量门禁 |
 | AI 解读导出 Word 的排版抽样 | `python scripts/probe_docx_export.py` → `design/preview-docs/ai-analysis-sample.docx` |
 
 两个脚本都在 `web/` 下执行 pnpm/npx，并打印 PASS/FAIL 汇总；新增检查项请扩展脚本而不是在对话里手敲命令。

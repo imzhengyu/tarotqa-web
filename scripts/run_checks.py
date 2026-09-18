@@ -59,6 +59,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--tests", action="store_true", help="vitest run")
     parser.add_argument("--coverage", action="store_true", help="vitest run --coverage + coverage-check.js")
     parser.add_argument("--build", action="store_true", help="vite build")
+    parser.add_argument("--visual", action="store_true", help="移动端视觉回归（需要本机 Edge/Chromium）")
     parser.add_argument("--keep-build", action="store_true", help="构建后保留产物（默认删除临时产物）")
     parser.add_argument(
         "--commit",
@@ -68,7 +69,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("test_args", nargs="*", help="追加给 vitest 的参数（放在 -- 之后）")
     args = parser.parse_args(argv)
     if not any([args.lint, args.csslint, args.tests, args.coverage, args.build]):
-        args.lint = args.csslint = args.tests = args.coverage = args.build = True
+        args.lint = args.csslint = args.tests = args.coverage = args.build = args.visual = True
     return args
 
 
@@ -146,6 +147,14 @@ def main(argv: list[str]) -> int:
         if build_path.exists() and not args.keep_build:
             shutil.rmtree(build_path)
             print(f"(已清理临时构建产物 {build_path.relative_to(ROOT)})")
+
+    if args.visual:
+        # 视觉回归自己负责构建 dist 与起本地服务（CI 无浏览器时自动跳过）
+        results.append(run_and_log(
+            "移动端视觉回归",
+            [sys.executable, str(ROOT / "scripts" / "run_visual_tests.py"), "--allow-skip"],
+            ROOT, log_dir, env,
+        ))
 
     print_report(results, log_dir, "检查结果（日志后处理）")
     summary = write_summary(results, log_dir, "TarotQA Web 全量检查")
