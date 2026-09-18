@@ -122,6 +122,9 @@ UI/配色改动另见 `design/ui-review.md`：改动配色后必须跑一次对�
 
 - `python scripts/install_git_hooks.py` 安装的 hooks 会在 `git commit` 时自动跑全量门禁
   （`scripts/run_checks.py --commit`：lint + csslint + 单测 + 覆盖率 + 构建），门禁不过则提交被阻止。
+- **push 前必须先检查 VPN/网络**：`pre-push` hook 会先跑 `python scripts/check_network.py`，
+  用它验证 `git ls-remote origin` 是否可达（GitHub 在部分网络下必须开 VPN）。
+  网络不通时不要反复重试 push，先确认 VPN/代理再推。
 - **Codex 不得执行 `git push`**：推送只能由用户在命令行主动发起。
   需要推送时，Codex 必须先明确报告「将推送哪些提交、目标分支、会触发 Pages 发布」并取得用户确认；
   确认后写入放行标记 `git rev-parse HEAD > .git/CODEX_PUSH_APPROVED`，再由用户执行 `git push`。

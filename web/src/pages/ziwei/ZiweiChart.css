@@ -441,16 +441,24 @@
 }
 
 .ziwei-chart-page.layout-mobile .chart-container {
+  /* 命盘本身是 560px 宽的固定版式：容器改成"左上对齐 + 横向可滚动"，
+     justify-content:center 会把溢出部分裁在左边且滚不到；aspect-ratio:1 会把 627px 高的命盘竖向切掉 */
+  justify-content: flex-start;
+  align-items: flex-start;
+  aspect-ratio: auto;
+  height: auto;
+  min-height: 0;
   overflow: auto;
-  min-height: 300px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ziwei-chart-page.layout-mobile .iztro-astrolabe.iztro-astrolabe-theme-default {
-  --iztro-star-font-size-big: 8px !important;
-  --iztro-star-font-size-small: 7px !important;
+  /* 手机上星曜字号不能低于 9-10px，否则读不出来；宽度略收窄以减少横向滚动 */
+  --iztro-star-font-size-big: 10px !important;
+  --iztro-star-font-size-small: 9px !important;
 
-  min-width: 600px;
-  min-height: 600px;
+  min-width: 560px;
+  min-height: 0;
 }
 
 .ziwei-chart-page.layout-mobile .chart-placeholder {
@@ -459,12 +467,20 @@
 
 /* Device type: Pad */
 .ziwei-chart-page.layout-pad .chart-container {
-  min-height: 450px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  aspect-ratio: auto;
+  height: auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .ziwei-chart-page.layout-pad .iztro-astrolabe.iztro-astrolabe-theme-default {
   --iztro-star-font-size-big: 11px !important;
   --iztro-star-font-size-small: 10px !important;
+
+  min-width: 620px;
+  min-height: 450px;
 }
 
 /* Device type: Desktop */

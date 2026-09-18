@@ -60,7 +60,15 @@ PAGES = [
         "name": "ziwei",
         "path": "/ziwei/chart",
         "steps": ["closeDisclaimer", "touchForm", "generateChart"],
-        "asserts": [{"selector": ".ziwei-chart-section .chart-container", "minWidth": 200}],
+        "asserts": [
+            {"selector": ".ziwei-chart-section .chart-container", "minWidth": 300},
+            # 命盘是固定版式：必须按可读宽度渲染（横向可滚动），而不是被压扁
+            {"selector": ".ziwei-chart-section .chart-container", "minScrollWidth": 540, "scrollAxis": "x"},
+            # 容器高度必须跟得上内容，否则整块命盘被竖向裁掉
+            {"selector": ".ziwei-chart-section .chart-container", "noVerticalClip": True},
+            # 星曜字号下限（本次修复前是 7px）
+            {"selector": ".iztro-star", "minFontSize": 9},
+        ],
     },
     {
         "name": "astrology",
@@ -69,6 +77,7 @@ PAGES = [
         "asserts": [
             {"selector": ".astrology-svg", "minWidth": 240},
             {"selector": ".astrology-svg text", "minCount": 20},
+            {"selector": ".planet-sign", "minFontSize": 11},
         ],
     },
     {
@@ -176,6 +185,31 @@ for (const spec of pages) {{
         const box = await nodes.first().boundingBox();
         if (!box || box.width < check.minWidth) {{
           problems.push(`${{check.selector}} 宽度 ${{box ? box.width : 'null'}}（要求 ≥${{check.minWidth}}）`);
+        }}
+      }}
+      if (check.minScrollWidth) {{
+        const metrics = await nodes.first().evaluate((element) => ({{
+          scrollWidth: element.scrollWidth, clientWidth: element.clientWidth,
+          scrollHeight: element.scrollHeight, clientHeight: element.clientHeight,
+          overflowX: getComputedStyle(element).overflowX,
+        }}));
+        if (metrics.scrollWidth < check.minScrollWidth) {{
+          problems.push(`${{check.selector}} 内容宽 ${{metrics.scrollWidth}}px（要求 ≥${{check.minScrollWidth}}，疑似被压扁）`);
+        }}
+        if (!['auto', 'scroll'].includes(metrics.overflowX)) {{
+          problems.push(`${{check.selector}} overflow-x=${{metrics.overflowX}}，超出内容无法滚动`);
+        }}
+        if (check.noVerticalClip && metrics.scrollHeight - metrics.clientHeight > 4) {{
+          problems.push(`${{check.selector}} 竖向被裁 ${{metrics.scrollHeight - metrics.clientHeight}}px`);
+        }}
+      }}
+      if (check.minFontSize) {{
+        const sizes = await nodes.evaluateAll((elements) =>
+          elements.map((element) => parseFloat(getComputedStyle(element).fontSize)).filter((size) => !Number.isNaN(size))
+        );
+        const smallest = sizes.length ? Math.min(...sizes) : null;
+        if (smallest === null || smallest < check.minFontSize) {{
+          problems.push(`${{check.selector}} 最小字号 ${{smallest}}px（要求 ≥${{check.minFontSize}}）`);
         }}
       }}
     }}
