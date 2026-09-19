@@ -237,6 +237,12 @@ const scenarios = {{
     await page.goto(base + '/', {{ waitUntil: 'load' }});
     await page.locator('.service-block').first().waitFor({{ timeout: 8000 }});
 
+    // 网页字体必须来自 ZeoSeven FontAPI（不要退回被墙的 fonts.googleapis.com / gstatic）
+    const fontLink = await page.locator('link[href*="fontsapi.zeoseven.com"]').count();
+    assert(fontLink > 0, 'index.html 应引用 ZeoSeven FontAPI（fontsapi.zeoseven.com）');
+    const blocked = await page.locator('link[href*="fonts.googleapis.com"], link[href*="fonts.gstatic.com"]').count();
+    assert(blocked === 0, '不应再引用被墙的 Google Fonts 原始域名');
+
     // footer 必须带上本次提交的 sha 与提交时间（北京时间）
     const footerText = (await page.locator('.footer').first().innerText()).replace(/\\s+/g, ' ');
     assert(/\\(\\w+\\)\\s·\\s\\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d（北京时间）/.test(footerText),

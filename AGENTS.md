@@ -91,9 +91,16 @@ UI/配色改动另见 `design/ui-review.md`：改动配色后必须跑一次对�
 
 站点用户几乎全在国内，**不要引入任何国内不可达的第三方资源**（Google Fonts / gstatic / 海外 CDN 都算）。
 
-- **字体分两级（都是自托管 woff2）**：
+- **网页字体**：走 ZeoSeven Fonts 的 FontAPI（国内平台）——
+  `https://fontsapi.zeoseven.com/<字体ID>/main/result.css`，当前用 `309`（**京华老宋体**，
+  family 名 `KingHwaOldSong`，衬线体、**仅 1 个字重**，加粗由浏览器合成），
+  在 `index.html` 里用 `media="print" onload` 非阻塞加载；
+  family 名取自返回的 CSS（`CSS 里 FontFamilyName`，当前是 `Noto Sans CJK`）。
+  **不要**写回 `fonts.googleapis.com` / `fonts.gstatic.com`（国内被阻断），线上探针会检查。
+  查字体 ID：`python scripts/probe_zsft_fontapi.py --search <名字>`（列表页 `/browse/hotlist/`）。
+- **PDF 导出字体**（必须自托管，pdfmake 要单个可内嵌文件）分两级：
   - `noto-sans-sc-core-{400,700}.woff2`（524/537KB，GB2312 一级字表 + 拉丁 + 常用标点）——
-    UI 的 `@font-face` 和 PDF 导出默认都用它；
+    导出默认用它；
   - `noto-sans-sc-zh-{400,700}.woff2`（1.1MB）——只有导出文本出现核心集没有的字时才回退使用；
   - `noto-sans-sc-core-ranges.json` 是核心集的覆盖区间表，导出前逐字校验（见 `pickFontTier`）。
   这样慢网/移动端典型导出只下 ~524KB（之前是 4.9MB 的 TTF → 2.2MB woff2 → 现在 524KB）。

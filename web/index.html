@@ -5,10 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TarotQA - AI塔罗</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <!-- 字体全部自托管（web/public/fonts，Fontsource 的 Noto Sans SC 子集）：
-         国内访问 Google 的字体 CDN 会被阻断，字体必须自己发。
-         核心子集（core，524KB）给网页 @font-face 与 PDF 导出共用，导出时基本命中缓存。
-         注意：**不要**在这里 preload 字体 —— 慢网下它会和首屏 JS 抢带宽、并让 load 事件迟迟不触发。 -->
+    <!-- 网页字体走 ZeoSeven Fonts 的 FontAPI（国内平台，ID 309 = 京华老宋体 / KingHwaOldSong，
+         衬线体，单一字重）。api 形式：
+           https://fontsapi.zeoseven.com/<字体ID>/main/result.css
+         不要写回 fonts.googleapis.com / fonts.gstatic.com（国内被阻断）。
+         用 media=print + onload 换成 all：CSS 不阻塞首屏，配合 font-display: swap 先显示系统字体。
+         PDF 导出用的字体是自托管的 Noto Sans SC 子集，见 utils/exportPdf.js。 -->
+    <link rel="preconnect" href="https://fontsapi.zeoseven.com" crossorigin>
+    <link
+      rel="stylesheet"
+      href="https://fontsapi.zeoseven.com/309/main/result.css"
+      media="print"
+      onload="this.media='all'"
+    >
+    <noscript><link rel="stylesheet" href="https://fontsapi.zeoseven.com/309/main/result.css"></noscript>
   </head>
   <body>
     <script>
