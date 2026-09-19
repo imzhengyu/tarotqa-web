@@ -28,10 +28,21 @@ export const FONT_BASES = [...MIRROR_BASES, SAME_ORIGIN_BASE];
 // 用 woff2 而不是 TTF：体积约为 TTF 的 45%，而且**和网页 UI 用的是同一份文件**
 // （global.css 的 @font-face 已经下载过），导出时基本直接命中浏览器 HTTP 缓存。
 // pdfmake 内置的 fontkit 自带 WOFF2 解压（bundle 里带 brotli），实测可正常内嵌子集。
-const FONT_FILES = {
-  normal: 'noto-sans-sc-zh-400.woff2',
-  bold: 'noto-sans-sc-zh-700.woff2'
+//
+// 两级字体：核心子集（GB2312 一级字表，524KB，覆盖常用字 99%+）优先；
+// 文本里出现核心子集没有的字（生僻字/二级字）时才回退到全量子集（1.1MB）。
+// 这是为了慢网/移动端：1.1MB 在国内不稳定的静态托管上经常 20s 都下不来。
+const FONT_SETS = {
+  core: {
+    normal: 'noto-sans-sc-core-400.woff2',
+    bold: 'noto-sans-sc-core-700.woff2'
+  },
+  full: {
+    normal: 'noto-sans-sc-zh-400.woff2',
+    bold: 'noto-sans-sc-zh-700.woff2'
+  }
 };
+const CORE_INDEX_FILE = 'noto-sans-sc-core-ranges.json';
 const FONT_ALIAS = 'NotoSC';
 
 // 持久缓存：字体一旦下载成功就存进 Cache Storage，同一台设备之后不再重复下 2MB
@@ -39,14 +50,17 @@ const FONT_CACHE = 'tarotqa-pdf-fonts-v1';
 
 // 站点部署在 GitHub Pages，国内访问可能极慢甚至长时间无响应：
 // 没有超时的话字体请求会一直挂着，UI 就永远停在"正在生成 PDF…"。
-export const PDF_FONT_TIMEOUT_MS = 20000;
+export const PDF_FONT_TIMEOUT_MS = 30000;
 export const PDF_BUILD_TIMEOUT_MS = 60000;
 // 慢网（3G/省流量模式）把预算放宽，否则"能用只是慢"也会被判失败
-export const PDF_FONT_TIMEOUT_SLOW_MS = 60000;
+export const PDF_FONT_TIMEOUT_SLOW_MS = 90000;
+// 非最后一个源（镜像）只给短预算：挂了就赶紧换下一个，别把时间耗光
+export const PDF_MIRROR_TIMEOUT_MS = 10000;
 
-// 字体 2.4MB×2、pdfmake 也不小：缓存住，第二次导出不再走网络（尽量空间换时间）
-let fontsPromise = null;
+// 字体与 pdfmake 都不小：按「字体层级」缓存住，同一会话内第二次导出不再走网络
+const fontsCache = new Map();
 let pdfMakePromise = null;
+let coreIndexPromise = null;
 
 function toBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -75,31 +89,40 @@ export function defaultFontTimeoutMs(connection = typeof navigator === 'undefine
   return PDF_FONT_TIMEOUT_MS;
 }
 
-async function fetchFontBase64(
+/**
+ * 按 FONT_BASES 顺序取一个文件：镜像源给短预算（挂了立刻换源），
+ * 最后一个源（同源）给完整预算。命中 Cache Storage 时不走网络。
+ */
+async function fetchResource(
   fileName,
   { fetchImpl = fetch, timeoutMs = defaultFontTimeoutMs(), bases = FONT_BASES } = {}
 ) {
   let lastError = null;
-  // 逐个源试：国内镜像 → 同源。任一源成功即返回。
-  for (const base of bases) {
+  for (const [index, base] of bases.entries()) {
     const url = `${base}${fileName}`;
     const cached = await readFromCache(url);
-    if (cached) return toBase64(cached);
+    if (cached) return cached;
+    const budget = index === bases.length - 1 ? timeoutMs : Math.min(timeoutMs, PDF_MIRROR_TIMEOUT_MS);
     try {
-      const buffer = await fetchWithTimeout(url, { fetchImpl, timeoutMs });
+      const buffer = await fetchWithTimeout(url, { fetchImpl, timeoutMs: budget });
       await writeToCache(url, buffer);
-      return toBase64(buffer);
+      return buffer;
     } catch (error) {
       lastError = error;
     }
   }
   const aborted = lastError?.name === 'AbortError' || lastError?.timeout;
   const timeoutError = new Error(
-    `字体下载${aborted ? '超时' : '失败'}：${fileName}`
+    `资源下载${aborted ? '超时' : '失败'}：${fileName}`
     + `（${Math.round(timeoutMs / 1000)}s，已尝试 ${bases.length} 个源，请检查网络后重试）`
+    + (lastError?.message ? `｜原因：${lastError.message}` : '')
   );
   timeoutError.timeout = Boolean(aborted);
   throw timeoutError;
+}
+
+async function fetchFontBase64(fileName, options) {
+  return toBase64(await fetchResource(fileName, options));
 }
 
 async function fetchWithTimeout(url, { fetchImpl, timeoutMs }) {
@@ -147,7 +170,7 @@ async function writeToCache(url, buffer) {
   }
 }
 
-async function loadPdfMake(fonts) {
+async function loadPdfMake(fonts, fontFiles) {
   if (!pdfMakePromise) {
     pdfMakePromise = import('pdfmake/build/pdfmake')
       .then((module) => module.default || module)
@@ -159,8 +182,8 @@ async function loadPdfMake(fonts) {
   const pdfMake = await pdfMakePromise;
 
   const vfs = {
-    [FONT_FILES.normal]: fonts.normal,
-    [FONT_FILES.bold]: fonts.bold
+    [fontFiles.normal]: fonts.normal,
+    [fontFiles.bold]: fonts.bold
   };
   // pdfmake 0.3+ 用 addVirtualFileSystem 注册字体；旧版是直接赋 vfs 字段
   if (typeof pdfMake.addVirtualFileSystem === 'function') {
@@ -169,10 +192,10 @@ async function loadPdfMake(fonts) {
     pdfMake.vfs = { ...(pdfMake.vfs || {}), ...vfs };
   }
   const fontFamily = {
-    normal: FONT_FILES.normal,
-    bold: FONT_FILES.bold,
-    italics: FONT_FILES.normal,
-    bolditalics: FONT_FILES.bold
+    normal: fontFiles.normal,
+    bold: fontFiles.bold,
+    italics: fontFiles.normal,
+    bolditalics: fontFiles.bold
   };
   // pdfmake 0.3+ 用 addFonts 注册字体族
   if (typeof pdfMake.addFonts === 'function') {
@@ -183,29 +206,35 @@ async function loadPdfMake(fonts) {
   return pdfMake;
 }
 
-/** 加载字体（带缓存）；失败时清掉缓存，避免一次网络抖动之后永久失败。 */
+/**
+ * 加载字体（按层级缓存）；失败时清掉缓存，避免一次网络抖动之后永久失败。
+ * @param {'core'|'full'} tier 核心子集（524KB，默认）或全量子集（1.1MB）
+ */
 export function loadPdfFonts({
+  tier = 'core',
   force = false,
   timeoutMs = defaultFontTimeoutMs(),
   fetchImpl = fetch,
   bases = FONT_BASES
 } = {}) {
-  if (force) fontsPromise = null;
-  if (!fontsPromise) {
+  const fontFiles = FONT_SETS[tier] || FONT_SETS.core;
+  if (force) fontsCache.delete(tier);
+  if (!fontsCache.has(tier)) {
     const once = () => Promise.all([
-      fetchFontBase64(FONT_FILES.normal, { fetchImpl, timeoutMs, bases }),
-      fetchFontBase64(FONT_FILES.bold, { fetchImpl, timeoutMs, bases })
+      fetchFontBase64(fontFiles.normal, { fetchImpl, timeoutMs, bases }),
+      fetchFontBase64(fontFiles.bold, { fetchImpl, timeoutMs, bases })
     ]);
     // 快速失败（如 DNS/连接被掐）自动重试一次；超时说明网慢，再等一轮只会更糟
-    fontsPromise = once()
+    const promise = once()
       .catch((error) => (error?.timeout ? Promise.reject(error) : once()))
       .then(([normal, bold]) => ({ normal, bold }))
       .catch((error) => {
-        fontsPromise = null;
+        fontsCache.delete(tier);
         throw error;
       });
+    fontsCache.set(tier, promise);
   }
-  return fontsPromise;
+  return fontsCache.get(tier);
 }
 
 function normalizeFileName(filename) {
@@ -213,15 +242,92 @@ function normalizeFileName(filename) {
   return base.endsWith('.pdf') ? base : `${base}.pdf`;
 }
 
-/** 预加载字体（忽略失败）：进到 AI 结果页就悄悄开始下，点导出时多半已经就绪。 */
+/** 核心子集的覆盖区间（升序、闭区间），用于判断文本能否用核心字体渲染。 */
+export function parseCoreRanges(payload) {
+  const ranges = Array.isArray(payload?.ranges) ? payload.ranges : [];
+  return ranges
+    .filter((item) => Array.isArray(item) && item.length === 2 && item[0] <= item[1])
+    .map(([start, end]) => [Number(start), Number(end)]);
+}
+
+/** 区间表里是否覆盖某个码点（二分查找）。 */
+export function isCodePointCovered(ranges, codePoint) {
+  let low = 0;
+  let high = ranges.length - 1;
+  while (low <= high) {
+    const mid = (low + high) >> 1;
+    const [start, end] = ranges[mid];
+    if (codePoint < start) high = mid - 1;
+    else if (codePoint > end) low = mid + 1;
+    else return true;
+  }
+  return false;
+}
+
+/** 文本里第一个超出核心子集的字符（没有则返回 null）。 */
+export function findUncoveredChar(ranges, text) {
+  for (const char of String(text || '')) {
+    const code = char.codePointAt(0);
+    // 换行/制表等控制字符不参与覆盖判断：它们不渲染字形，字体 cmap 里本来也不会有
+    if (code < 0x20 || code === 0x7F) continue;
+    if (!isCodePointCovered(ranges, code)) return char;
+  }
+  return null;
+}
+
+function loadCoreRanges({ force = false, ...options } = {}) {
+  if (force) coreIndexPromise = null;
+  if (!coreIndexPromise) {
+    coreIndexPromise = fetchResource(CORE_INDEX_FILE, options)
+      .then((buffer) => parseCoreRanges(JSON.parse(decodeText(buffer))))
+      .catch((error) => {
+        coreIndexPromise = null;
+        throw error;
+      });
+  }
+  return coreIndexPromise;
+}
+
+/** ArrayBuffer → 文本：索引是纯 ASCII JSON，没有 TextDecoder 的环境也能解析。 */
+function decodeText(buffer) {
+  if (typeof TextDecoder === 'function') return new TextDecoder().decode(buffer);
+  return String.fromCharCode(...new Uint8Array(buffer));
+}
+
+/**
+ * 选字体层级：文本全部落在核心子集覆盖范围内就用核心（524KB，最适合慢网），
+ * 出现生僻字/二级字则回退全量子集；索引拿不到时也走全量（宁可慢一点，不能缺字）。
+ */
+export async function pickFontTier(text, options = {}) {
+  try {
+    const ranges = await loadCoreRanges(options);
+    const uncovered = findUncoveredChar(ranges, text);
+    if (uncovered && typeof console !== 'undefined' && console.debug) {
+      console.debug('[pdf] 核心字体缺字，改用全量字体：', uncovered, (uncovered.codePointAt(0) || 0).toString(16));
+    }
+    return uncovered ? 'full' : 'core';
+  } catch (error) {
+    if (typeof console !== 'undefined' && console.debug) {
+      console.debug('[pdf] 核心字体覆盖索引不可用，回退全量字体：', error?.message);
+    }
+    return 'full';
+  }
+}
+
+/** 预加载（忽略失败）：进到 AI 结果页就悄悄下核心字体 + 覆盖索引，点导出时多半已就绪。 */
 export function preloadPdfFonts(options = {}) {
-  return loadPdfFonts(options).catch(() => null);
+  return Promise.all([
+    loadPdfFonts(options).catch(() => null),
+    loadCoreRanges(options).catch(() => null)
+  ]).then(() => null);
 }
 
 /** 生成 PDF Blob：只生成、不落盘，真机上交给用户手势再保存。 */
 async function runBuild(markdown, meta, fontOptions) {
-  const fonts = await loadPdfFonts(fontOptions);
-  const pdfMake = await loadPdfMake(fonts);
+  const text = `${markdown}\n${meta?.title || ''}\n${meta?.subtitle || ''}`;
+  const tier = await pickFontTier(text, fontOptions);
+  const fonts = await loadPdfFonts({ ...fontOptions, tier });
+  const pdfMake = await loadPdfMake(fonts, FONT_SETS[tier]);
   return pdfMake.createPdf(buildPdfDefinition(markdown, meta)).getBlob();
 }
 
@@ -325,4 +431,4 @@ export async function exportMarkdownToPdf(markdown, filename, meta = {}) {
   return { blob, url, fileName };
 }
 
-export { FONT_ALIAS, FONT_FILES, normalizeFileName };
+export { FONT_ALIAS, FONT_SETS, normalizeFileName };

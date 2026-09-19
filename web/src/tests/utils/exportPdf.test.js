@@ -16,7 +16,11 @@ import {
   normalizeFileName,
   releasePdfUrl,
   sharePdfBlob,
-  FONT_FILES
+  FONT_SETS,
+  findUncoveredChar,
+  isCodePointCovered,
+  parseCoreRanges,
+  pickFontTier
 } from '../../utils/exportPdf';
 
 vi.mock('pdfmake/build/pdfmake', () => ({
@@ -74,7 +78,15 @@ describe('AI Markdown → PDF', () => {
   describe('浏览器导出管道', () => {
     beforeEach(() => {
       // 字体走 fetch；下载走 URL.createObjectURL（jsdom 未实现）
-      global.fetch = vi.fn(async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) }));
+      global.fetch = vi.fn(async (url) => ({
+        ok: true,
+        arrayBuffer: async () => (String(url).endsWith('noto-sans-sc-core-ranges.json')
+          // 覆盖索引：SAMPLE 用到的 ASCII/汉字/中文标点都在核心集里 → 走核心字体
+          ? new TextEncoder().encode(JSON.stringify({
+            ranges: [[0x20, 0x7E], [0x3000, 0x303F], [0x4E00, 0x9FA5], [0xFF00, 0xFFEF]]
+          })).buffer
+          : new ArrayBuffer(8))
+      }));
       global.URL.createObjectURL = vi.fn(() => 'blob:mock');
       global.URL.revokeObjectURL = vi.fn();
       vi.spyOn(window.HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
@@ -91,16 +103,16 @@ describe('AI Markdown → PDF', () => {
 
       // 第二个参数带 AbortSignal（超时用），只断言 URL 与"带 signal"即可
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining(FONT_FILES.normal),
+        expect.stringContaining(FONT_SETS.core.normal),
         expect.objectContaining({ signal: expect.anything() })
       );
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining(FONT_FILES.bold),
+        expect.stringContaining(FONT_SETS.core.bold),
         expect.objectContaining({ signal: expect.anything() })
       );
       expect(pdfMake.addVirtualFileSystem).toHaveBeenCalled();
       expect(pdfMake.addFonts).toHaveBeenCalledWith(
-        expect.objectContaining({ NotoSC: expect.objectContaining({ normal: FONT_FILES.normal }) })
+        expect.objectContaining({ NotoSC: expect.objectContaining({ normal: FONT_SETS.core.normal }) })
       );
       await expect(blob.text()).resolves.toContain('%PDF-1.4');
     });
@@ -220,7 +232,7 @@ describe('AI Markdown → PDF', () => {
     it('字体下载卡住 → 超时后抛出可重试的错误（不是静默等待）', async () => {
       await expect(
         loadPdfFonts({ force: true, fetchImpl: hangingFetch, timeoutMs: 40 })
-      ).rejects.toThrow(/字体下载超时：noto-sans-sc-zh-400\.woff2（0s，已尝试 \d+ 个源，请检查网络后重试）/);
+      ).rejects.toThrow(/资源下载超时：noto-sans-sc-core-400\.woff2（0s，已尝试 \d+ 个源，请检查网络后重试）/);
     });
 
     it('整体生成卡住 → 由外层超时兜底，错误文案带"超时/重试"', async () => {
@@ -320,8 +332,8 @@ describe('AI Markdown → PDF', () => {
         })
       ).resolves.toEqual({ normal: expect.any(String), bold: expect.any(String) });
 
-      expect(tried).toContain('https://mirror.example.com/cdn/fonts/noto-sans-sc-zh-400.woff2');
-      expect(tried).toContain('/fonts/noto-sans-sc-zh-400.woff2');
+      expect(tried).toContain('https://mirror.example.com/cdn/fonts/noto-sans-sc-core-400.woff2');
+      expect(tried).toContain('/fonts/noto-sans-sc-core-400.woff2');
     });
 
     it('下载成功后写进 Cache Storage，第二次导出直接命中缓存（不再走网络）', async () => {
@@ -346,8 +358,8 @@ describe('AI Markdown → PDF', () => {
       expect(openSpy).toHaveBeenCalled();
       expect(store.size).toBe(2);
       expect([...store.keys()]).toEqual([
-        '/fonts/noto-sans-sc-zh-400.woff2',
-        '/fonts/noto-sans-sc-zh-700.woff2'
+        '/fonts/noto-sans-sc-core-400.woff2',
+        '/fonts/noto-sans-sc-core-700.woff2'
       ]);
 
       // 断网重来：缓存里已有 → 仍然成功
@@ -362,6 +374,48 @@ describe('AI Markdown → PDF', () => {
       await expect(
         loadPdfFonts({ force: true, fetchImpl: okFetch(), timeoutMs: 200 })
       ).resolves.toEqual({ normal: expect.any(String), bold: expect.any(String) });
+    });
+  });
+
+  // 核心子集（GB2312 一级字表，524KB）优先，缺字才回退全量（1.1MB）——为慢网/移动端省流量
+  describe('按文本挑字体层级', () => {
+    const RANGES = parseCoreRanges({ chars: 4, ranges: [[0x20, 0x7E], [0x4E00, 0x9FA5]] });
+
+    it.each([
+      ['ASCII 全在核心集', 'hello 123', true],
+      ['换行/制表不算缺字', '第一行\n第二行\t结束', true],
+      ['核心集里的汉字', '命运 占卜', true],
+      ['区间上边界的字（U+9FA5）', '\u9fa5', true],
+      ['刚出界的字（U+9FA6）', '\u9fa6', false],
+      ['emoji（U+1F52E）', '🔮', false]
+    ])('%s → 被覆盖：%s', (_label, text, covered) => {
+      expect(findUncoveredChar(RANGES, text) === null).toBe(covered);
+    });
+
+    it('区间解析会丢掉非法项，并按区间做二分查找', () => {
+      const ranges = parseCoreRanges({ ranges: [[10, 20], [30, 30], 'bad', [5, 1], null] });
+      expect(ranges).toEqual([[10, 20], [30, 30]]);
+      expect(isCodePointCovered(ranges, 10)).toBe(true);
+      expect(isCodePointCovered(ranges, 20)).toBe(true);
+      expect(isCodePointCovered(ranges, 21)).toBe(false);
+      expect(isCodePointCovered(ranges, 30)).toBe(true);
+      expect(isCodePointCovered(ranges, 29)).toBe(false);
+    });
+
+    it.each([
+      ['全部命中核心集', '塔罗占卜 test', 'core'],
+      ['有覆盖范围外的字（emoji）', '抽到宝牌 🔮', 'full']
+    ])('%s → 用 %s 字体', async (_label, text, expected) => {
+      const payload = new TextEncoder().encode(JSON.stringify({ ranges: [[0x20, 0x7E], [0x4E00, 0x9FA5]] }));
+      const fetchImpl = async () => ({ ok: true, arrayBuffer: async () => payload.buffer });
+      await expect(pickFontTier(text, { force: true, fetchImpl, timeoutMs: 200 })).resolves.toBe(expected);
+    });
+
+    it('核心覆盖索引拿不到时回退全量字体（宁可慢，不能缺字）', async () => {
+      const offline = async () => { throw new TypeError('offline'); };
+      await expect(
+        pickFontTier('任意文本', { force: true, fetchImpl: offline, timeoutMs: 50, bases: ['/fonts/'] })
+      ).resolves.toBe('full');
     });
   });
 });

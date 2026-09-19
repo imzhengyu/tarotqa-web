@@ -91,12 +91,18 @@ UI/配色改动另见 `design/ui-review.md`：改动配色后必须跑一次对�
 
 站点用户几乎全在国内，**不要引入任何国内不可达的第三方资源**（Google Fonts / gstatic / 海外 CDN 都算）。
 
-- **UI 字体**：`web/public/fonts/noto-sans-sc-zh-{400,700}.woff2` 自托管，`global.css` 里 `@font-face`
-  直接引本地文件；`index.html` 只保留一条 font preload。历史上用的 `fonts.googleapis.com` 已移除，
-  线上探针会检查它不再出现。
-- **PDF 导出字体**：和 UI **共用同一份 woff2**（pdfmake 内置 fontkit 自带 WOFF2 解压，实测可内嵌）。
-  体积只有 TTF 的 ~45%，而且浏览器早就为 UI 下过这份文件，导出时基本直接命中 HTTP 缓存。
-  旧的 2.4MB×2 TTF 已删除，不要再加回来。
+- **字体分两级（都是自托管 woff2）**：
+  - `noto-sans-sc-core-{400,700}.woff2`（524/537KB，GB2312 一级字表 + 拉丁 + 常用标点）——
+    UI 的 `@font-face` 和 PDF 导出默认都用它；
+  - `noto-sans-sc-zh-{400,700}.woff2`（1.1MB）——只有导出文本出现核心集没有的字时才回退使用；
+  - `noto-sans-sc-core-ranges.json` 是核心集的覆盖区间表，导出前逐字校验（见 `pickFontTier`）。
+  这样慢网/移动端典型导出只下 ~524KB（之前是 4.9MB 的 TTF → 2.2MB woff2 → 现在 524KB）。
+  旧的 TTF 已删除，不要再加回来。
+- **不要在 `index.html` 里 preload 字体**：慢网下它会和首屏 JS 抢带宽，还会让 `load` 事件迟迟不触发
+  （E2E 的字体卡死场景就是因为这个才要 `domcontentloaded`）。
+- **已知的镜像结论**（`scripts/probe_font_mirror.py` 实测）：npmmirror 可取但**没有 CORS**，浏览器不能直接用；
+  带 CORS 的是 jsDelivr 系（含第三方国内镜像 jsd.onmicrosoft.cn）、unpkg、以及自托管。
+  真正稳的是自己的 OSS/COS 默认域名，配到仓库 Variables `FONT_BASE_URLS` 即可（代码按 镜像 → 同源 回退）。
 - **多源回退**：`web/src/utils/exportPdf.js` 按 `FONT_BASES` 顺序尝试（国内镜像 → 同源兜底）。
   配好仓库 Variables `FONT_BASE_URLS`（逗号分隔，如 `https://xxx.oss-cn-hangzhou.aliyuncs.com/fonts`）
   即可让构建注入 `VITE_FONT_BASE_URLS`，无需改代码。

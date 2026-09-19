@@ -268,6 +268,10 @@ const scenarios = {{
   // 2) 塔罗完整流程 + 导出 PDF
   'tarot-full-flow': async () => {{
     const {{ isolated, page }} = await newPage();
+    const fontRequests = [];
+    page.on('request', (request) => {{
+      if (request.url().includes('/fonts/')) fontRequests.push(request.url().split('/').pop());
+    }});
     await page.goto(base + '/divination', {{ waitUntil: 'load' }});
     await page.getByText('选择牌阵').first().waitFor({{ timeout: 8000 }});
     await closeDisclaimer(page);
@@ -328,6 +332,10 @@ const scenarios = {{
     assert(await manualSave.count() === 1, '导出完成后应给出手工保存链接（真机兜底）');
     const manualHref = await manualSave.getAttribute('href');
     assert((manualHref || '').startsWith('blob:'), `手工保存链接应指向 blob，实际 ${{manualHref}}`);
+    // 常用字文档必须只下核心子集（524KB）；请求全量字体说明覆盖判断失效，慢网会重新变卡
+    const fullFonts = fontRequests.filter((name) => name.includes('-zh-'));
+    assert(fullFonts.length === 0, `常用字文档不应下载全量字体，实际请求：${{fullFonts.join(',')}}`);
+    assert(fontRequests.some((name) => name.includes('-core-')), `应下载核心子集，实际请求：${{fontRequests.join(',')}}`);
     await isolated.close();
   }},
 
@@ -457,9 +465,9 @@ const scenarios = {{
     await page.locator('[data-testid="pdf-working"]').waitFor({{ timeout: 5000 }});
     assert(await page.locator('[data-testid="pdf-working"]').isVisible(), '点击后应显示生成中状态');
 
-    // 20s 字体超时后必须落到错误态（超时不重试，避免用户白等第二轮的 20s）
+    // 字体下载预算 30s，超时后必须落到错误态（超时不重试，避免用户白等第二轮）
     const alert = page.locator('.pdf-export-error');
-    await alert.waitFor({{ timeout: 28000 }});
+    await alert.waitFor({{ timeout: 45000 }});
     const text = await alert.innerText();
     assert(/超时|失败/.test(text), `错误信息应说明原因，实际：${{text}}`);
     assert(await page.getByRole('button', {{ name: /重试导出 PDF/ }}).count() === 1, '应给出重试按钮');

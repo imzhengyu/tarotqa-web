@@ -6,9 +6,9 @@
     <title>TarotQA - AI塔罗</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <!-- 字体全部自托管（web/public/fonts，Fontsource 的 Noto Sans SC 子集）：
-         国内访问 fonts.googleapis.com / fonts.gstatic.com 会被阻断，外链字体会拖慢甚至卡住首屏，
-         自托管的同一份 woff2 也直接给 PDF 导出复用（见 utils/exportPdf.js），导出时基本命中缓存。 -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/noto-sans-sc-zh-400.woff2" crossorigin>
+         国内访问 Google 的字体 CDN 会被阻断，字体必须自己发。
+         核心子集（core，524KB）给网页 @font-face 与 PDF 导出共用，导出时基本命中缓存。
+         注意：**不要**在这里 preload 字体 —— 慢网下它会和首屏 JS 抢带宽、并让 load 事件迟迟不触发。 -->
   </head>
   <body>
     <script>

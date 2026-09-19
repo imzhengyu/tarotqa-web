@@ -52,6 +52,8 @@ const browserGlobals = {
   scrollBy: 'readonly',
   scrollLeft: 'readonly',
   scrollTo: 'readonly',
+  TextDecoder: 'readonly',
+  TextEncoder: 'readonly',
   scrollTop: 'readonly',
   scrollX: 'readonly',
   scrollY: 'readonly',
