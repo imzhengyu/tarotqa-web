@@ -78,6 +78,9 @@ jobs:
         env:
           VITE_TAROT_DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           VITE_GIT_SHA: ${{ github.sha }}
+          # 可选：国内字体镜像源（逗号分隔，优先于同源，如阿里云 OSS / 腾讯云 COS 默认域名）。
+          # 在仓库 Settings → Variables 里配置 FONT_BASE_URLS 即可启用，没配就走同源。
+          VITE_FONT_BASE_URLS: ${{ vars.FONT_BASE_URLS }}
 
       # 失败时把检查日志带出来，便于定位（日志平时只落本地 logs/）
       - name: Upload check logs

@@ -9,6 +9,7 @@ vi.mock('../../utils/exportPdf', () => ({
   canSharePdf: vi.fn(() => false),
   downloadPdfBlob: vi.fn(() => 'blob:mock-pdf'),
   normalizeFileName: vi.fn((name) => `${name}.pdf`),
+  preloadPdfFonts: vi.fn(() => Promise.resolve(null)),
   releasePdfUrl: vi.fn(),
   sharePdfBlob: vi.fn(async () => 'shared'),
   exportMarkdownToPdf: vi.fn()

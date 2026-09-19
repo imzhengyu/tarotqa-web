@@ -4,9 +4,11 @@ import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 
 const browserGlobals = {
+  AbortController: 'readonly',
   alert: 'readonly',
   Blob: 'readonly',
   blur: 'readonly',
+  caches: 'readonly',
   clearInterval: 'readonly',
   clearTimeout: 'readonly',
   close: 'readonly',
@@ -39,6 +41,7 @@ const browserGlobals = {
   print: 'readonly',
   prompt: 'readonly',
   resizeBy: 'readonly',
+  Response: 'readonly',
   resizeTo: 'readonly',
   screen: 'readonly',
   screenLeft: 'readonly',

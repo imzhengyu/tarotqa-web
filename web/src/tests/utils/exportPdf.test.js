@@ -4,7 +4,13 @@ import {
   buildPdfBlob,
   canSharePdf,
   downloadPdfBlob,
+  FONT_BASES,
   exportMarkdownToPdf,
+  defaultFontTimeoutMs,
+  loadPdfFonts,
+  PDF_FONT_TIMEOUT_SLOW_MS,
+  PDF_FONT_TIMEOUT_MS,
+  preloadPdfFonts,
   isIosDevice,
   isMobileBrowser,
   normalizeFileName,
@@ -83,8 +89,15 @@ describe('AI Markdown → PDF', () => {
       const pdfMake = (await import('pdfmake/build/pdfmake')).default;
       const blob = await buildPdfBlob(SAMPLE, { title: 't' });
 
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining(FONT_FILES.normal));
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining(FONT_FILES.bold));
+      // 第二个参数带 AbortSignal（超时用），只断言 URL 与"带 signal"即可
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining(FONT_FILES.normal),
+        expect.objectContaining({ signal: expect.anything() })
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining(FONT_FILES.bold),
+        expect.objectContaining({ signal: expect.anything() })
+      );
       expect(pdfMake.addVirtualFileSystem).toHaveBeenCalled();
       expect(pdfMake.addFonts).toHaveBeenCalledWith(
         expect.objectContaining({ NotoSC: expect.objectContaining({ normal: FONT_FILES.normal }) })
@@ -192,6 +205,163 @@ describe('AI Markdown → PDF', () => {
       expect(result.fileName).toBe('legacy.pdf');
       expect(result.url).toBe('blob:mock');
       await expect(result.blob.text()).resolves.toContain('%PDF-1.4');
+    });
+  });
+
+  // 站点在 GitHub Pages，国内网络经常"连上了但不回包"：没有超时就会永远停在"正在生成 PDF…"
+  describe('网络卡死不能无限等待', () => {
+    const hangingFetch = (_url, options = {}) => new Promise((_resolve, reject) => {
+      // 真实浏览器里 fetch 会因 signal 中止而 reject，这里如实模拟
+      options.signal?.addEventListener('abort', () => {
+        reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+      });
+    });
+
+    it('字体下载卡住 → 超时后抛出可重试的错误（不是静默等待）', async () => {
+      await expect(
+        loadPdfFonts({ force: true, fetchImpl: hangingFetch, timeoutMs: 40 })
+      ).rejects.toThrow(/字体下载超时：noto-sans-sc-zh-400\.woff2（0s，已尝试 \d+ 个源，请检查网络后重试）/);
+    });
+
+    it('整体生成卡住 → 由外层超时兜底，错误文案带"超时/重试"', async () => {
+      await expect(
+        buildPdfBlob(SAMPLE, {}, { timeoutMs: 30, force: true, fontTimeoutMs: 80, fetchImpl: hangingFetch })
+      ).rejects.toThrow(/超时.*重试/);
+    });
+
+    it('字体请求第一次失败会自动重试一次', async () => {
+      let calls = 0;
+      const flakyFetch = async (_url) => {
+        calls += 1;
+        if (calls <= 2) throw new TypeError('Failed to fetch');
+        return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) };
+      };
+      await expect(loadPdfFonts({ force: true, fetchImpl: flakyFetch, timeoutMs: 200 })).resolves.toEqual({
+        normal: expect.any(String),
+        bold: expect.any(String)
+      });
+      expect(calls).toBe(4); // 第一次两个字体都失败 → 重试的两个都成功
+    });
+
+    it('超时不再自动重试（否则用户要白等两轮 20s）', async () => {
+      let calls = 0;
+      const timeoutFetch = (_url, options = {}) => {
+        calls += 1;
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () => {
+            reject(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+          });
+        });
+      };
+      await expect(loadPdfFonts({ force: true, fetchImpl: timeoutFetch, timeoutMs: 30 })).rejects.toThrow(/超时/);
+      expect(calls).toBe(2); // 两个字体各请求一次，没有第二轮
+    });
+
+    it('预加载失败不抛错（后台任务不能把页面搞崩）', async () => {
+      await expect(
+        preloadPdfFonts({ force: true, fetchImpl: () => Promise.reject(new TypeError('offline')), timeoutMs: 50 })
+      ).resolves.toBeNull();
+    });
+
+    it.each([
+      ['WiFi/4G', { effectiveType: '4g' }, PDF_FONT_TIMEOUT_MS],
+      ['3G', { effectiveType: '3g' }, PDF_FONT_TIMEOUT_SLOW_MS],
+      ['2G', { effectiveType: '2g' }, PDF_FONT_TIMEOUT_SLOW_MS],
+      ['省流量模式', { effectiveType: '4g', saveData: true }, PDF_FONT_TIMEOUT_SLOW_MS],
+      ['拿不到网络信息', null, PDF_FONT_TIMEOUT_MS]
+    ])('%s 的字体下载预算：%s ms', (_label, connection, expected) => {
+      expect(defaultFontTimeoutMs(connection)).toBe(expected);
+    });
+  });
+
+  // 字体与站点解耦：多源回退 + Cache Storage 持久缓存
+  describe('字体源与缓存（国内可访问性）', () => {
+    const okFetch = (buffer = new ArrayBuffer(8)) => async () => ({
+      ok: true,
+      arrayBuffer: async () => buffer
+    });
+
+    beforeEach(() => {
+      // jsdom 不提供 Response：给个最小实现，让 Cache Storage 路径可测
+      global.Response = global.Response || class {
+        constructor(buffer) {
+          this._buffer = buffer;
+        }
+
+        async arrayBuffer() {
+          return this._buffer;
+        }
+      };
+    });
+
+    afterEach(() => {
+      delete global.caches;
+    });
+
+    it('同源是最后一个兜底源（国内镜像排在前面）', () => {
+      expect(FONT_BASES.at(-1)).toMatch(/\/fonts\/$/);
+      expect(FONT_BASES.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('第一个源失败时自动换下一个源，最终成功', async () => {
+      const tried = [];
+      const fetchImpl = async (url) => {
+        tried.push(url);
+        if (url.startsWith('https://mirror.example.com/')) throw new TypeError('Failed to fetch');
+        return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) };
+      };
+
+      await expect(
+        loadPdfFonts({
+          force: true,
+          fetchImpl,
+          timeoutMs: 200,
+          bases: ['https://mirror.example.com/cdn/fonts/', '/fonts/']
+        })
+      ).resolves.toEqual({ normal: expect.any(String), bold: expect.any(String) });
+
+      expect(tried).toContain('https://mirror.example.com/cdn/fonts/noto-sans-sc-zh-400.woff2');
+      expect(tried).toContain('/fonts/noto-sans-sc-zh-400.woff2');
+    });
+
+    it('下载成功后写进 Cache Storage，第二次导出直接命中缓存（不再走网络）', async () => {
+      const store = new Map();
+      const openSpy = vi.fn();
+      global.caches = {
+        open: async (...args) => {
+          openSpy(...args);
+          return {
+            match: async (url) => {
+              const hit = store.get(url);
+              return hit ? { arrayBuffer: async () => hit } : null;
+            },
+            put: async (url, response) => {
+              store.set(url, await response.arrayBuffer());
+            }
+          };
+        }
+      };
+
+      const first = await loadPdfFonts({ force: true, fetchImpl: okFetch(new ArrayBuffer(16)), timeoutMs: 200 });
+      expect(openSpy).toHaveBeenCalled();
+      expect(store.size).toBe(2);
+      expect([...store.keys()]).toEqual([
+        '/fonts/noto-sans-sc-zh-400.woff2',
+        '/fonts/noto-sans-sc-zh-700.woff2'
+      ]);
+
+      // 断网重来：缓存里已有 → 仍然成功
+      const offline = async () => { throw new TypeError('Failed to fetch'); };
+      await expect(
+        loadPdfFonts({ force: true, fetchImpl: offline, timeoutMs: 200, bases: ['/fonts/'] })
+      ).resolves.toEqual(first);
+    });
+
+    it('Cache Storage 不可用（隐私模式）时不影响导出', async () => {
+      Object.defineProperty(global, 'caches', { value: undefined, configurable: true });
+      await expect(
+        loadPdfFonts({ force: true, fetchImpl: okFetch(), timeoutMs: 200 })
+      ).resolves.toEqual({ normal: expect.any(String), bold: expect.any(String) });
     });
   });
 });

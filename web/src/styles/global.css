@@ -1,6 +1,21 @@
-/* Google Fonts: Source Han Serif SC (思源宋体) SemiBold for Chinese, Cinzel for English */
+/* 自托管 Noto Sans SC（Fontsource 子集）：国内访问不到 Google Fonts，字体必须自己发。
+   400/700 两个 weight 同时是 PDF 导出用的字体源（woff2 约为 TTF 体积的 45%，pdfmake 内置的
+   fontkit 自带 WOFF2 解压），一份文件两处复用，导出时基本直接命中浏览器缓存。 */
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/noto-sans-sc-zh-400.woff2') format('woff2');
+}
 
-/* Loaded via <link> in index.html with preconnect+preload for non-blocking first paint */
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/noto-sans-sc-zh-700.woff2') format('woff2');
+}
 
 :root {
   /* 主题：蜜桃柠檬 C1（来源 design/palettes.json → peach-lemon-deep）

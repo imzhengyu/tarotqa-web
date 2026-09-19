@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TarotQA - AI塔罗</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- 视觉风格 B（柔和文档）：正文用无衬线，去掉装饰性衬线字体 -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap"></noscript>
+    <!-- 字体全部自托管（web/public/fonts，Fontsource 的 Noto Sans SC 子集）：
+         国内访问 fonts.googleapis.com / fonts.gstatic.com 会被阻断，外链字体会拖慢甚至卡住首屏，
+         自托管的同一份 woff2 也直接给 PDF 导出复用（见 utils/exportPdf.js），导出时基本命中缓存。 -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/noto-sans-sc-zh-400.woff2" crossorigin>
   </head>
   <body>
     <script>

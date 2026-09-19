@@ -78,7 +78,7 @@ pnpm run lint:css:fix # Stylelint 自动修复
 | 双击即可的本地部署（Windows） | `deploy-local.bat`（内部调用 `scripts/deploy-local.ps1`，端口固定 4000） |
 | 真实页面截图（Edge + Pages 同款回落） | `python scripts/snapshot_app_pages.py [--skip-build]` → `design/preview-shots/app/` |
 | **移动端视觉回归（每个页面）** | `python scripts/run_visual_tests.py` → `design/preview-shots/mobile/`；已并入全量门禁 |
-| **端到端交互回归（Playwright + Edge）** | `python scripts/run_e2e_tests.py`；已并入全量门禁（AI 走 route mock，不花钱） |
+| **端到端交互回归（Playwright + Edge）** | `python scripts/run_e2e_tests.py [--only 场景名]`；已并入全量门禁（AI 走 route mock，不花钱）。含国产手机 UA（华为/荣耀/小米/OPPO/vivo/微信内置浏览器）与「导出 PDF 网络卡死必须报错可重试」场景 |
 | 受控推送（网络检查 + 放行标记 + push） | `python scripts/push_approved.py [--approve] [--dry-run]` |
 | 网络/VPN/代理检查 | `python scripts/check_network.py [--detect-proxy\|--apply-proxy]` |
 | AI 解读导出 Word 的排版抽样 | `python scripts/probe_docx_export.py` → `design/preview-docs/ai-analysis-sample.docx` |
@@ -86,6 +86,23 @@ pnpm run lint:css:fix # Stylelint 自动修复
 两个脚本都在 `web/` 下执行 pnpm/npx，并打印 PASS/FAIL 汇总；新增检查项请扩展脚本而不是在对话里手敲命令。
 
 UI/配色改动另见 `design/ui-review.md`：改动配色后必须跑一次对比度审计，确认 0 FAIL 再截图留档。
+
+### 字体与国内可访问性（重要）
+
+站点用户几乎全在国内，**不要引入任何国内不可达的第三方资源**（Google Fonts / gstatic / 海外 CDN 都算）。
+
+- **UI 字体**：`web/public/fonts/noto-sans-sc-zh-{400,700}.woff2` 自托管，`global.css` 里 `@font-face`
+  直接引本地文件；`index.html` 只保留一条 font preload。历史上用的 `fonts.googleapis.com` 已移除，
+  线上探针会检查它不再出现。
+- **PDF 导出字体**：和 UI **共用同一份 woff2**（pdfmake 内置 fontkit 自带 WOFF2 解压，实测可内嵌）。
+  体积只有 TTF 的 ~45%，而且浏览器早就为 UI 下过这份文件，导出时基本直接命中 HTTP 缓存。
+  旧的 2.4MB×2 TTF 已删除，不要再加回来。
+- **多源回退**：`web/src/utils/exportPdf.js` 按 `FONT_BASES` 顺序尝试（国内镜像 → 同源兜底）。
+  配好仓库 Variables `FONT_BASE_URLS`（逗号分隔，如 `https://xxx.oss-cn-hangzhou.aliyuncs.com/fonts`）
+  即可让构建注入 `VITE_FONT_BASE_URLS`，无需改代码。
+- **持久缓存**：下载成功的字体写进 Cache Storage（`tarotqa-pdf-fonts-v1`），同一设备只下一次。
+- 字体没改过就别重新生成；要换字体跑 `python scripts/build_pdf_fonts.py --force`。
+  字体体检（体积/覆盖字数）用 `python scripts/probe_font_payload.py`。
 
 **视觉产物的汇报格式**：凡是交付预览页 / 截图 / 示例网页，最终总结必须给出
 **完整可粘贴的 `file:///` URL**（绝对路径，如

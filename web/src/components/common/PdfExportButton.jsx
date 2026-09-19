@@ -8,6 +8,7 @@ import {
   downloadPdfBlob,
   isIosDevice,
   normalizeFileName,
+  preloadPdfFonts,
   releasePdfUrl,
   sharePdfBlob
 } from '../../utils/exportPdf';
@@ -33,6 +34,7 @@ function PdfExportButton({
   const { t } = useLanguage();
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+  const [elapsed, setElapsed] = useState(0);
   const pdfRef = useRef({ blob: null, fileName: '', url: '', shareable: false });
 
   const clearPdf = useCallback(() => {
@@ -41,6 +43,20 @@ function PdfExportButton({
   }, []);
 
   useEffect(() => clearPdf, [clearPdf]);
+
+  // AI 结果一出来就后台预下载字体（约 5MB）：把慢网等待提前到用户点导出之前
+  useEffect(() => {
+    if (markdown) preloadPdfFonts();
+  }, [markdown]);
+
+  // 生成期间显示秒数：慢网下用户能看出"还在跑"，而不是以为卡死了
+  useEffect(() => {
+    if (status !== 'working') return undefined;
+    const startedAt = Date.now();
+    setElapsed(0);
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [status]);
 
   const generate = async () => {
     setStatus('working');
@@ -81,10 +97,15 @@ function PdfExportButton({
 
   if (status === 'working') {
     return (
-      <div className="pdf-export-wrap">
+      <div className="pdf-export-wrap" data-testid="pdf-working">
         <button type="button" className={className} disabled>
-          <Icon name="download" size={16} /> {t('正在生成 PDF…', 'Generating PDF…')}
+          <Icon name="download" size={16} /> {t('正在生成 PDF…', 'Generating PDF…')} {elapsed}s
         </button>
+        <p className="pdf-export-hint">
+          {elapsed < 6
+            ? t('首次导出需下载中文字体（约 5MB），稍等片刻。', 'First export downloads the CJK font (~5MB), please wait.')
+            : t('网络较慢或字体下载受阻，超过 20 秒会自动报错并可重试。', 'Slow network — it will fail with a retry option after 20s.')}
+        </p>
       </div>
     );
   }

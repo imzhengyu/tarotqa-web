@@ -15,13 +15,34 @@
 import { buildPdfDefinition } from './pdfMarkdown';
 
 // 用构建基准拼字体地址：base '/' → /fonts/...；base '/tarotqa-web/' → /tarotqa-web/fonts/...
-const FONT_BASE = `${(import.meta.env && import.meta.env.BASE_URL) || '/'}fonts/`;
+const SAME_ORIGIN_BASE = `${(import.meta.env && import.meta.env.BASE_URL) || '/'}fonts/`;
+// 国内加速源（可选，逗号分隔，优先于同源）：例如阿里云 OSS / 腾讯云 COS 的默认域名，
+// 构建时用 VITE_FONT_BASE_URLS 注入；没配就只用同源。
+const MIRROR_BASES = String((import.meta.env && import.meta.env.VITE_FONT_BASE_URLS) || '')
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean)
+  .map((item) => (item.endsWith('/') ? item : `${item}/`));
+export const FONT_BASES = [...MIRROR_BASES, SAME_ORIGIN_BASE];
+
+// 用 woff2 而不是 TTF：体积约为 TTF 的 45%，而且**和网页 UI 用的是同一份文件**
+// （global.css 的 @font-face 已经下载过），导出时基本直接命中浏览器 HTTP 缓存。
+// pdfmake 内置的 fontkit 自带 WOFF2 解压（bundle 里带 brotli），实测可正常内嵌子集。
 const FONT_FILES = {
-  // 用 TTF：pdfkit/fontkit 对 woff2 的支持依赖构建环境，TTF 一定可用
-  normal: 'noto-sans-sc-400.ttf',
-  bold: 'noto-sans-sc-700.ttf'
+  normal: 'noto-sans-sc-zh-400.woff2',
+  bold: 'noto-sans-sc-zh-700.woff2'
 };
 const FONT_ALIAS = 'NotoSC';
+
+// 持久缓存：字体一旦下载成功就存进 Cache Storage，同一台设备之后不再重复下 2MB
+const FONT_CACHE = 'tarotqa-pdf-fonts-v1';
+
+// 站点部署在 GitHub Pages，国内访问可能极慢甚至长时间无响应：
+// 没有超时的话字体请求会一直挂着，UI 就永远停在"正在生成 PDF…"。
+export const PDF_FONT_TIMEOUT_MS = 20000;
+export const PDF_BUILD_TIMEOUT_MS = 60000;
+// 慢网（3G/省流量模式）把预算放宽，否则"能用只是慢"也会被判失败
+export const PDF_FONT_TIMEOUT_SLOW_MS = 60000;
 
 // 字体 2.4MB×2、pdfmake 也不小：缓存住，第二次导出不再走网络（尽量空间换时间）
 let fontsPromise = null;
@@ -37,12 +58,93 @@ function toBase64(buffer) {
   return window.btoa(binary);
 }
 
-async function fetchFontBase64(fileName, fetchImpl = fetch) {
-  const response = await fetchImpl(`${FONT_BASE}${fileName}`);
-  if (!response.ok) {
-    throw new Error(`字体加载失败：${fileName}（${response.status}）`);
+function withTimeout(promise, timeoutMs, message) {
+  if (!timeoutMs || typeof setTimeout !== 'function') return promise;
+  let timer;
+  const timeout = new Promise((resolve, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+/** 默认字体下载预算：按网络类型自适应（慢网给 60s）。 */
+export function defaultFontTimeoutMs(connection = typeof navigator === 'undefined' ? null : navigator.connection) {
+  if (connection?.saveData) return PDF_FONT_TIMEOUT_SLOW_MS;
+  const type = connection?.effectiveType || '';
+  if (/(^|-)(slow-)?2g$|(^|-)3g$/.test(type)) return PDF_FONT_TIMEOUT_SLOW_MS;
+  return PDF_FONT_TIMEOUT_MS;
+}
+
+async function fetchFontBase64(
+  fileName,
+  { fetchImpl = fetch, timeoutMs = defaultFontTimeoutMs(), bases = FONT_BASES } = {}
+) {
+  let lastError = null;
+  // 逐个源试：国内镜像 → 同源。任一源成功即返回。
+  for (const base of bases) {
+    const url = `${base}${fileName}`;
+    const cached = await readFromCache(url);
+    if (cached) return toBase64(cached);
+    try {
+      const buffer = await fetchWithTimeout(url, { fetchImpl, timeoutMs });
+      await writeToCache(url, buffer);
+      return toBase64(buffer);
+    } catch (error) {
+      lastError = error;
+    }
   }
-  return toBase64(await response.arrayBuffer());
+  const aborted = lastError?.name === 'AbortError' || lastError?.timeout;
+  const timeoutError = new Error(
+    `字体下载${aborted ? '超时' : '失败'}：${fileName}`
+    + `（${Math.round(timeoutMs / 1000)}s，已尝试 ${bases.length} 个源，请检查网络后重试）`
+  );
+  timeoutError.timeout = Boolean(aborted);
+  throw timeoutError;
+}
+
+async function fetchWithTimeout(url, { fetchImpl, timeoutMs }) {
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  const abortTimer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    const response = await fetchImpl(url, controller ? { signal: controller.signal } : undefined);
+    if (!response.ok) {
+      const error = new Error(`HTTP ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+    return await response.arrayBuffer();
+  } finally {
+    if (abortTimer) clearTimeout(abortTimer);
+  }
+}
+
+function fontCache() {
+  // Response 缺失的环境（老内核/测试环境）直接不缓存，功能不受影响
+  return typeof caches === 'undefined' || typeof Response === 'undefined' ? null : caches;
+}
+
+async function readFromCache(url) {
+  const storage = fontCache();
+  if (!storage) return null;
+  try {
+    const cache = await storage.open(FONT_CACHE);
+    const hit = await cache.match(url);
+    return hit ? await hit.arrayBuffer() : null;
+  } catch {
+    return null; // 隐私模式/配额问题：缓存不可用不影响导出
+  }
+}
+
+async function writeToCache(url, buffer) {
+  const storage = fontCache();
+  if (!storage) return;
+  try {
+    const cache = await storage.open(FONT_CACHE);
+    await cache.put(url, new Response(buffer, { headers: { 'Content-Type': 'font/woff2' } }));
+  } catch (error) {
+    // 忽略：缓存是优化，不是功能依赖（隐私模式/配额/老内核都会走到这里）
+    if (typeof console !== 'undefined' && console.debug) console.debug('[pdf] 字体缓存写入失败', error?.message);
+  }
 }
 
 async function loadPdfMake(fonts) {
@@ -82,12 +184,21 @@ async function loadPdfMake(fonts) {
 }
 
 /** 加载字体（带缓存）；失败时清掉缓存，避免一次网络抖动之后永久失败。 */
-export function loadPdfFonts() {
+export function loadPdfFonts({
+  force = false,
+  timeoutMs = defaultFontTimeoutMs(),
+  fetchImpl = fetch,
+  bases = FONT_BASES
+} = {}) {
+  if (force) fontsPromise = null;
   if (!fontsPromise) {
-    fontsPromise = Promise.all([
-      fetchFontBase64(FONT_FILES.normal),
-      fetchFontBase64(FONT_FILES.bold)
-    ])
+    const once = () => Promise.all([
+      fetchFontBase64(FONT_FILES.normal, { fetchImpl, timeoutMs, bases }),
+      fetchFontBase64(FONT_FILES.bold, { fetchImpl, timeoutMs, bases })
+    ]);
+    // 快速失败（如 DNS/连接被掐）自动重试一次；超时说明网慢，再等一轮只会更糟
+    fontsPromise = once()
+      .catch((error) => (error?.timeout ? Promise.reject(error) : once()))
       .then(([normal, bold]) => ({ normal, bold }))
       .catch((error) => {
         fontsPromise = null;
@@ -102,14 +213,36 @@ function normalizeFileName(filename) {
   return base.endsWith('.pdf') ? base : `${base}.pdf`;
 }
 
+/** 预加载字体（忽略失败）：进到 AI 结果页就悄悄开始下，点导出时多半已经就绪。 */
+export function preloadPdfFonts(options = {}) {
+  return loadPdfFonts(options).catch(() => null);
+}
+
 /** 生成 PDF Blob：只生成、不落盘，真机上交给用户手势再保存。 */
-export async function buildPdfBlob(markdown, meta = {}) {
-  if (!markdown || !markdown.trim()) {
-    throw new Error('没有可导出的 AI 内容');
-  }
-  const fonts = await loadPdfFonts();
+async function runBuild(markdown, meta, fontOptions) {
+  const fonts = await loadPdfFonts(fontOptions);
   const pdfMake = await loadPdfMake(fonts);
   return pdfMake.createPdf(buildPdfDefinition(markdown, meta)).getBlob();
+}
+
+/** 生成 PDF Blob：只生成、不落盘，真机上交给用户手势再保存。 */
+export function buildPdfBlob(
+  markdown,
+  meta = {},
+  { timeoutMs = PDF_BUILD_TIMEOUT_MS, fontTimeoutMs = PDF_FONT_TIMEOUT_MS, ...fontOptions } = {}
+) {
+  if (!markdown || !markdown.trim()) {
+    return Promise.reject(new Error('没有可导出的 AI 内容'));
+  }
+  // 兜底：字体/引擎/排版任何一环卡住都要变成可重试的错误，而不是无限"正在生成"
+  const task = runBuild(markdown, meta, { ...fontOptions, timeoutMs: fontTimeoutMs });
+  // 外层先超时返回时，原始 promise 之后仍可能 reject —— 先吃掉，避免 unhandled rejection
+  task.catch(() => {});
+  return withTimeout(
+    task,
+    timeoutMs,
+    `生成 PDF 超时（${Math.round(timeoutMs / 1000)}s），请检查网络后重试`
+  );
 }
 
 /** 同步触发下载（锚点点击，桌面/Android Chrome 有效），返回 objectURL 供手工链接兜底。 */

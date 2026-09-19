@@ -12,6 +12,12 @@
   4. 西方星盘：生成星盘 → 行星/ASC/MC 渲染 → AI 解读渲染
   5. 牌库：搜索过滤 + 详情形弹窗开合
   6. 我的：保存/清除 API Key（localStorage）
+  7. 导出 PDF 网络卡死：字体请求挂住 → 必须报错可重试，不能永远停在"正在生成 PDF…"
+  8. 国产手机 UA：华为/HarmonyOS、荣耀/MagicOS、小米/HyperOS、OPPO/ColorOS、vivo/OriginOS、
+     微信内置浏览器 —— 每家跑「首页布局无横向溢出 + 塔罗单牌 → AI 解读 → 导出 PDF 拿到文件或保存入口」
+
+说明：国产机型是用 Chromium 模拟 UA + 视口，能覆盖 UA 分支与各家屏幕宽度，
+模拟不出 ArkWeb / 微信 X5 / WKWebView 的内核差异。
 报告：logs/e2e-<时间戳>/report.md
 """
 
@@ -47,6 +53,61 @@ MOCK_MARKDOWN = (
     "| 牌位 | 牌 | 倾向 |\\n| --- | --- | --- |\\n| 核心 | 世界 | 收尾 |\\n| 障碍 | 月亮 | 不透明 |\\n"
 )
 
+# 国产手机 / 国产浏览器的 UA 与视口（Playwright 用 Chromium 模拟：
+# 能覆盖「UA 分支 + 各家视口宽度」的差异，但模拟不出 ArkWeb / WKWebView 的引擎差异）。
+# 这里挑的是真机常见组合，尤其是内置浏览器下载受限的场景。
+UA_PROFILES = [
+    {
+        "name": "huawei",
+        "label": "华为 Mate 60 / HarmonyOS 4（ArkWeb）",
+        "ua": "Mozilla/5.0 (Phone; OpenHarmony 4.0) AppleWebKit/537.36 (KHTML, like Gecko) "
+              "Chrome/114.0.0.0 Safari/537.36 ArkWeb/4.0.0.0 Mobile",
+        "viewport": {"width": 428, "height": 926},
+        "dpr": 3,
+    },
+    {
+        "name": "honor",
+        "label": "荣耀 Magic6 / MagicOS 8（HonorBrowser）",
+        "ua": "Mozilla/5.0 (Linux; U; Android 14; zh-cn; BVL-N49 Build/HONORBVL-N49) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Version/4.0 Chrome/114.0.0.0 HonorBrowser/8.0.1.302 Mobile Safari/537.36",
+        "viewport": {"width": 412, "height": 915},
+        "dpr": 3,
+    },
+    {
+        "name": "xiaomi",
+        "label": "小米 14 / HyperOS（MiuiBrowser）",
+        "ua": "Mozilla/5.0 (Linux; U; Android 14; zh-cn; 23127PN0CC Build/UKQ1.230804.001) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Version/4.0 Chrome/119.0.0.0 Mobile Safari/537.36 XiaoMi/MiuiBrowser/18.4.20",
+        "viewport": {"width": 393, "height": 873},
+        "dpr": 2.75,
+    },
+    {
+        "name": "oppo",
+        "label": "OPPO Find X6 / ColorOS 14（HeyTapBrowser）",
+        "ua": "Mozilla/5.0 (Linux; U; Android 14; zh-CN; PGZ110 Build/TP1A.220905.001) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Version/4.0 Chrome/114.0.0.0 Mobile Safari/537.36 HeyTapBrowser/10.7.22.1",
+        "viewport": {"width": 412, "height": 919},
+        "dpr": 3,
+    },
+    {
+        "name": "vivo",
+        "label": "vivo X90 / OriginOS 4（vivoBrowser）",
+        "ua": "Mozilla/5.0 (Linux; U; Android 14; zh-cn; V2218A Build/TP1A.220624.014) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Version/4.0 Chrome/114.0.0.0 Mobile Safari/537.36 VivoBrowser/16.0.6.0",
+        "viewport": {"width": 400, "height": 900},
+        "dpr": 3,
+    },
+    {
+        "name": "wechat-android",
+        "label": "微信内置浏览器（Android WebView）",
+        "ua": "Mozilla/5.0 (Linux; Android 13; Pixel 5 Build/TQ3A.230805.001; wv) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Version/4.0 Chrome/119.0.0.0 Mobile Safari/537.36 "
+              "MicroMessenger/8.0.44.2480(0x28002C35) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64",
+        "viewport": {"width": 393, "height": 851},
+        "dpr": 2.75,
+    },
+]
+
 SCRIPT = """\
 import {{ chromium }} from {entry};
 
@@ -54,6 +115,7 @@ const base = {base};
 const mockMarkdown = {mock_markdown};
 const downloadDir = {download_dir};
 const ONLY = {only};
+const uaProfiles = {ua_profiles};
 
 const browser = await chromium.launch({{
   channel: {channel},
@@ -77,6 +139,21 @@ async function mockAI(page) {{
 async function newPage() {{
   // 每个场景单独 context：避免 localStorage 里的 10s AI 冷却/API Key 串到下一个场景
   const isolated = await browser.newContext({{ viewport: {{ width: 1280, height: 900 }}, acceptDownloads: true }});
+  const page = await isolated.newPage();
+  await mockAI(page);
+  return {{ isolated, page }};
+}}
+
+// 国产机型：按各家 UA + 视口建 context（手机视口会走移动端布局）
+async function newMobilePage(profile) {{
+  const isolated = await browser.newContext({{
+    viewport: profile.viewport,
+    deviceScaleFactor: profile.dpr,
+    isMobile: true,
+    hasTouch: true,
+    userAgent: profile.ua,
+    acceptDownloads: true,
+  }});
   const page = await isolated.newPage();
   await mockAI(page);
   return {{ isolated, page }};
@@ -243,6 +320,9 @@ const scenarios = {{
     const {{ readFileSync }} = await import('node:fs');
     const head = readFileSync(saved).subarray(0, 5).toString('utf8');
     assert(head.startsWith('%PDF'), `导出文件应为 PDF（头部 %PDF），实际 "${{head}}"`);
+    // 字体必须真的内嵌（pdfmake 用的是 woff2 源文件，得确认 fontkit 解压 + 子集化成功）
+    const pdfBody = readFileSync(saved).toString('latin1');
+    assert(/\\/FontFile2|\\/FontFile3/.test(pdfBody), 'PDF 应内嵌字体程序（/FontFile），否则中文会缺字');
     // 真机（iOS Safari / 内置浏览器）靠这个手工入口保存，必须存在且是指向 blob 的下载链接
     const manualSave = page.locator('[data-testid="pdf-ready-download"] a[download]');
     assert(await manualSave.count() === 1, '导出完成后应给出手工保存链接（真机兜底）');
@@ -345,9 +425,131 @@ const scenarios = {{
     assert(cleared === null, `清除后 localStorage 应为空，实际 ${{cleared}}`);
     await isolated.close();
   }},
+
+  // 7) 导出 PDF 时网络卡死：必须报错 + 可重试，不能永远停在"正在生成 PDF…"
+  //    （真机现象：GitHub Pages 在国内偶发"连上但不回包"，字体请求一直挂着）
+  'pdf-export-stall': async () => {{
+    const {{ isolated, page }} = await newPage();
+    // 字体请求永远不回包（模拟国内访问 GitHub Pages 卡住）——必须在页面加载前挂上路由，
+    // 否则 AI 结果页的后台预下载会先发出去，拦不住
+    let stalled = true;
+    await page.route('**/fonts/*.woff2', (route) => {{
+      if (stalled) return; // 既不 fulfill 也不 abort：请求一直挂着
+      return route.continue();
+    }});
+    // 字体被挂住时 load 永远不会触发（index.html preload 了字体），只等 DOM
+    await page.goto(base + '/divination', {{ waitUntil: 'domcontentloaded' }});
+    await page.getByText('选择牌阵').first().waitFor({{ timeout: 8000 }});
+    await closeDisclaimer(page);
+
+    await clickAnd(page, page.getByText('单牌阵').first(), null, '选单牌阵');
+    await clickAnd(page, page.getByRole('button', {{ name: /选择此牌阵/ }}).first(),
+      () => page.locator('.question-textarea').waitFor({{ timeout: 6000 }}), '进入提问');
+    await page.locator('.question-textarea').fill('导出卡死回归');
+    await clickAnd(page, page.getByRole('button', {{ name: /开始抽牌/ }}).first(),
+      () => page.getByText('点击卡牌抽取').waitFor({{ timeout: 8000 }}), '开始抽牌');
+    await page.locator('.draw-cards .deck').first().click({{ force: true }});
+    await page.getByText('占卜结果').first().waitFor({{ timeout: 12000 }});
+    await clickAnd(page, page.getByRole('button', {{ name: /AI深度解读/ }}).first(),
+      () => page.locator('#divination-ai-result').waitFor({{ timeout: 12000 }}), '生成 AI 解读');
+
+    await clickAnd(page, page.getByRole('button', {{ name: /导出 PDF/ }}).first(), null, '导出 PDF');
+    await page.locator('[data-testid="pdf-working"]').waitFor({{ timeout: 5000 }});
+    assert(await page.locator('[data-testid="pdf-working"]').isVisible(), '点击后应显示生成中状态');
+
+    // 20s 字体超时后必须落到错误态（超时不重试，避免用户白等第二轮的 20s）
+    const alert = page.locator('.pdf-export-error');
+    await alert.waitFor({{ timeout: 28000 }});
+    const text = await alert.innerText();
+    assert(/超时|失败/.test(text), `错误信息应说明原因，实际：${{text}}`);
+    assert(await page.getByRole('button', {{ name: /重试导出 PDF/ }}).count() === 1, '应给出重试按钮');
+
+    // 网络恢复后重试要能成功
+    stalled = false;
+    const downloadPromise = page.waitForEvent('download', {{ timeout: 30000 }}).catch(() => null);
+    await page.getByRole('button', {{ name: /重试导出 PDF/ }}).first().click({{ force: true }});
+    await page.waitForFunction(() => document.querySelector('[data-testid^="pdf-ready"]') !== null, {{ timeout: 30000 }});
+    const retryDownload = await Promise.race([downloadPromise, page.waitForTimeout(1500).then(() => null)]);
+    const manual = await page.locator('[data-testid="pdf-ready-download"] a[download]').count();
+    const share = await page.locator('[data-testid="pdf-ready-share"] button').count();
+    assert(retryDownload || manual === 1 || share === 1, '重试后应能拿到 PDF 或保存入口');
+    await isolated.close();
+  }},
 }};
 
 const results = [];
+// 国产手机 UA 场景：每个机型跑「首页布局 + 塔罗单牌 → AI 解读 → 导出 PDF」。
+// 这些机型多数是 Chromium 内核，但 UA 分支（isIosDevice/canSharePdf）与视口宽度各家不同，
+// 内置浏览器又常拦下载 —— 所以导出必须验到「拿到 PDF」或「拿到手工保存入口」。
+function uaScenario(profile) {{
+  return async () => {{
+    const {{ isolated, page }} = await newMobilePage(profile);
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(`页面异常：${{String(error.message).slice(0, 160)}}`));
+    page.on('console', (msg) => {{
+      // 静态托管下 SPA 路由的 404 回落是预期噪音
+      if (msg.type() === 'error' && !/Failed to load resource/.test(msg.text())) {{
+        errors.push(`控制台：${{msg.text().slice(0, 160)}}`);
+      }}
+    }});
+
+    await page.goto(base + '/', {{ waitUntil: 'load' }});
+    await page.locator('.service-block').first().waitFor({{ timeout: 12000 }});
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert(overflow <= 4, `首页横向溢出 ${{overflow}}px`);
+
+    await page.goto(base + '/divination', {{ waitUntil: 'load' }});
+    await page.getByText('选择牌阵').first().waitFor({{ timeout: 15000 }});
+    await closeDisclaimer(page);
+    await clickAnd(page, page.getByText('单牌阵').first(), null, '选单牌阵');
+    await clickAnd(
+      page,
+      page.getByRole('button', {{ name: /选择此牌阵/ }}).first(),
+      () => page.locator('.question-textarea').waitFor({{ timeout: 6000 }}),
+      '进入提问'
+    );
+    await page.locator('.question-textarea').fill('国产机型 UA 导出测试');
+    await clickAnd(
+      page,
+      page.getByRole('button', {{ name: /开始抽牌/ }}).first(),
+      () => page.getByText('点击卡牌抽取').waitFor({{ timeout: 8000 }}),
+      '开始抽牌'
+    );
+    await page.locator('.draw-cards .deck').first().click({{ force: true }});
+    await page.getByText('占卜结果').first().waitFor({{ timeout: 15000 }});
+    await clickAnd(
+      page,
+      page.getByRole('button', {{ name: /AI深度解读/ }}).first(),
+      () => page.locator('#divination-ai-result').waitFor({{ timeout: 15000 }}),
+      '生成 AI 解读'
+    );
+
+    const downloadPromise = page.waitForEvent('download', {{ timeout: 25000 }}).catch(() => null);
+    await clickAnd(page, page.getByRole('button', {{ name: /导出 PDF/ }}).first(), null, '导出 PDF');
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid^="pdf-ready"]') !== null,
+      {{ timeout: 25000 }},
+    );
+    const download = await Promise.race([downloadPromise, page.waitForTimeout(1200).then(() => null)]);
+    const manual = await page.locator('[data-testid="pdf-ready-download"] a[download]').count();
+    const share = await page.locator('[data-testid="pdf-ready-share"] button').count();
+    assert(download || manual === 1 || share === 1, '导出后既没有下载事件，也没有保存/分享入口');
+    if (download) {{
+      assert(download.suggestedFilename().endsWith('.pdf'), `导出文件名应以 .pdf 结尾，实际 ${{download.suggestedFilename()}}`);
+    }}
+    console.log(
+      `    导出路径：${{download ? `下载 ${{download.suggestedFilename()}}` : share ? '系统分享面板' : '手工保存链接'}}`
+      + `（手工链接 ${{manual}} 个）`
+    );
+
+    assert(errors.length === 0, errors[0] || '');
+    await isolated.close();
+  }};
+}}
+for (const profile of uaProfiles) {{
+  scenarios[`ua-${{profile.name}}`] = uaScenario(profile);
+}}
+
 const selected = Object.entries(scenarios).filter(([name]) => ONLY.length === 0 || ONLY.includes(name));
 for (const [name, run] of selected) {{
   // UI 有 600ms 动画与懒加载，允许重试一次；重试成功会在报告里标注（暴露偶发性）
@@ -475,6 +677,7 @@ def main(argv: list[str] | None = None) -> int:
             mock_markdown=f"'{MOCK_MARKDOWN}'",
             download_dir=f"'{DOWNLOAD_DIR.as_posix()}'",
             only=json.dumps(args.only, ensure_ascii=False),
+            ua_profiles=json.dumps(UA_PROFILES, ensure_ascii=False),
         ),
         encoding="utf-8",
     )
