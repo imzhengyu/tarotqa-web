@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types';
 import { Iztrolabe } from 'react-iztro';
 import MarkdownSection from '../../components/common/MarkdownSection';
-import Icon from '../../components/common/Icons';
-import { exportMarkdownToPdf } from '../../utils/exportPdf';
+import PdfExportButton from '../../components/common/PdfExportButton';
 
 const markdownPlugins = [
   { loader: () => import('markdown-it-multimd-table'), options: { multiline: true, header: true } }
@@ -68,16 +67,14 @@ export default function ZiweiChartDisplay({
                 <MarkdownSection content={aiInterpretation} plugins={markdownPlugins} />
               </div>
               <div className="ai-export-section">
-                <button
-                  className="btn btn-secondary export-ai-btn"
-                  onClick={() => exportMarkdownToPdf(aiInterpretation, generateFilename(birthData), {
+                <PdfExportButton
+                  markdown={aiInterpretation}
+                  filename={generateFilename(birthData)}
+                  meta={{
                     title: t('紫微斗数 · AI 解读', 'Ziwei Dou Shu · AI Analysis'),
                     subtitle: birthData ? `${birthData.year}-${String(birthData.month).padStart(2, '0')}-${String(birthData.day).padStart(2, '0')}` : ''
-                  })}
-                  title={t('导出 PDF', 'Export as PDF')}
-                >
-                  <Icon name="download" size={16} /> {t('导出 PDF', 'Export as PDF')}
-                </button>
+                  }}
+                />
               </div>
             </>
           )}

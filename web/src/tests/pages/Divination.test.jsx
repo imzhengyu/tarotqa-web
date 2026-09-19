@@ -4,7 +4,15 @@ import Divination, { generateTarotFilename, spreadList } from '../../pages/Divin
 import { LanguageProvider } from '../../context/LanguageContext';
 
 // 导出 PDF 会真的加载字体并生成文件，这里换成可断言的桩
-vi.mock('../../utils/exportPdf', () => ({ exportMarkdownToPdf: vi.fn() }));
+vi.mock('../../utils/exportPdf', () => ({
+  buildPdfBlob: vi.fn(async () => new Blob(['%PDF-1.4'], { type: 'application/pdf' })),
+  canSharePdf: vi.fn(() => false),
+  downloadPdfBlob: vi.fn(() => 'blob:mock-pdf'),
+  normalizeFileName: vi.fn((name) => `${name}.pdf`),
+  releasePdfUrl: vi.fn(),
+  sharePdfBlob: vi.fn(async () => 'shared'),
+  exportMarkdownToPdf: vi.fn()
+}));
 
 const mockCards = [
   {
@@ -222,9 +230,9 @@ describe('Divination', () => {
     });
   });
 
-  // 覆盖页面里的导出回调：AI 解读完成后点「导出 PDF」应调用导出模块
+  // 覆盖页面里的导出回调：AI 解读完成后点「导出 PDF」应真的走完一次生成流程
   it('AI 解读完成后可以导出 PDF', async () => {
-    const { exportMarkdownToPdf } = await import('../../utils/exportPdf');
+    const { buildPdfBlob, downloadPdfBlob } = await import('../../utils/exportPdf');
 
     render(<Divination />, { wrapper: TestWrapper });
 
@@ -246,6 +254,9 @@ describe('Divination', () => {
     await waitFor(() => expect(screen.getByText('导出 PDF')).toBeInTheDocument(), { timeout: 3000 });
 
     fireEvent.click(screen.getByText('导出 PDF'));
-    await waitFor(() => expect(exportMarkdownToPdf).toHaveBeenCalled());
+    // 生成完成后页面要给出手工保存入口（真机靠这一下才存得下来）
+    await waitFor(() => expect(screen.getByTestId('pdf-ready-download')).toBeInTheDocument());
+    expect(buildPdfBlob).toHaveBeenCalledWith(expect.stringContaining('AI解读结果'), expect.objectContaining({ title: expect.any(String) }));
+    expect(downloadPdfBlob).toHaveBeenCalled();
   });
 });

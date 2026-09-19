@@ -122,7 +122,7 @@ describe('ZiweiChartDisplay', () => {
         generateFilename={generateZiweiFilename}
         t={(zh) => zh}
       />
-    );
+    , { wrapper: TestWrapper });
     expect(screen.getByText('点击生成命盘')).toBeInTheDocument();
   });
 
@@ -137,7 +137,7 @@ describe('ZiweiChartDisplay', () => {
         generateFilename={generateZiweiFilename}
         t={(zh) => zh}
       />
-    );
+    , { wrapper: TestWrapper });
     expect(screen.getByTestId('iztrolabe-mock')).toBeInTheDocument();
   });
 
@@ -153,7 +153,7 @@ describe('ZiweiChartDisplay', () => {
         generateFilename={generateZiweiFilename}
         t={(zh) => zh}
       />
-    );
+    , { wrapper: TestWrapper });
     fireEvent.click(screen.getByText('AI 命盘分析'));
     expect(onAnalyze).toHaveBeenCalledTimes(1);
   });
@@ -170,7 +170,7 @@ describe('ZiweiChartDisplay', () => {
         generateFilename={generateZiweiFilename}
         t={(zh) => zh}
       />
-    );
+    , { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(screen.getByText('紫微解读结果')).toBeInTheDocument();

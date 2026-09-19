@@ -43,6 +43,7 @@ SANITY_TESTS = [
     "src/tests/hooks/useAIRequestCooldown.test.js",
     "src/tests/components/BirthInfoForm.test.jsx",
     "src/tests/components/ChinaCityPicker.test.jsx",
+    "src/tests/components/PdfExportButton.test.jsx",
     "src/tests/components/Icons.test.jsx",
     "src/tests/data/personas.test.js",
     "src/tests/components/TarotCard.test.jsx",

@@ -5,6 +5,7 @@ import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 
 const browserGlobals = {
   alert: 'readonly',
+  Blob: 'readonly',
   blur: 'readonly',
   clearInterval: 'readonly',
   clearTimeout: 'readonly',
@@ -25,6 +26,8 @@ const browserGlobals = {
   localStorage: 'readonly',
   location: 'readonly',
   fetch: 'readonly',
+  File: 'readonly',
+  FileReader: 'readonly',
   matchMedia: 'readonly',
   moveBy: 'readonly',
   moveTo: 'readonly',

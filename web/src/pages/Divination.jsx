@@ -5,7 +5,7 @@ import DelayedPoofButton from '../components/common/DelayedPoofButton';
 import MarkdownSection from '../components/common/MarkdownSection';
 import Icon from '../components/common/Icons';
 import { useLanguage } from '../context/LanguageContext';
-import { exportMarkdownToPdf } from '../utils/exportPdf';
+import PdfExportButton from '../components/common/PdfExportButton';
 import { formatTimestamp } from '../utils/date';
 import api from '../services/api';
 import { spreads } from '../data/spreads';
@@ -448,16 +448,14 @@ function Divination() {
               </div>
             </div>
               <div className="ai-export-section">
-                <button
-                  className="btn btn-secondary export-ai-btn"
-                  onClick={() => exportMarkdownToPdf(aiInterpretation, generateTarotFilename(selectedSpread?.name, drawnCards.length), {
+                <PdfExportButton
+                  markdown={aiInterpretation}
+                  filename={generateTarotFilename(selectedSpread?.name, drawnCards.length)}
+                  meta={{
                     title: t('塔罗占卜 · AI 深度解读', 'Tarot Reading · AI Analysis'),
                     subtitle: `${selectedSpread?.name} · ${drawnCards.length} ${t('张牌', 'cards')} · ${new Date().toLocaleString()}`
-                  })}
-                  title={t('导出 PDF', 'Export as PDF')}
-                >
-                  <Icon name="download" size={16} /> {t('导出 PDF', 'Export as PDF')}
-                </button>
+                  }}
+                />
               </div>
             </>
           )}

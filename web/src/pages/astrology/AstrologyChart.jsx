@@ -3,7 +3,6 @@ import BirthInfoForm from '../../components/common/BirthInfoForm';
 import DisclaimerModal from '../../components/common/DisclaimerModal';
 import DelayedPoofButton from '../../components/common/DelayedPoofButton';
 import MarkdownSection from '../../components/common/MarkdownSection';
-import Icon from '../../components/common/Icons';
 import { useAIRequestCooldown } from '../../hooks/useAIRequestCooldown';
 import { useBackToTop } from '../../hooks/useBackToTop';
 import { useDevice } from '../../hooks/useDevice';
@@ -11,7 +10,7 @@ import { calculateAstrologyChart } from '../../utils/astrology/calculations';
 import { ZODIAC_SIGNS, PLANETS, PLANET_COLORS } from '../../utils/astrology/constants';
 import { useLanguage } from '../../context/LanguageContext';
 import { ASTROLOGY_CHART } from '../../constants';
-import { exportMarkdownToPdf } from '../../utils/exportPdf';
+import PdfExportButton from '../../components/common/PdfExportButton';
 import { formatTimestamp } from '../../utils/date';
 import api from '../../services/api';
 import './AstrologyChart.css';
@@ -401,16 +400,14 @@ function AstrologyChart() {
                   <MarkdownSection content={aiInterpretation} plugins={markdownPlugins} />
                 </div>
                 <div className="ai-export-section">
-                  <button
-                    className="btn btn-secondary export-ai-btn"
-                    onClick={() => exportMarkdownToPdf(aiInterpretation, generateAstrologyFilename(birthData), {
+                  <PdfExportButton
+                    markdown={aiInterpretation}
+                    filename={generateAstrologyFilename(birthData)}
+                    meta={{
                       title: t('西方星盘 · AI 解读', 'Western Astrology · AI Analysis'),
                       subtitle: `${birthData?.year}-${String(birthData?.month).padStart(2, '0')}-${String(birthData?.day).padStart(2, '0')} ${String(birthData?.hour).padStart(2, '0')}:${String(birthData?.minute).padStart(2, '0')}`
-                    })}
-                    title={t('导出 PDF', 'Export as PDF')}
-                  >
-                    <Icon name="download" size={16} /> {t('导出 PDF', 'Export as PDF')}
-                  </button>
+                    }}
+                  />
                 </div>
               </>
             )}

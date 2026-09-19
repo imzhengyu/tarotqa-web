@@ -84,10 +84,16 @@ async function newPage() {{
 
 async function closeDisclaimer(page) {{
   const modal = page.locator('.disclaimer-modal');
+  // 弹窗可能是导航后异步出现的：先给它最多 2s 出现（不然下一个点击会被遮罩挡住 → 30s 超时）
+  await modal.first().waitFor({{ state: 'visible', timeout: 2000 }}).catch(() => {{}});
   if (await modal.count() === 0) return;
-  const button = page.locator('.disclaimer-modal button.btn-primary');
+  const button = page.locator('.disclaimer-modal button.btn-primary').first();
   if (await button.count()) {{
-    await button.first().click({{ force: true }});
+    await button.scrollIntoViewIfNeeded().catch(() => {{}});
+    await button.click({{ force: true, timeout: 5000 }}).catch(async () => {{
+      // 入场动画期间可能一直判定为不稳定：直接派发事件兜底
+      await button.dispatchEvent('click').catch(() => {{}});
+    }});
     await modal.first().waitFor({{ state: 'hidden', timeout: 6000 }}).catch(() => {{}});
     await page.waitForTimeout(250);
   }}
@@ -237,6 +243,11 @@ const scenarios = {{
     const {{ readFileSync }} = await import('node:fs');
     const head = readFileSync(saved).subarray(0, 5).toString('utf8');
     assert(head.startsWith('%PDF'), `导出文件应为 PDF（头部 %PDF），实际 "${{head}}"`);
+    // 真机（iOS Safari / 内置浏览器）靠这个手工入口保存，必须存在且是指向 blob 的下载链接
+    const manualSave = page.locator('[data-testid="pdf-ready-download"] a[download]');
+    assert(await manualSave.count() === 1, '导出完成后应给出手工保存链接（真机兜底）');
+    const manualHref = await manualSave.getAttribute('href');
+    assert((manualHref || '').startsWith('blob:'), `手工保存链接应指向 blob，实际 ${{manualHref}}`);
     await isolated.close();
   }},
 
