@@ -98,13 +98,14 @@ UI/配色改动另见 `design/ui-review.md`：改动配色后必须跑一次对�
   family 名取自返回的 CSS（`CSS 里 FontFamilyName`，当前是 `Noto Sans CJK`）。
   **不要**写回 `fonts.googleapis.com` / `fonts.gstatic.com`（国内被阻断），线上探针会检查。
   查字体 ID：`python scripts/probe_zsft_fontapi.py --search <名字>`（列表页 `/browse/hotlist/`）。
-- **PDF 导出字体**（必须自托管，pdfmake 要单个可内嵌文件）分两级：
-  - `noto-sans-sc-core-{400,700}.woff2`（524/537KB，GB2312 一级字表 + 拉丁 + 常用标点）——
+- **PDF 导出字体**（必须自托管 **TTF**，pdfmake 要单个可内嵌文件）分两级：
+  - `noto-sans-sc-core-{400,700}.ttf`（约 1.1MB，GB2312 一级字表 + 拉丁 + 常用标点 + Latin-1 补充区）——
     导出默认用它；
-  - `noto-sans-sc-zh-{400,700}.woff2`（1.1MB）——只有导出文本出现核心集没有的字时才回退使用；
+  - `noto-sans-sc-full-{400,700}.ttf`（约 1.75MB，一二级字表）——只有出现核心集没有的字时才回退；
   - `noto-sans-sc-core-ranges.json` 是核心集的覆盖区间表，导出前逐字校验（见 `pickFontTier`）。
-  这样慢网/移动端典型导出只下 ~524KB（之前是 4.9MB 的 TTF → 2.2MB woff2 → 现在 524KB）。
-  旧的 TTF 已删除，不要再加回来。
+  - **千万不要再换成 woff2**：pdfmake 内置的 fontkit 对 WOFF2（glyf 变换）解码不完整，
+    会解出**空字形** —— PDF 照样能下载、能抽到文本（ToUnicode 在）、也能通过 `/FontFile` 检查，
+    但页面渲染出来是**白页**（这个坑真踩过）。E2E 现在会用 pypdfium2 渲染第一页算"墨迹占比"兜底。
 - **不要在 `index.html` 里 preload 字体**：慢网下它会和首屏 JS 抢带宽，还会让 `load` 事件迟迟不触发
   （E2E 的字体卡死场景就是因为这个才要 `domcontentloaded`）。
 - **已知的镜像结论**（`scripts/probe_font_mirror.py` 实测）：npmmirror 可取但**没有 CORS**，浏览器不能直接用；

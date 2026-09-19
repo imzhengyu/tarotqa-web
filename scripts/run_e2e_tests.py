@@ -41,6 +41,10 @@ ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 TEMP_JS = WEB / ".e2e-tests.mjs"
 DOWNLOAD_DIR = ROOT / "logs" / "e2e-downloads"
+PDF_SHOT_DIR = ROOT / "design" / "preview-shots" / "pdf"
+# 渲染页面里"非白像素"占比的下限：只有边框、没有文字的白页约 0.68%，
+# 正常有文字的导出约 1.8%+，取 1.2% 作分界（抓"字形为空 → 白页"这类回归）
+MIN_PDF_INK = 0.012
 
 EDGE_CANDIDATES = [
     Path(os.environ.get("ProgramFiles(x86)", "C:/Program Files (x86)")) / "Microsoft/Edge/Application/msedge.exe",
@@ -226,6 +230,7 @@ async function diagnose(page) {{
 }}
 
 const failures = [];
+let downloadedPdf = null; // 导出流程拿到的 PDF 路径，跑完再做「内容不为空」的渲染校验
 function assert(condition, message) {{
   if (!condition) failures.push(message);
 }}
@@ -330,9 +335,10 @@ const scenarios = {{
     const {{ readFileSync }} = await import('node:fs');
     const head = readFileSync(saved).subarray(0, 5).toString('utf8');
     assert(head.startsWith('%PDF'), `导出文件应为 PDF（头部 %PDF），实际 "${{head}}"`);
-    // 字体必须真的内嵌（pdfmake 用的是 woff2 源文件，得确认 fontkit 解压 + 子集化成功）
+    // 字体必须真的内嵌（用 TTF 源；woff2 会被 fontkit 解出空字形，见下面的内容校验）
     const pdfBody = readFileSync(saved).toString('latin1');
     assert(/\\/FontFile2|\\/FontFile3/.test(pdfBody), 'PDF 应内嵌字体程序（/FontFile），否则中文会缺字');
+    downloadedPdf = saved;
     // 真机（iOS Safari / 内置浏览器）靠这个手工入口保存，必须存在且是指向 blob 的下载链接
     const manualSave = page.locator('[data-testid="pdf-ready-download"] a[download]');
     assert(await manualSave.count() === 1, '导出完成后应给出手工保存链接（真机兜底）');
@@ -447,7 +453,7 @@ const scenarios = {{
     // 字体请求永远不回包（模拟国内访问 GitHub Pages 卡住）——必须在页面加载前挂上路由，
     // 否则 AI 结果页的后台预下载会先发出去，拦不住
     let stalled = true;
-    await page.route('**/fonts/*.woff2', (route) => {{
+    await page.route('**/fonts/*.ttf', (route) => {{
       if (stalled) return; // 既不 fulfill 也不 abort：请求一直挂着
       return route.continue();
     }});
@@ -597,7 +603,7 @@ for (const [name, run] of selected) {{
 }}
 
 await browser.close();
-console.log(`__RESULT__${{JSON.stringify(results)}}`);
+console.log(`__RESULT__${{JSON.stringify({{ results, downloadedPdf }})}}`);
 """
 
 
@@ -606,6 +612,42 @@ def resolve(name: str) -> str:
     if not path:
         sys.exit(f"[e2e] 找不到可执行文件: {name}")
     return path
+
+
+def check_pdf_content(pdf_path: str | None) -> dict | None:
+    """渲染导出的 PDF 第一页，用"非白像素占比"判断内容是否真的画出来了。
+
+    只断言 %PDF 头 / `/FontFile` 是抓不到"字体字形为空 → 白页"的：
+    那种 PDF 依然有内嵌字体、依然能抽出文本（ToUnicode 在），但渲染出来一片空白。
+    """
+    if not pdf_path:
+        return None
+    path = Path(pdf_path)
+    if not path.exists():
+        return {"ok": False, "summary": f"FAIL 导出文件不存在：{pdf_path}"}
+    try:
+        import pypdfium2 as pdfium
+        from pypdf import PdfReader
+    except ImportError:
+        return {"ok": False, "summary": "FAIL 缺少 pypdfium2/pypdf，无法校验 PDF 内容（pip install pypdfium2 pypdf）"}
+
+    document = pdfium.PdfDocument(path)
+    rendered = document[0].render(scale=1.6).to_pil()
+    PDF_SHOT_DIR.mkdir(parents=True, exist_ok=True)
+    shot = PDF_SHOT_DIR / "e2e-export-page1.png"
+    rendered.save(shot)
+
+    histogram = rendered.convert("L").histogram()
+    ink = sum(histogram[:250]) / max(1, sum(histogram))
+    text = "\n".join(page.extract_text() or "" for page in PdfReader(str(path)).pages).strip()
+    ok = ink >= MIN_PDF_INK
+    return {
+        "ok": ok,
+        "summary": (
+            f"{'PASS' if ok else 'FAIL'} 页数 {len(document)}，非白像素 {ink:.2%}（要求 ≥{MIN_PDF_INK:.1%}），"
+            f"抽出文本 {len(text)} 字符；页面图 {shot.relative_to(ROOT)}"
+        ),
+    }
 
 
 def browser_config() -> tuple[str, str, str]:
@@ -711,8 +753,16 @@ def main(argv: list[str] | None = None) -> int:
 
     output = proc.stdout or ""
     payload = next((line for line in output.splitlines() if line.startswith("__RESULT__")), None)
-    results = json.loads(payload.replace("__RESULT__", "")) if payload else []
+    parsed = json.loads(payload.replace("__RESULT__", "")) if payload else {}
+    results = parsed.get("results", [])
+    pdf_path = parsed.get("downloadedPdf")
     print("\n".join(line for line in output.splitlines() if not line.startswith("__RESULT__")))
+
+    # 导出的 PDF 必须真的有内容：交给 Python 渲染一页算"墨迹占比"+ 抽文本长度。
+    # （只断言 %PDF 头和 /FontFile 是抓不到"字体字形为空 → 白页"这类回归的）
+    pdf_check = check_pdf_content(pdf_path) if pdf_path else None
+    if pdf_check:
+        print(pdf_check["summary"])
 
     log_dir = new_run_dir("e2e")
     report = log_dir / "report.md"
@@ -721,6 +771,10 @@ def main(argv: list[str] | None = None) -> int:
         report_lines.append(f"## {'PASS' if item['ok'] else 'FAIL'} {item['name']}")
         report_lines += [f"- {text}" for text in item["problems"]] or ["- 无问题"]
         report_lines.append("")
+    if pdf_check:
+        report_lines += ["## 导出 PDF 内容校验", f"- {pdf_check['summary']}", ""]
+        if not pdf_check["ok"]:
+            return 1
     report.write_text("\n".join(report_lines), encoding="utf-8")
 
     passed = sum(1 for item in results if item["ok"])

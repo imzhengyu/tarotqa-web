@@ -25,21 +25,21 @@ const MIRROR_BASES = String((import.meta.env && import.meta.env.VITE_FONT_BASE_U
   .map((item) => (item.endsWith('/') ? item : `${item}/`));
 export const FONT_BASES = [...MIRROR_BASES, SAME_ORIGIN_BASE];
 
-// 用 woff2 而不是 TTF：体积约为 TTF 的 45%，而且**和网页 UI 用的是同一份文件**
-// （global.css 的 @font-face 已经下载过），导出时基本直接命中浏览器 HTTP 缓存。
-// pdfmake 内置的 fontkit 自带 WOFF2 解压（bundle 里带 brotli），实测可正常内嵌子集。
+// **必须用未压缩的 TTF**：pdfmake 内置的 fontkit 对 WOFF2（glyf 变换）解码不完整，
+// 字形轮廓会变空 —— PDF 能下载、能抽到文本（ToUnicode 在），但页面渲染出来是白页。
+// 所以这里的字体是 fontTools 预处理好的 TTF 子集（见 scripts/build_pdf_fonts.py）。
+// 体积比 woff2 大（core 约 1.1MB），换来的是"内容真的画得出来"。
 //
-// 两级字体：核心子集（GB2312 一级字表，524KB，覆盖常用字 99%+）优先；
-// 文本里出现核心子集没有的字（生僻字/二级字）时才回退到全量子集（1.1MB）。
-// 这是为了慢网/移动端：1.1MB 在国内不稳定的静态托管上经常 20s 都下不来。
+// 两级字体：核心子集（GB2312 一级字表，1.1MB，覆盖常用字 99%+）优先；
+// 文本里出现核心子集没有的字（生僻字/二级字）时才回退到全量子集（1.7MB）。
 const FONT_SETS = {
   core: {
-    normal: 'noto-sans-sc-core-400.woff2',
-    bold: 'noto-sans-sc-core-700.woff2'
+    normal: 'noto-sans-sc-core-400.ttf',
+    bold: 'noto-sans-sc-core-700.ttf'
   },
   full: {
-    normal: 'noto-sans-sc-zh-400.woff2',
-    bold: 'noto-sans-sc-zh-700.woff2'
+    normal: 'noto-sans-sc-full-400.ttf',
+    bold: 'noto-sans-sc-full-700.ttf'
   }
 };
 const CORE_INDEX_FILE = 'noto-sans-sc-core-ranges.json';
@@ -163,7 +163,7 @@ async function writeToCache(url, buffer) {
   if (!storage) return;
   try {
     const cache = await storage.open(FONT_CACHE);
-    await cache.put(url, new Response(buffer, { headers: { 'Content-Type': 'font/woff2' } }));
+    await cache.put(url, new Response(buffer, { headers: { 'Content-Type': 'font/ttf' } }));
   } catch (error) {
     // 忽略：缓存是优化，不是功能依赖（隐私模式/配额/老内核都会走到这里）
     if (typeof console !== 'undefined' && console.debug) console.debug('[pdf] 字体缓存写入失败', error?.message);

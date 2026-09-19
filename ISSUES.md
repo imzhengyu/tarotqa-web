@@ -82,6 +82,7 @@
 | 39 | 依赖里的 copyleft/未知许可 | `dompurify`(MPL OR Apache)、`axe-core`(MPL, dev)、`jszip`(MIT OR GPL)、`png-js`(未声明) | 低 | 都能走 MIT/Apache 分支；`png-js` 属间接依赖，建议确认或替换 |
 | 40 | 网页字体改用第三方平台字体（京华老宋体，ZSFT ID 309） | `web/index.html` 引 `https://fontsapi.zeoseven.com/309/main/result.css`；字体版权 (c) 2022 TerryWang，ZSFT 标注"商业使用：允许"，前提是不得删除字体内版权声明、需附许可协议副本 | 中 | 已留档；若日后商用推广，建议按 ZSFT 条目页说明补 `THIRD-PARTY.md` 并保留 OFL/自定义许可原文 |
 | 41 | PDF 导出字体仍是自托管 Noto Sans SC，与网页字体（京华老宋体）不一致 | `web/src/utils/exportPdf.js` 的 `FONT_SETS` 指向 `noto-sans-sc-*` | 低 | pdfmake 只接受单个可内嵌文件；若要统一成京华老宋体需把 ZSFT 的 503 个切片合并再切子集（体积会明显变大），待决策 |
+| 42 | 【已修复】PDF 导出内容为空白（仅 woff2 那版） | 曾用 woff2 喂 pdfmake：PDF 有内嵌字体/能抽文本，但渲染白页 | 高（已修） | 已改回未压缩 TTF，并在 E2E 里加「渲染第一页 → 墨迹占比 ≥1.2%」断言；勿再用 woff2 做 PDF 字体 |
 
 ## 已完成
 

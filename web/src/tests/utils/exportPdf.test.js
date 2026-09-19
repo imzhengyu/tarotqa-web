@@ -232,7 +232,7 @@ describe('AI Markdown → PDF', () => {
     it('字体下载卡住 → 超时后抛出可重试的错误（不是静默等待）', async () => {
       await expect(
         loadPdfFonts({ force: true, fetchImpl: hangingFetch, timeoutMs: 40 })
-      ).rejects.toThrow(/资源下载超时：noto-sans-sc-core-400\.woff2（0s，已尝试 \d+ 个源，请检查网络后重试）/);
+      ).rejects.toThrow(/资源下载超时：noto-sans-sc-core-400\.ttf（0s，已尝试 \d+ 个源，请检查网络后重试）/);
     });
 
     it('整体生成卡住 → 由外层超时兜底，错误文案带"超时/重试"', async () => {
@@ -332,8 +332,8 @@ describe('AI Markdown → PDF', () => {
         })
       ).resolves.toEqual({ normal: expect.any(String), bold: expect.any(String) });
 
-      expect(tried).toContain('https://mirror.example.com/cdn/fonts/noto-sans-sc-core-400.woff2');
-      expect(tried).toContain('/fonts/noto-sans-sc-core-400.woff2');
+      expect(tried).toContain('https://mirror.example.com/cdn/fonts/noto-sans-sc-core-400.ttf');
+      expect(tried).toContain('/fonts/noto-sans-sc-core-400.ttf');
     });
 
     it('下载成功后写进 Cache Storage，第二次导出直接命中缓存（不再走网络）', async () => {
@@ -358,8 +358,8 @@ describe('AI Markdown → PDF', () => {
       expect(openSpy).toHaveBeenCalled();
       expect(store.size).toBe(2);
       expect([...store.keys()]).toEqual([
-        '/fonts/noto-sans-sc-core-400.woff2',
-        '/fonts/noto-sans-sc-core-700.woff2'
+        '/fonts/noto-sans-sc-core-400.ttf',
+        '/fonts/noto-sans-sc-core-700.ttf'
       ]);
 
       // 断网重来：缓存里已有 → 仍然成功
